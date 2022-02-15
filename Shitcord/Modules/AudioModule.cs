@@ -186,14 +186,18 @@ public class AudioModule : BaseCommandModule
 
         var embed = new DiscordEmbedBuilder();
         string description = "";
-        for (int i = 0; i < tracks.Length && i < 10; i++)
+        for (var i = 0; i < tracks.Length && i < 10; i++)
             description += $"{i + 1}. [{tracks[i].Title}]({tracks[i].Uri})\n";
 
-        if (tracks.Length > 10)
-            description += $". . . and {tracks.Length - 10} more";
-
-        if (tracks.Length == 0)
-            description = "Queue is empty";
+        switch (tracks.Length)
+        {
+            case > 10:
+                embed.WithFooter($". . . and {tracks.Length - 10} more");
+                break;
+            case 0:
+                description = "Queue is empty";
+                break;
+        }
 
         embed.WithTitle(":question:  |  Next tracks in the queue: ")
             .WithDescription(description)

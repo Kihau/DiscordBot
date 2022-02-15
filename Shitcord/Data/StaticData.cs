@@ -8,4 +8,10 @@ public static class StaticData
         790507097615237120,
         489788192145539072
     };
+
+#if  DEBUG
+    public static bool DebugEnabled { get; set; } = true;
+#else
+    public static bool DebugEnabled { get; set; } = false;
+#endif
 }

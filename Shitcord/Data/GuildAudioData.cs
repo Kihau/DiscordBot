@@ -243,7 +243,7 @@ public class GuildAudioData
     {
         if (this.Player is not {IsConnected: true}) return;
 
-        this.StopAsync().GetAwaiter().GetResult();
+        await this.StopAsync();
 
         await this.UpdateSongMessage();
         await this.UpdateQueueMessage();
