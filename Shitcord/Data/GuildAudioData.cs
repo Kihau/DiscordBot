@@ -414,13 +414,24 @@ public class GuildAudioData
         this.Enqueue(qlist);
     }
 
+    // TODO: check if logic is correct
     public async Task SkipAsync(int num)
     {
         if (this.Player is not {IsConnected: true})
             return;
 
+        while (--num > 0)
+        {
+            var track = this.Dequeue();
+            if (this.IsLooping && track != null)
+                this.Enqueue(track);
+        }
+        
+        if (!this.IsStopped)
+            await this.Player.StopAsync();
+        
         // TODO: Add support to skip multiple songs
-        await this.Player.StopAsync();
+        //await this.Player.StopAsync();
     }
 
     public LavalinkTrack[] GetNextTracks()

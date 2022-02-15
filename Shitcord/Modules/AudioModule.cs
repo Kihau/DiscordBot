@@ -248,7 +248,7 @@ public class AudioModule : BaseCommandModule
     [Command("skip"), Aliases("s")]
     [Description("Skips tracks")]
     public async Task SkipCommand(CommandContext ctx, [Description("Number of tracks to skip")] int count = 1)
-        => await this.Data.SkipAsync(1);
+        => await this.Data.SkipAsync(count);
 
     // TODO: Remove by starting and ending index instead of index and count (maybe?)
     [Command("remove"), Aliases("r")]

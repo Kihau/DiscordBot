@@ -163,23 +163,26 @@ public class Discordbot
 		return services;
 	}
 
-	// TODO: Finalize
-	private async Task ConsoleCommandHandler(string msg)
+	private async Task<bool> ConsoleCommandHandler(string msg)
 	{
 		if (this.LastChannel is null)
-			return;
+			return false;
 		
 		var cnext = this.Client.GetCommandsNext();
 
 		msg = msg.Trim();
 		if (!msg.StartsWith(this.Config.Discord.Prefix))
-			return;
+			return false;
 		
 		var cmd_name = msg.Remove(0, this.Config.Discord.Prefix.Length).Split(' ').First();
 		var command = cnext.FindCommand(cmd_name, out var args);
-		
+
+		if (command is null)
+			return false;
+
 		// TODO: if command is null check for internal console commands
-		
+
+		args = msg.Substring(this.Config.Discord.Prefix.Length + cmd_name.Length).Trim();
 		var ctx = cnext.CreateFakeContext(
 			this.Client.CurrentUser, 
 			this.LastChannel, 
@@ -190,6 +193,8 @@ public class Discordbot
 		);
 
 		var _ = Task.Run(async () => await cnext.ExecuteCommandAsync(ctx));
+
+		return true;
 	}
 
 	public async Task RunAsync()
@@ -209,11 +214,14 @@ public class Discordbot
 
 		await Task.Delay(this.Config.Discord.StartDelay);
 		var activity = new DiscordActivity(this.Config.Discord.Status, ActivityType.ListeningTo);
-		//await Client.ConnectAsync(activity, UserStatus.DoNotDisturb);
+		await Client.ConnectAsync(activity, UserStatus.DoNotDisturb);
 
 		while (true)
 		{
 			string message = Console.ReadLine()?.Trim() ?? "";
+			
+			if (await this.ConsoleCommandHandler(message))
+				continue;
 
 			if (!message.StartsWith(this.Config.Discord.Prefix))
 			{
