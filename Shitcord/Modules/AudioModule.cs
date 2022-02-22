@@ -12,7 +12,7 @@ using DSharpPlus.Lavalink.Entities;
 using Shitcord.Data;
 using Shitcord.Services;
 
-namespace Shitcord.Modules;
+namespace Shitcord.Extensions;
 
 //[Group("audio")]
 [Description("Audio and music commands")]
@@ -250,7 +250,6 @@ public class AudioModule : BaseCommandModule
     public async Task SkipCommand(CommandContext ctx, [Description("Number of tracks to skip")] int count = 1)
         => await this.Data.SkipAsync(count);
 
-    // TODO: Remove by starting and ending index instead of index and count (maybe?)
     [Command("remove"), Aliases("r")]
     [Description("Removes a song from the queue")]
     public async Task RemoveCommand(CommandContext ctx,
@@ -310,8 +309,8 @@ public class AudioModule : BaseCommandModule
                 .WithTitle(":musical_note:  |  Now playing: ")
                 .WithDescription($"[{this.Data.CurrentTrack.Title}]({this.Data.CurrentTrack.Uri})\n" +
                                  $":play_pause: Current timestamp: {this.Data.GetTimestamp()}\n" +
-                                 $":play_pause: Song length: {this.Data.CurrentTrack.Length}" +
-                                 $":play_pause: Song Author: {this.Data.CurrentTrack.Author}")
+                                 $":play_pause: Song length: {this.Data.CurrentTrack.Length}\n" +
+                                 $":play_pause: Song Author: {this.Data.CurrentTrack.Author}\n")
                 .WithColor(DiscordColor.Purple);
             await ctx.Channel.SendMessageAsync(embed.Build());
         }

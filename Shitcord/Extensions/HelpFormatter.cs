@@ -1,4 +1,4 @@
-namespace Shitcord.Modules;
+namespace Shitcord.Extensions;
 
 public class HelpFormatter
 {

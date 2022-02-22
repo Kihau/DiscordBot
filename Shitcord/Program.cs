@@ -5,7 +5,6 @@ using Shitcord;
 using Shitcord.Data;
 
 // TODO: Create one discord message (a terminal) and print actual terminal output (add interaction button)
-// TODO: Add quiet option/flag to disable bot response messages
 // TODO: In config file store default prefix - guild prefixes store in database
 // TODO: Add option to set timeout time, pause or leave on timeout, enabled disabled - store then in database
 

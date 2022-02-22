@@ -29,6 +29,7 @@ public class GuildAudioData
     public bool TimeoutStarted { get; private set; }
     private Timer? _timeoutTimer;
 
+    // TODO: Update message only when content has changed (ratelimits)
     public DiscordChannel? UpdatesChannel { get; set; }
     public DiscordMessage? SongUpdates { get; set; }
     public DiscordMessage? QueueUpdates { get; set; }
@@ -61,8 +62,11 @@ public class GuildAudioData
     {
         this.UpdatesChannel = channel;
 
-        if (this.SongUpdates != null)
-            await this.SongUpdates.DeleteAsync();
+        try
+        {
+            if (this.SongUpdates != null)
+                await this.SongUpdates.DeleteAsync();
+        } catch { /* ignored */ }
 
         var mess = GenerateSongMessage();
         this.SongUpdates = await this.UpdatesChannel.SendMessageAsync(mess);
@@ -72,8 +76,11 @@ public class GuildAudioData
     {
         this.UpdatesChannel = channel;
 
-        if (this.QueueUpdates != null)
-            await this.QueueUpdates.DeleteAsync();
+        try
+        {
+            if (this.QueueUpdates != null)
+                await this.QueueUpdates.DeleteAsync();
+        } catch { /* ignored */ }
 
         var mess = GenerateQueueMessage();
         this.QueueUpdates = await this.UpdatesChannel.SendMessageAsync(mess);
@@ -282,7 +289,7 @@ public class GuildAudioData
     private async Task PlaybackFinished(LavalinkGuildConnection con, TrackFinishEventArgs e)
     {
         // var previous = e.Track;
-        if (this.IsLooping && !this.IsStopped)
+        if (this.IsLooping /*&& !this.IsStopped*/)
             this.Queue.Enqueue(e.Track);
 
         if (this.SkipEventFire)
@@ -311,8 +318,12 @@ public class GuildAudioData
         await this.Player.SeekAsync(TimeSpan.Zero);
         this.IsPaused = false;
 
-        await this.UpdateSongMessage();
-        await this.UpdateQueueMessage();
+        var _ = Task.Run(async () =>
+        {
+            await this.UpdateSongMessage();
+            await this.UpdateQueueMessage();
+        });
+
     }
 
     public void Enqueue(LavalinkTrack track)
@@ -414,24 +425,22 @@ public class GuildAudioData
         this.Enqueue(qlist);
     }
 
-    // TODO: check if logic is correct
     public async Task SkipAsync(int num)
     {
         if (this.Player is not {IsConnected: true})
             return;
 
+        var tracks = new List<LavalinkTrack>();
         while (--num > 0)
         {
             var track = this.Dequeue();
-            if (this.IsLooping && track != null)
-                this.Enqueue(track);
+            
+            if (track != null && this.IsLooping)
+                tracks.Add(track);
         }
         
-        if (!this.IsStopped)
-            await this.Player.StopAsync();
-        
-        // TODO: Add support to skip multiple songs
-        //await this.Player.StopAsync();
+        await this.Player.StopAsync();
+        this.Enqueue(tracks);
     }
 
     public LavalinkTrack[] GetNextTracks()

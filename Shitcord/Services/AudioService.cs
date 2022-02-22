@@ -37,8 +37,8 @@ namespace Shitcord.Services;
                 this.AudioData.TryGetValue(e.Guild.Id, out var data);
                 if (data == null) 
                     return;
-                
-                await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+
+                bool defer = true;
                 switch (e.Id)
                 {
                     // Song Info
@@ -86,7 +86,14 @@ namespace Shitcord.Services;
                     case "lastpage_btn":
                         data.page = Int32.MaxValue;
                         break;
+                    
+                    default:
+                        defer = false;
+                        break;
                 }
+                
+                if (defer)
+                    await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
 
                 await data.UpdateSongMessage();
                 await data.UpdateQueueMessage();

@@ -1,6 +1,6 @@
 using System;
 
-namespace Shitcord.Modules;
+namespace Shitcord.Extensions;
 
 public class CommandException : Exception
 {

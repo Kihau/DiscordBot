@@ -7,7 +7,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 
-namespace Shitcord.Modules;
+namespace Shitcord.Extensions;
 
 //[Group("testing")]
 [Description("Memes and command testing")]

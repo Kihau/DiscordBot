@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices.ComTypes;
+using System.Runtime.Loader;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
@@ -7,8 +8,9 @@ using DSharpPlus.EventArgs;
 using DSharpPlus.Lavalink;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Shitcord.Modules;
+using Shitcord.Extensions;
 using Shitcord.Data;
+using Shitcord.Modules;
 using Shitcord.Services;
 
 namespace Shitcord;
@@ -18,8 +20,8 @@ public class Discordbot
 	public DiscordClient Client { get; private set; }
 	public Config Config { get; }
 
-	public DiscordChannel? LastChannel { get; set; }
-	public DiscordGuild? LastGuild { get; set; }
+	public DiscordChannel LastChannel { get; set; }
+	public DiscordGuild LastGuild { get; set; }
 
 	public DateTime StartTime { get; }
 
@@ -32,12 +34,19 @@ public class Discordbot
 	public DateTime LastDisconnect { get; private set; }
 	public bool IsDisconnected { get; private set; } = false;
 
+#if DEBUG
+	public bool DebugEnabled { get; set; } = true;
+#else
+    public bool DebugEnabled { get; set; } = false;
+#endif
+
+	
 	public Discordbot()
 	{
 		this.StartTime = DateTime.Now;
 		//var exec_path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 #if DEBUG
-		this.Config = new Config("Resources/config-kihau.json");
+		this.Config = new Config("Resources/config-debug.json");
 #else
         this.Config = new Config("Resources/config.json");
 #endif
@@ -62,35 +71,8 @@ public class Discordbot
 		};
 
 		Client = new DiscordClient(clientConfig);
-		Client.MessageCreated += PrintMessage;
 
-		// Client.SocketClosed += (o, sender) =>
-		// {
-		//     this.LastDisconnect = DateTime.Now;
-		//     this.IsDisconnected = true;
-		//     return Task.CompletedTask;
-		// };
-		//
-		// Client.ClientErrored += (o, sender) =>
-		// {
-		//     Console.WriteLine($"errored at: {sender.Exception.Message}");
-		//     return Task.CompletedTask;
-		// };
-		//
-		// Client.SocketErrored += (o, sender) =>
-		// {
-		//     Console.WriteLine($"shit happened: {sender.Exception.Message}");
-		//     return Task.CompletedTask;            
-		// };
-		//
-		// Client.SocketOpened+= (o, sender) =>
-		// {
-		//     if (this.IsDisconnected)
-		//         this.TotalDowntime += DateTime.Now - this.LastDisconnect;
-		//     this.IsDisconnected = false;
-		//     return Task.CompletedTask;
-		// };
-		//
+		Client.MessageCreated += PrintMessage;
 
 		if (this.Config.Lava.IsEnabled)
 			Client.UseLavalink();
@@ -98,13 +80,14 @@ public class Discordbot
 
 	private Task PrintMessage(DiscordClient client, MessageCreateEventArgs e)
 	{
-		Console.WriteLine($"[{e.Guild.Name}] {e.Author.Username}@{e.Channel.Name}: {e.Message.Content}");
+		if(this.DebugEnabled)
+			Console.WriteLine($"[{e.Guild.Name}] {e.Author.Username}@{e.Channel.Name}: {e.Message.Content}");
 
-		if (e.Author.Id != 278778540554715137)
-			return Task.CompletedTask;
-
-		LastChannel = e.Channel;
-		LastGuild = e.Guild;
+		// if (e.Author.Id != 278778540554715137)
+		// 	return Task.CompletedTask;
+		//
+		// LastChannel = e.Channel;
+		// LastGuild = e.Guild;
 
 		return Task.CompletedTask;
 	}
@@ -131,13 +114,16 @@ public class Discordbot
 		if (this.Config.Lava.IsEnabled)
 			commands.RegisterCommands<AudioModule>();
 		commands.RegisterCommands<UtilityModule>();
+		commands.RegisterCommands<AuthModule>();
 #if DEBUG
 		commands.RegisterCommands<TestingModule>();
 #endif
 
 		commands.CommandErrored += async (sender, e) =>
 		{
-			if (!StaticData.DebugEnabled && e.Exception is not CommandException)
+			Console.WriteLine($"Exception thrown: {e.Exception}");
+
+			if (!this.DebugEnabled && e.Exception is not CommandException)
 				return;
 
 			var embed = new DiscordEmbedBuilder();
@@ -145,8 +131,6 @@ public class Discordbot
 				.WithDescription(e.Exception.Message)
 				.WithColor(DiscordColor.Red);
 			await e.Context.Channel.SendMessageAsync(embed.Build());
-
-			Console.WriteLine($"Exception thrown: {e.Exception}");
 		};
 	}
 
@@ -165,9 +149,6 @@ public class Discordbot
 
 	private async Task<bool> ConsoleCommandHandler(string msg)
 	{
-		if (this.LastChannel is null)
-			return false;
-		
 		var cnext = this.Client.GetCommandsNext();
 
 		msg = msg.Trim();
@@ -179,8 +160,6 @@ public class Discordbot
 
 		if (command is null)
 			return false;
-
-		// TODO: if command is null check for internal console commands
 
 		args = msg.Substring(this.Config.Discord.Prefix.Length + cmd_name.Length).Trim();
 		var ctx = cnext.CreateFakeContext(
@@ -215,69 +194,34 @@ public class Discordbot
 		await Task.Delay(this.Config.Discord.StartDelay);
 		var activity = new DiscordActivity(this.Config.Discord.Status, ActivityType.ListeningTo);
 		await Client.ConnectAsync(activity, UserStatus.DoNotDisturb);
+		
+		ulong debug_channel = 928054033741152307;
+		try
+		{
+			this.LastChannel = await this.Client.GetChannelAsync(debug_channel);
+			await Task.Delay(3000);
+			this.LastGuild = this.LastChannel.Guild;
+		}
+		catch
+		{
+			this.LastGuild = this.Client.Guilds.First().Value;
+			this.LastChannel = this.LastGuild.Channels
+				.First(x => x.Value.Type == ChannelType.Text).Value;
+		}
 
+		Console.WriteLine($"Current guild set to: {this.LastGuild.Name}");
+		Console.WriteLine($"Current channel set to: {this.LastChannel.Name}");
+		
 		while (true)
 		{
-			string message = Console.ReadLine()?.Trim() ?? "";
+			string? message = Console.ReadLine()?.Trim();
 			
-			if (await this.ConsoleCommandHandler(message))
+			if (message is null) 
 				continue;
-
-			if (!message.StartsWith(this.Config.Discord.Prefix))
-			{
-				if (LastChannel != null && !String.IsNullOrWhiteSpace(message))
-					await LastChannel.SendMessageAsync(message);
-				continue;
-			}
-
-			string cmd = message.Remove(0, this.Config.Discord.Prefix.Length);
-			var cmd_args = cmd.Split(' ');
-
-			if (cmd_args.Length == 0)
-				continue;
-
-			switch (cmd_args[0])
-			{
-				case "cc":
-					if (LastGuild == null || cmd_args.Length < 2) continue;
-					var channel_name = cmd_args[1];
-					foreach (var channel in this.LastGuild.Channels.Values)
-						if (channel.Name.Contains(channel_name, StringComparison.OrdinalIgnoreCase) &&
-						    channel.Type == ChannelType.Text)
-							this.LastChannel = channel;
-					if (LastChannel != null)
-						Console.WriteLine($"Current channel set to: {LastChannel.Name}");
-					break;
-
-				case "cg":
-					if (cmd_args.Length < 2) continue;
-					var guild_name = cmd_args[1];
-					foreach (var guild in this.Client.Guilds.Values)
-						if (guild.Name.Contains(guild_name, StringComparison.OrdinalIgnoreCase))
-							this.LastGuild = guild;
-					if (LastGuild != null)
-						Console.WriteLine($"Current guild set to: {LastGuild.Name}");
-					break;
-
-				case "lg":
-					int i = 0;
-					foreach (var guild in this.Client.Guilds.Values)
-						Console.WriteLine($"{i++}. {guild.Name}");
-					break;
-
-				case "lc":
-					if (this.LastGuild == null) continue;
-					int j = 1;
-					foreach (var channel in this.LastGuild.Channels.Values)
-						if (channel.Type == ChannelType.Text)
-							Console.WriteLine($"{j++}. {channel.Name}");
-					break;
-
-				// default:
-				//     if (LastChannel != null && !String.IsNullOrWhiteSpace(message))
-				//         await LastChannel.SendMessageAsync(message);
-				//     break;
-			}
+			
+			var success = await this.ConsoleCommandHandler(message);
+			if (!success && this.DebugEnabled)
+				await this.LastChannel.SendMessageAsync(message);
 		}
 	}
 }
