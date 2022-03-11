@@ -322,20 +322,130 @@ public class AudioModule : BaseCommandModule
     public async Task ResumeLavaCommand(CommandContext ctx)
         => await this.Data.ResumeAsync();
 
-    [Command("timescale")]
-    public async Task TimescaleLavaCommand(CommandContext ctx, double speed = 1.0, double pitch = 1.0,
-        double rate = 1.0)
+    [Group("filters")]
+    [Description("Track filter commands")]
+    public class FilterModule : BaseCommandModule
     {
-        var lava = ctx.Client.GetLavalink();
-        var node = lava.ConnectedNodes.Values.First();
-        var conn = node.GetGuildConnection(ctx.Member.VoiceState.Guild);
+        private GuildAudioData Data { get; set; }
+        private AudioService Audio { get; init; }
 
-        var scale = new TimeScale();
-        scale.Speed = speed;
-        scale.Pitch = pitch;
-        scale.Rate = rate;
+        public FilterModule(AudioService service) => this.Audio = service;
 
-        await conn.SetTimescaleAsync(scale);
+        public override async Task BeforeExecutionAsync(CommandContext ctx)
+        {
+            this.Data = this.Audio.GetOrAddData(ctx.Guild);
+            await base.BeforeExecutionAsync(ctx);
+        }
+
+        public override async Task AfterExecutionAsync(CommandContext ctx)
+        {
+            await this.Data.UpdateSongMessage();
+            await this.Data.UpdateQueueMessage();
+            await base.AfterExecutionAsync(ctx);
+        }
+        
+        [Command("reset")]
+        public async Task ResetFiltersCommand(CommandContext ctx)
+            => await this.Data.ResetFiltersAsync();
+
+
+        [Command("get")]
+        public async Task GetFiltersCommand(CommandContext ctx)
+            => await ctx.Channel.SendMessageAsync($"```json\n{this.Data.Filters.GetJson()}\n```");
+
+
+        [Command("set")]
+        public async Task SetFiltersCommand(CommandContext ctx, [RemainingText] string json)
+        {
+            int cs1 = json.IndexOf("```", StringComparison.Ordinal) + 5;
+            cs1 = json.IndexOf('\n', cs1) + 1;
+            int cs2 = json.LastIndexOf("```", StringComparison.Ordinal);
+
+            if (cs1 is -1 || cs2 is -1)
+            {
+                cs1 = 0;
+                cs2 = json.Length;
+            }
+            
+            string filters_string = json.Substring(cs1, cs2 - cs1);
+            
+            var output = filters_string.GetAudioFilters();
+            if (output != null)
+                this.Data.Filters = output;
+        }
+        
+        [Command("example")]
+        public async Task SetExampleFiltersCommand(CommandContext ctx)
+        {
+            var example = new AudioFilters
+            {
+                Karaoke = new Karaoke
+                {
+                    Level = 1,
+                    MonoLevel = 1,
+                    FilterBand = 220,
+                    FilterWidth = 100
+                },
+                Timescale = new TimeScale
+                {
+                    Speed = 1,
+                    Pitch = 1,
+                    Rate = 1
+                },
+                
+                Tremolo = new Tremolo
+                {
+                    Frequency = 2.0,
+                    Depth = 0.5
+                },
+                
+                Vibrato = new Vibrato
+                {
+                    Frequency = 2.0,
+                    Depth = 0.5
+                },
+                
+                Rotation = new Rotation {RotationFreq = 0},
+                
+                Distortion = new Distortion
+                {
+                    SinOffset = 0,
+                    SinScale = 1,
+                    CosOffset = 0,
+                    CosScale = 1,
+                    TanOffset = 0,
+                    TanScale = 1,
+                    Offset = 0,
+                    Scale = 1
+                },
+                
+                Lowpass = new LowPass{Smoothing = 20.0},
+                
+                Channelmix = new ChannelMix
+                {
+                    LeftToLeft = 1,
+                    LeftToRight = 0,
+                    RightToLeft = 0,
+                    RightToRight = 1
+                }
+            };
+            
+            await ctx.Channel.SendMessageAsync($"```json\n{example.GetJson()}\n```");
+        }
+
+        [Command("timescale")]
+        public async Task TimescaleLavaCommand(CommandContext ctx, double speed = 1.0, double pitch = 1.0,
+            double rate = 1.0)
+        {
+            var scale = new TimeScale
+            {
+                Pitch = pitch,
+                Rate = rate,
+                Speed = speed
+            };
+
+            await this.Data.SetTimescaleAsync(scale);
+        }
     }
 
     [Command("volume")]

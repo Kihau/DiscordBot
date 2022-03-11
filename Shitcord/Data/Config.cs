@@ -56,7 +56,7 @@ public class Config
 
     public void Save(string path)
     {
-        var options = new JsonSerializerOptions() {WriteIndented = true};
+        var options = new JsonSerializerOptions {WriteIndented = true};
         string output = JsonSerializer.Serialize(this, options);
         File.WriteAllText(path, output);
     }

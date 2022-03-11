@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
+using DSharpPlus.Lavalink.Entities;
 using DSharpPlus.Lavalink.EventArgs;
 
 namespace Shitcord.Data;
@@ -22,9 +23,10 @@ public class GuildAudioData
 
     public bool SkipEventFire { get; set; } = false;
 
-    // Replace this with Filters class
-    //public TimeScale Scale { get; set; }
+    public AudioFilters Filters { get; set; } = new();
+    
     private LavalinkGuildConnection? Player { get; set; }
+    // todo method that prints / sets (in codeblock) an entire payload 
 
     public bool TimeoutStarted { get; private set; }
     private Timer? _timeoutTimer;
@@ -55,6 +57,7 @@ public class GuildAudioData
 
         this.Player = await this.Lavalink.ConnectAsync(vchannel);
         await this.Player.SetVolumeAsync(this.Volume);
+        await this.Player.SetAudiofiltersAsync(this.Filters);
         this.Player.PlaybackFinished += PlaybackFinished;
     }
 
@@ -177,7 +180,10 @@ public class GuildAudioData
         }
         else
         {
+            #pragma warning disable CS8602
             author = this.CurrentTrack.Author;
+            #pragma warning restore CS8602
+            
             state = this.IsPaused ? "Paused" : "Playing";
             state_btn = this.IsPaused ? "Resume" : "Pause";
             current_song = $"[{this.CurrentTrack.Title}]({this.CurrentTrack.Uri})";
@@ -345,6 +351,26 @@ public class GuildAudioData
 
         foreach (var item in items)
             this.Queue.Enqueue(item);
+    }
+    
+    public async Task SetTimescaleAsync(TimeScale timescale)
+    {
+        this.Filters.Timescale = timescale;
+
+        if (this.Player is not {IsConnected: true})
+            return;
+
+        await this.Player.SetAudiofiltersAsync(this.Filters);
+    }
+    
+    public async Task ResetFiltersAsync()
+    {
+        this.Filters = new AudioFilters();
+
+        if (this.Player is not {IsConnected: true})
+            return;
+        
+        await this.Player.SetAudiofiltersAsync(this.Filters);
     }
 
     public LavalinkTrack? Dequeue() =>
