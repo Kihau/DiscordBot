@@ -343,10 +343,10 @@ public class AudioModule : BaseCommandModule
             await this.Data.UpdateQueueMessage();
             await base.AfterExecutionAsync(ctx);
         }
-        
+
         [Command("reset")]
         public async Task ResetFiltersCommand(CommandContext ctx)
-            => await this.Data.ResetFiltersAsync();
+            => await this.Data.SetAudioFiltersAsync(new AudioFilters());
 
 
         [Command("get")]
@@ -385,6 +385,7 @@ public class AudioModule : BaseCommandModule
                     FilterBand = 220,
                     FilterWidth = 100
                 },
+            
                 Timescale = new TimeScale
                 {
                     Speed = 1,
@@ -432,18 +433,78 @@ public class AudioModule : BaseCommandModule
             await ctx.Channel.SendMessageAsync($"```json\n{example.GetJson()}\n```");
         }
 
+        [Command("karaoke")]
+        public async Task KaraokeLavaCommand(CommandContext ctx, double level = 1, double monoLevel = 1, 
+            double filterBand = 220, double filterWidth = 100)
+        {
+            this.Data.Filters.Karaoke = new Karaoke
+            {
+                Level = level,
+                MonoLevel = monoLevel,
+                FilterBand = filterBand,
+                FilterWidth = filterWidth
+            };
+
+            await this.Data.SetAudioFiltersAsync();
+        }
+
         [Command("timescale")]
         public async Task TimescaleLavaCommand(CommandContext ctx, double speed = 1.0, double pitch = 1.0,
             double rate = 1.0)
         {
-            var scale = new TimeScale
+            this.Data.Filters.Timescale = new TimeScale
             {
                 Pitch = pitch,
                 Rate = rate,
                 Speed = speed
             };
 
-            await this.Data.SetTimescaleAsync(scale);
+            await this.Data.SetAudioFiltersAsync();
+        }
+        
+        [Command("tremolo")]
+        public async Task TremoloLavaCommand(CommandContext ctx, double frequency = 2.0, double depth = 0.5)
+        {
+            this.Data.Filters.Tremolo = new Tremolo
+            {
+                Frequency = frequency,
+                Depth = depth,
+            };
+
+            await this.Data.SetAudioFiltersAsync();
+        }
+        
+        [Command("vibrato")]
+        public async Task VibratoLavaCommand(CommandContext ctx, double frequency = 2.0, double depth = 0.5)
+        {
+            this.Data.Filters.Vibrato = new Vibrato
+            {
+                Frequency = frequency,
+                Depth = depth
+            };
+
+            await this.Data.SetAudioFiltersAsync();
+        }
+        
+        [Command("rotation")]
+        public async Task RotationLavaCommand(CommandContext ctx, double rotationFreq = 0.0)
+        {
+            this.Data.Filters.Rotation = new Rotation
+            {
+                RotationFreq = rotationFreq
+            };
+
+            await this.Data.SetAudioFiltersAsync();
+        }
+        [Command("lowpass")]
+        public async Task LowPassLavaCommand(CommandContext ctx, double smoothing = 2.0)
+        {
+            this.Data.Filters.Lowpass = new LowPass
+            {
+                Smoothing = smoothing
+            };
+
+            await this.Data.SetAudioFiltersAsync();
         }
     }
 

@@ -44,6 +44,7 @@ public class GuildAudioData
         this.Guild = guild;
         this.Lavalink = lavalink;
         this.Queue = new ConcurrentQueue<LavalinkTrack>();
+        this.Filters = new AudioFilters();
     }
 
     public async Task CreateConnectionAsync(DiscordChannel vchannel)
@@ -353,38 +354,57 @@ public class GuildAudioData
             this.Queue.Enqueue(item);
     }
     
-    public async Task SetTimescaleAsync(TimeScale timescale)
+    // public async Task SetTimescaleAsync(Karaoke karaoke)
+    // {
+    //     this.Filters.Karaoke = karaoke;
+    //
+    //     if (this.Player is not {IsConnected: true})
+    //         return;
+    //
+    //     await this.Player.SetAudiofiltersAsync(this.Filters);
+    // }
+    
+    // public async Task ApplyFiltersAsync()
+    // {
+    //     if (this.Player is not {IsConnected: true})
+    //         return;
+    //
+    //     await this.Player.SetAudiofiltersAsync(this.Filters);
+    // }
+    
+    // public async Task SetTimescaleAsync(TimeScale timescale)
+    // {
+    //     this.Filters.Timescale = timescale;
+    //
+    //     if (this.Player is not {IsConnected: true})
+    //         return;
+    //
+    //     await this.Player.SetAudiofiltersAsync(this.Filters);
+    // }
+    
+    public async Task SetAudioFiltersAsync(AudioFilters? filters = null)
     {
-        this.Filters.Timescale = timescale;
+        if (filters != null)
+            this.Filters = filters;
 
+        // if (this.Filters == null)
+        //     return;
+        
         if (this.Player is not {IsConnected: true})
             return;
-
+        
         await this.Player.SetAudiofiltersAsync(this.Filters);
     }
     
-    public async Task SetAudioFiltersAsync(AudioFilters? filters)
-    {
-        if (filters == null)
-            return;
-        
-        this.Filters = filters;
-
-        if (this.Player is not {IsConnected: true})
-            return;
-
-        await this.Player.SetAudiofiltersAsync(this.Filters);
-    }
-    
-    public async Task ResetFiltersAsync()
-    {
-        this.Filters = new AudioFilters();
-
-        if (this.Player is not {IsConnected: true})
-            return;
-        
-        await this.Player.SetAudiofiltersAsync(this.Filters);
-    }
+    // public async Task ResetFiltersAsync()
+    // {
+    //     this.Filters = new AudioFilters();
+    //
+    //     if (this.Player is not {IsConnected: true})
+    //         return;
+    //     
+    //     await this.Player.SetAudiofiltersAsync(this.Filters);
+    // }
 
     public LavalinkTrack? Dequeue() =>
         this.Queue.TryDequeue(out var track) ? track : null;
