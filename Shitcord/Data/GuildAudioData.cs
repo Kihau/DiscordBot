@@ -363,6 +363,19 @@ public class GuildAudioData
         await this.Player.SetAudiofiltersAsync(this.Filters);
     }
     
+    public async Task SetAudioFiltersAsync(AudioFilters? filters)
+    {
+        if (filters == null)
+            return;
+        
+        this.Filters = filters;
+
+        if (this.Player is not {IsConnected: true})
+            return;
+
+        await this.Player.SetAudiofiltersAsync(this.Filters);
+    }
+    
     public async Task ResetFiltersAsync()
     {
         this.Filters = new AudioFilters();

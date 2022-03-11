@@ -370,8 +370,7 @@ public class AudioModule : BaseCommandModule
             string filters_string = json.Substring(cs1, cs2 - cs1);
             
             var output = filters_string.GetAudioFilters();
-            if (output != null)
-                this.Data.Filters = output;
+            await this.Data.SetAudioFiltersAsync(output);
         }
         
         [Command("example")]
