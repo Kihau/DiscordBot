@@ -336,17 +336,17 @@ public class AudioModule : BaseCommandModule
             this.Data = this.Audio.GetOrAddData(ctx.Guild);
             await base.BeforeExecutionAsync(ctx);
         }
-
+        
         public override async Task AfterExecutionAsync(CommandContext ctx)
         {
-            await this.Data.UpdateSongMessage();
-            await this.Data.UpdateQueueMessage();
+            // TODO: ADD "IgnoreFilterUpdate" ATTRIBUTE
+            await this.Data.SetAudioFiltersAsync();
             await base.AfterExecutionAsync(ctx);
         }
 
         [Command("reset")]
         public async Task ResetFiltersCommand(CommandContext ctx)
-            => await this.Data.SetAudioFiltersAsync(new AudioFilters());
+            => this.Data.Filters = new AudioFilters();
 
 
         [Command("get")]
@@ -370,7 +370,9 @@ public class AudioModule : BaseCommandModule
             string filters_string = json.Substring(cs1, cs2 - cs1);
             
             var output = filters_string.GetAudioFilters();
-            await this.Data.SetAudioFiltersAsync(output);
+            if (output != null)
+                this.Data.Filters = output;
+            //await this.Data.SetAudioFiltersAsync(output);
         }
         
         [Command("example")]
@@ -434,6 +436,21 @@ public class AudioModule : BaseCommandModule
         }
 
         [Command("karaoke")]
+        public async Task KaraokeLavaCommand(CommandContext ctx) => this.Data.Filters.Karaoke = new Karaoke();        
+        [Command("timescale")]
+        public async Task TimescaleLavaCommand(CommandContext ctx) => this.Data.Filters.Timescale = new TimeScale();        
+        [Command("tremolo")]
+        public async Task TremoloLavaCommand(CommandContext ctx) => this.Data.Filters.Tremolo = new Tremolo();        
+        [Command("vibrato")]
+        public async Task VibratoLavaCommand(CommandContext ctx) => this.Data.Filters.Vibrato = new Vibrato();        
+        [Command("rotation")]
+        public async Task RotationLavaCommand(CommandContext ctx) => this.Data.Filters.Rotation = new Rotation();        
+        [Command("lowpass")]
+        public async Task LowPassLavaCommand(CommandContext ctx) => this.Data.Filters.Lowpass = new LowPass();        
+        [Command("channelmix")]
+        public async Task ChannelMixLavaCommand(CommandContext ctx) => this.Data.Filters.Channelmix = new ChannelMix();        
+        
+        [Command("karaoke")]
         public async Task KaraokeLavaCommand(CommandContext ctx, double level = 1, double monoLevel = 1, 
             double filterBand = 220, double filterWidth = 100)
         {
@@ -444,8 +461,6 @@ public class AudioModule : BaseCommandModule
                 FilterBand = filterBand,
                 FilterWidth = filterWidth
             };
-
-            await this.Data.SetAudioFiltersAsync();
         }
 
         [Command("timescale")]
@@ -458,8 +473,6 @@ public class AudioModule : BaseCommandModule
                 Rate = rate,
                 Speed = speed
             };
-
-            await this.Data.SetAudioFiltersAsync();
         }
         
         [Command("tremolo")]
@@ -470,8 +483,6 @@ public class AudioModule : BaseCommandModule
                 Frequency = frequency,
                 Depth = depth,
             };
-
-            await this.Data.SetAudioFiltersAsync();
         }
         
         [Command("vibrato")]
@@ -482,8 +493,6 @@ public class AudioModule : BaseCommandModule
                 Frequency = frequency,
                 Depth = depth
             };
-
-            await this.Data.SetAudioFiltersAsync();
         }
         
         [Command("rotation")]
@@ -493,9 +502,8 @@ public class AudioModule : BaseCommandModule
             {
                 RotationFreq = rotationFreq
             };
-
-            await this.Data.SetAudioFiltersAsync();
         }
+        
         [Command("lowpass")]
         public async Task LowPassLavaCommand(CommandContext ctx, double smoothing = 2.0)
         {
@@ -503,8 +511,19 @@ public class AudioModule : BaseCommandModule
             {
                 Smoothing = smoothing
             };
+        }
 
-            await this.Data.SetAudioFiltersAsync();
+        [Command("channelmix")]
+        public async Task ChannelMixLavaCommand(CommandContext ctx, double leftToLeft = 1, double leftToRight = 0,
+            double rightToLeft = 0, double rightToRight = 1)
+        {
+            this.Data.Filters.Channelmix = new ChannelMix
+            {
+                LeftToLeft = leftToLeft,
+                LeftToRight = leftToRight,
+                RightToLeft = rightToLeft,
+                RightToRight = rightToRight
+            };
         }
     }
 

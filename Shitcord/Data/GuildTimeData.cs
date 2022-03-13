@@ -5,7 +5,7 @@ namespace Shitcord.Data;
 
 /// <summary>
 /// UNUSED CODE - NO FUN ALLOWED
-/// DOESN'T WORD DUE TO DISCORD API RATELIMITS
+/// DOESN'T WORK DUE TO DISCORD API RATELIMITS
 /// </summary>
 
 [Obsolete("discord ratelimits channel updates", true)]

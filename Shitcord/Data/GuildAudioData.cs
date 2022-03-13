@@ -26,7 +26,6 @@ public class GuildAudioData
     public AudioFilters Filters { get; set; } = new();
     
     private LavalinkGuildConnection? Player { get; set; }
-    // todo method that prints / sets (in codeblock) an entire payload 
 
     public bool TimeoutStarted { get; private set; }
     private Timer? _timeoutTimer;
