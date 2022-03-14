@@ -28,7 +28,9 @@ public class GuildAudioData
     private LavalinkGuildConnection? Player { get; set; }
 
     public bool TimeoutStarted { get; private set; }
-    private Timer? _timeoutTimer;
+    //private Timer? _timeoutTimer;
+    private Timer? _stopTimer;
+    private Timer? _leaveTimer;
 
     // TODO: Update message only when content has changed (ratelimits)
     public DiscordChannel? UpdatesChannel { get; set; }
@@ -245,14 +247,20 @@ public class GuildAudioData
 
     public void StartTimeout()
     {
-        this._timeoutTimer?.Dispose();
-        this._timeoutTimer = new Timer(
-            this.TimerCallback, null, new TimeSpan(0, 0, 10, 0), Timeout.InfiniteTimeSpan);
+        //this._timeoutTimer?.Dispose();
+        this._stopTimer?.Dispose();
+        this._leaveTimer?.Dispose();
+        
+        this._stopTimer = new Timer(
+            this.StopTimerCallback, null, new TimeSpan(0, 0, 10, 0), Timeout.InfiniteTimeSpan);
+        
+        this._leaveTimer = new Timer(
+            this.LeaveTimerCallback, null, new TimeSpan(1, 0, 0, 0), Timeout.InfiniteTimeSpan);
 
         this.TimeoutStarted = true;
     }
 
-    private async void TimerCallback(object? sender)
+    private async void StopTimerCallback(object? sender)
     {
         if (this.Player is not {IsConnected: true}) return;
 
@@ -261,13 +269,28 @@ public class GuildAudioData
         await this.UpdateSongMessage();
         await this.UpdateQueueMessage();
 
-        if (this._timeoutTimer != null) 
-            await this._timeoutTimer.DisposeAsync();
+        if (this._stopTimer != null) 
+            await this._stopTimer.DisposeAsync();
+    }
+    
+    private async void LeaveTimerCallback(object? sender)
+    {
+        if (this.Player is not {IsConnected: true}) return;
+
+        await this.DestroyConnectionAsync();
+
+        await this.UpdateSongMessage();
+        await this.UpdateQueueMessage();
+
+        if (this._leaveTimer != null) 
+            await this._leaveTimer.DisposeAsync();
     }
 
     public void CancelTimeout()
     {
-        this._timeoutTimer?.Dispose();
+        //this._timeoutTimer?.Dispose();
+        this._stopTimer?.Dispose();
+        this._leaveTimer?.Dispose();
         this.TimeoutStarted = false;
     }
 

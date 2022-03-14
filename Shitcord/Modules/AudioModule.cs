@@ -76,29 +76,39 @@ public class AudioModule : BaseCommandModule
         if (channel != null)
             await this.Data.CreateConnectionAsync(channel);
 
+        var msgBuilder = new DiscordMessageBuilder();
+        
         if (!String.IsNullOrWhiteSpace(message))
         {
             IEnumerable<LavalinkTrack> tracks;
             if (Uri.TryCreate(message, UriKind.Absolute, out var uri))
                 tracks = await this.Audio.GetTracksAsync(uri);
             else tracks = await this.Audio.GetTracksAsync(message);
+            
+            var lavalinkTracks = tracks as LavalinkTrack[] ?? tracks.ToArray();
+            if (lavalinkTracks.Length > 1)
+            {
+                msgBuilder.AddEmbed(new DiscordEmbedBuilder()
+                    .WithTitle(":thumbsup:  |  Enqueued: ")
+                    .WithDescription($"Enqueued {lavalinkTracks.Length} songs")
+                    .WithColor(DiscordColor.Purple));
+            }
 
-            this.Data.EnqueueFirst(tracks);
+            this.Data.EnqueueFirst(lavalinkTracks);
         }
 
         await this.Data.PlayAsync();
-
-        var embed = new DiscordEmbedBuilder();
+        
         if (this.Data.CurrentTrack != null) 
         {
-            //var embed = new DiscordEmbedBuilder()
-            embed.WithTitle(":musical_note:  |  Now playing: ")
+            msgBuilder.AddEmbed(new DiscordEmbedBuilder()
+                .WithTitle(":musical_note:  |  Now playing: ")
                 .WithDescription($"[{this.Data.CurrentTrack.Title}]({this.Data.CurrentTrack.Uri})")
-                .WithColor(DiscordColor.Purple);
+                .WithColor(DiscordColor.Purple));
         }
         else throw new CommandException("Failed to play the song");
-
-        await ctx.Channel.SendMessageAsync(embed.Build());
+        
+        await ctx.Channel.SendMessageAsync(msgBuilder);
     }
 
     [Command("songupdates"), Aliases("su")]
@@ -129,10 +139,8 @@ public class AudioModule : BaseCommandModule
         var lavalinkTracks = tracks.ToList();
 
         var embed = new DiscordEmbedBuilder();
-        if (lavalinkTracks.Any() /*&& this.Data.IsConnected*/)
+        if (lavalinkTracks.Any())
         {
-            //var embed = new DiscordEmbedBuilder()
-
             var description = lavalinkTracks.Count == 1
                 ? $"[{lavalinkTracks.First().Title}]({lavalinkTracks.First().Uri})"
                 : $"Enqueued {lavalinkTracks.Count} songs";
@@ -163,9 +171,9 @@ public class AudioModule : BaseCommandModule
         }
 
         var embed = new DiscordEmbedBuilder();
-        if (tracks.Any() /*&& this.Data.IsConnected*/)
+        if (tracks.Any())
         {
-            string description = $"Enqueued {tracks.Count()} songs";
+            string description = $"Enqueued {tracks.Count} songs";
 
             embed.WithTitle(":thumbsup:  |  Enqueued: ")
                 .WithDescription(description)
@@ -372,7 +380,6 @@ public class AudioModule : BaseCommandModule
             var output = filters_string.GetAudioFilters();
             if (output != null)
                 this.Data.Filters = output;
-            //await this.Data.SetAudioFiltersAsync(output);
         }
         
         [Command("example")]
@@ -435,19 +442,19 @@ public class AudioModule : BaseCommandModule
             await ctx.Channel.SendMessageAsync($"```json\n{example.GetJson()}\n```");
         }
 
-        [Command("karaoke")]
+        [Command("karaoke"), Priority(0)]
         public async Task KaraokeLavaCommand(CommandContext ctx) => this.Data.Filters.Karaoke = new Karaoke();        
-        [Command("timescale")]
+        [Command("timescale"), Priority(0)]
         public async Task TimescaleLavaCommand(CommandContext ctx) => this.Data.Filters.Timescale = new TimeScale();        
-        [Command("tremolo")]
+        [Command("tremolo"), Priority(0)]
         public async Task TremoloLavaCommand(CommandContext ctx) => this.Data.Filters.Tremolo = new Tremolo();        
-        [Command("vibrato")]
+        [Command("vibrato"), Priority(0)]
         public async Task VibratoLavaCommand(CommandContext ctx) => this.Data.Filters.Vibrato = new Vibrato();        
-        [Command("rotation")]
+        [Command("rotation"), Priority(0)]
         public async Task RotationLavaCommand(CommandContext ctx) => this.Data.Filters.Rotation = new Rotation();        
-        [Command("lowpass")]
+        [Command("lowpass"), Priority(0)]
         public async Task LowPassLavaCommand(CommandContext ctx) => this.Data.Filters.Lowpass = new LowPass();        
-        [Command("channelmix")]
+        [Command("channelmix"), Priority(0)]
         public async Task ChannelMixLavaCommand(CommandContext ctx) => this.Data.Filters.Channelmix = new ChannelMix();        
         
         [Command("karaoke")]
@@ -494,23 +501,17 @@ public class AudioModule : BaseCommandModule
                 Depth = depth
             };
         }
-        
+
         [Command("rotation")]
         public async Task RotationLavaCommand(CommandContext ctx, double rotationFreq = 0.0)
         {
-            this.Data.Filters.Rotation = new Rotation
-            {
-                RotationFreq = rotationFreq
-            };
+            this.Data.Filters.Rotation = new Rotation {RotationFreq = rotationFreq};
         }
-        
+
         [Command("lowpass")]
         public async Task LowPassLavaCommand(CommandContext ctx, double smoothing = 2.0)
         {
-            this.Data.Filters.Lowpass = new LowPass
-            {
-                Smoothing = smoothing
-            };
+            this.Data.Filters.Lowpass = new LowPass {Smoothing = smoothing};
         }
 
         [Command("channelmix")]

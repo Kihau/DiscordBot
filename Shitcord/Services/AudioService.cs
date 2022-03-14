@@ -132,8 +132,11 @@ namespace Shitcord.Services;
             var result = await this.Lavalink.Node.Rest.GetTracksAsync(uri);
             if (result.LoadResultType == LavalinkLoadResultType.PlaylistLoaded)
                 return result.Tracks;
+
+            if (!result.Tracks.Any())
+                return new List<LavalinkTrack>();
             
-            return new [] { result.Tracks.First() };
+            return new List<LavalinkTrack> { result.Tracks.First() };
         }
 
         public async Task<IEnumerable<LavalinkTrack>> GetTracksAsync(String message)
@@ -142,7 +145,10 @@ namespace Shitcord.Services;
             if (result.LoadResultType == LavalinkLoadResultType.PlaylistLoaded)
                 return result.Tracks;
             
-            return new [] { result.Tracks.First() }; 
+            if (!result.Tracks.Any())
+                return new List<LavalinkTrack>();
+            
+            return new List<LavalinkTrack> { result.Tracks.First() }; 
         }
 
         public Task<LavalinkLoadResult> GetTracksAsync(FileInfo message)
