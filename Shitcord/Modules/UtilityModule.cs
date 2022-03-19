@@ -4,10 +4,9 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using Shitcord.Data;
 using Shitcord.Services;
 
-namespace Shitcord.Extensions;
+namespace Shitcord.Modules;
 
 // TODO: Add snipe and editsnipe command
 

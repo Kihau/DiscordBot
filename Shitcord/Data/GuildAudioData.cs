@@ -29,6 +29,7 @@ public class GuildAudioData
 
     public bool TimeoutStarted { get; private set; }
     //private Timer? _timeoutTimer;
+    // TODO: Autoresume, autojoin guild dependent 
     private Timer? _stopTimer;
     private Timer? _leaveTimer;
 
@@ -255,7 +256,7 @@ public class GuildAudioData
             this.StopTimerCallback, null, new TimeSpan(0, 0, 10, 0), Timeout.InfiniteTimeSpan);
         
         this._leaveTimer = new Timer(
-            this.LeaveTimerCallback, null, new TimeSpan(1, 0, 0, 0), Timeout.InfiniteTimeSpan);
+            this.LeaveTimerCallback, null, new TimeSpan(0, 1, 0, 0), Timeout.InfiniteTimeSpan);
 
         this.TimeoutStarted = true;
     }
@@ -264,7 +265,7 @@ public class GuildAudioData
     {
         if (this.Player is not {IsConnected: true}) return;
 
-        await this.StopAsync();
+        await this.PauseAsync();
 
         await this.UpdateSongMessage();
         await this.UpdateQueueMessage();

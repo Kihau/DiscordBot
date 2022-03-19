@@ -9,6 +9,8 @@ public class RequireAuthorizedAttribute : CheckBaseAttribute
 	private readonly List<ulong> _authorizedUsers;
 	public RequireAuthorizedAttribute()
 	{
+		// TODO: remove hardcoded authorized IDS
+		// Get authorized users from database
 		_authorizedUsers = new List<ulong>
 		{
 			278778540554715137,

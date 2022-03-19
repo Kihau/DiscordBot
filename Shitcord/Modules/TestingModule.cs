@@ -1,13 +1,10 @@
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using Shitcord.Extensions;
 
-namespace Shitcord.Extensions;
+namespace Shitcord.Modules;
 
 //[Group("testing")]
 [Description("Memes and command testing")]

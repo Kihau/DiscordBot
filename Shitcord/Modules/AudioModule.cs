@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -10,9 +5,10 @@ using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
 using DSharpPlus.Lavalink.Entities;
 using Shitcord.Data;
+using Shitcord.Extensions;
 using Shitcord.Services;
 
-namespace Shitcord.Extensions;
+namespace Shitcord.Modules;
 
 //[Group("audio")]
 [Description("Audio and music commands")]
@@ -252,6 +248,31 @@ public class AudioModule : BaseCommandModule
         this.Data.Shuffle();
         await ctx.RespondAsync("Queue shuffled");
     }
+    
+    [Command("nightcore")]
+    [Description("Switches on/off nightcore")]
+    public async Task NightcoreCommand(CommandContext ctx, string state)
+    {
+        switch (state)
+        {
+            case "on":
+                Data.Filters.Timescale = new TimeScale
+                {
+                    Speed = 1.0,
+                    Pitch = 1.05,
+                    Rate = 1.30
+                };
+                break;
+            case "reset":
+            case "off":
+                this.Data.Filters.Timescale = null;
+                break;
+            default:
+                throw new CommandException("Incorrect usage, please specify if nightcore state (ex. >>nightcore on)");
+        }
+        
+        await this.Data.SetAudioFiltersAsync();
+    }
 
     [Command("skip"), Aliases("s")]
     [Description("Skips tracks")]
@@ -330,6 +351,16 @@ public class AudioModule : BaseCommandModule
     public async Task ResumeLavaCommand(CommandContext ctx)
         => await this.Data.ResumeAsync();
 
+    [Command("volume")]
+    [Description("Sets volume level of a command")]
+    public async Task VolumeLavaCommand(CommandContext ctx, [Description("volume level (greater than 0)")] int level)
+        => await this.Data.SetVolumeAsync(level);
+
+    [Command("leave")]
+    [Description("Leaves the voice channel")]
+    public async Task LeaveLavaCommand(CommandContext ctx)
+        => await this.Data.DestroyConnectionAsync();
+    
     [Group("filters")]
     [Description("Track filter commands")]
     public class FilterModule : BaseCommandModule
@@ -443,19 +474,19 @@ public class AudioModule : BaseCommandModule
         }
 
         [Command("karaoke"), Priority(0)]
-        public async Task KaraokeLavaCommand(CommandContext ctx) => this.Data.Filters.Karaoke = new Karaoke();        
+        public async Task KaraokeLavaCommand(CommandContext ctx) => this.Data.Filters.Karaoke = null;        
         [Command("timescale"), Priority(0)]
-        public async Task TimescaleLavaCommand(CommandContext ctx) => this.Data.Filters.Timescale = new TimeScale();        
+        public async Task TimescaleLavaCommand(CommandContext ctx) => this.Data.Filters.Timescale = null;        
         [Command("tremolo"), Priority(0)]
-        public async Task TremoloLavaCommand(CommandContext ctx) => this.Data.Filters.Tremolo = new Tremolo();        
+        public async Task TremoloLavaCommand(CommandContext ctx) => this.Data.Filters.Tremolo = null;        
         [Command("vibrato"), Priority(0)]
-        public async Task VibratoLavaCommand(CommandContext ctx) => this.Data.Filters.Vibrato = new Vibrato();        
+        public async Task VibratoLavaCommand(CommandContext ctx) => this.Data.Filters.Vibrato = null;        
         [Command("rotation"), Priority(0)]
-        public async Task RotationLavaCommand(CommandContext ctx) => this.Data.Filters.Rotation = new Rotation();        
+        public async Task RotationLavaCommand(CommandContext ctx) => this.Data.Filters.Rotation = null;        
         [Command("lowpass"), Priority(0)]
-        public async Task LowPassLavaCommand(CommandContext ctx) => this.Data.Filters.Lowpass = new LowPass();        
+        public async Task LowPassLavaCommand(CommandContext ctx) => this.Data.Filters.Lowpass = null;        
         [Command("channelmix"), Priority(0)]
-        public async Task ChannelMixLavaCommand(CommandContext ctx) => this.Data.Filters.Channelmix = new ChannelMix();        
+        public async Task ChannelMixLavaCommand(CommandContext ctx) => this.Data.Filters.Channelmix = null;        
         
         [Command("karaoke")]
         public async Task KaraokeLavaCommand(CommandContext ctx, double level = 1, double monoLevel = 1, 
@@ -508,6 +539,24 @@ public class AudioModule : BaseCommandModule
             this.Data.Filters.Rotation = new Rotation {RotationFreq = rotationFreq};
         }
 
+        [Command("distortion")]
+        public async Task DistortionLavaCommand(CommandContext ctx, double sinOffset = 0, double sinScale = 1,
+            double cosOffset = 0, double cosScale = 1, double tanOffset = 0, double tanScale = 1, double offset = 0,
+            double scale = 1)
+        {
+            this.Data.Filters.Distortion = new Distortion
+            {
+                SinOffset = sinOffset,
+                SinScale = sinScale,
+                CosOffset = cosOffset,
+                CosScale = cosScale,
+                TanOffset = tanOffset,
+                TanScale = tanScale,
+                Offset = offset,
+                Scale = scale,
+            };
+        }
+        
         [Command("lowpass")]
         public async Task LowPassLavaCommand(CommandContext ctx, double smoothing = 2.0)
         {
@@ -527,14 +576,4 @@ public class AudioModule : BaseCommandModule
             };
         }
     }
-
-    [Command("volume")]
-    [Description("Sets volume level of a command")]
-    public async Task VolumeLavaCommand(CommandContext ctx, [Description("volume level (greater than 0)")] int level)
-        => await this.Data.SetVolumeAsync(level);
-
-    [Command("leave")]
-    [Description("Leaves the voice channel")]
-    public async Task LeaveLavaCommand(CommandContext ctx)
-        => await this.Data.DestroyConnectionAsync();
 }

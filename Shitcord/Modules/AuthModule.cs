@@ -126,7 +126,7 @@ public class AuthModule : BaseCommandModule
 			Console.WriteLine($"Current guild set to: {Bot.LastGuild.Name}");
 		else await ctx.RespondAsync($"Current guild set to: {Bot.LastGuild.Name}");
 	}
-	
+
 	[Command("eval")]
 	public async Task EvalCommand(CommandContext ctx, [RemainingText] string code)
 	{

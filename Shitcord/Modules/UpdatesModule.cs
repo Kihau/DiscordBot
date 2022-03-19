@@ -1,7 +1,7 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 
-namespace Shitcord.Extensions;
+namespace Shitcord.Modules;
 
 [Group("updates"), Aliases("up")]
 public class UpdatesModule : BaseCommandModule

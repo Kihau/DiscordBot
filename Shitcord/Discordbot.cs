@@ -25,31 +25,22 @@ public class Discordbot
 
 	public DateTime StartTime { get; }
 
-	public TimeSpan TotalRuntime => DateTime.Now - this.StartTime;
-	public TimeSpan TotalUptime => this.TotalRuntime - this.TotalDowntime;
-	private TimeSpan TotalDowntime { get; set; }
-
-	public float UptimePercentage => this.TotalUptime.Ticks / (float) this.TotalRuntime.Ticks * 10.0f;
-
-	public DateTime LastDisconnect { get; private set; }
-	public bool IsDisconnected { get; private set; } = false;
-
 #if DEBUG
 	public bool DebugEnabled { get; set; } = true;
 #else
     public bool DebugEnabled { get; set; } = false;
 #endif
 
-	
+
 	public Discordbot()
 	{
 		this.StartTime = DateTime.Now;
 		//var exec_path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-#if DEBUG
-		this.Config = new Config("Resources/config-debug.json");
-#else
-        this.Config = new Config("Resources/config.json");
-#endif
+		
+		this.Config = this.DebugEnabled
+			? new Config("Resources/config-debug.json")
+			: new Config("Resources/config.json");
+
 		this.ConfigureClient();
 		this.ConfigureCommands();
 	}
@@ -80,7 +71,7 @@ public class Discordbot
 
 	private Task PrintMessage(DiscordClient client, MessageCreateEventArgs e)
 	{
-		if(this.DebugEnabled)
+		if (this.DebugEnabled)
 			Console.WriteLine($"[{e.Guild.Name}] {e.Author.Username}@{e.Channel.Name}: {e.Message.Content}");
 
 		// if (e.Author.Id != 278778540554715137)
@@ -115,9 +106,10 @@ public class Discordbot
 			commands.RegisterCommands<AudioModule>();
 		commands.RegisterCommands<UtilityModule>();
 		commands.RegisterCommands<AuthModule>();
-#if DEBUG
-		commands.RegisterCommands<TestingModule>();
-#endif
+
+		if (this.DebugEnabled)
+			commands.RegisterCommands<TestingModule>();
+
 
 		commands.CommandErrored += async (sender, e) =>
 		{
@@ -154,7 +146,7 @@ public class Discordbot
 		msg = msg.Trim();
 		if (!msg.StartsWith(this.Config.Discord.Prefix))
 			return false;
-		
+
 		var cmd_name = msg.Remove(0, this.Config.Discord.Prefix.Length).Split(' ').First();
 		var command = cnext.FindCommand(cmd_name, out var args);
 
@@ -163,10 +155,10 @@ public class Discordbot
 
 		args = msg.Substring(this.Config.Discord.Prefix.Length + cmd_name.Length).Trim();
 		var ctx = cnext.CreateFakeContext(
-			this.Client.CurrentUser, 
-			this.LastChannel, 
-			msg, 
-			this.Config.Discord.Prefix, 
+			this.Client.CurrentUser,
+			this.LastChannel,
+			msg,
+			this.Config.Discord.Prefix,
 			command,
 			args
 		);
@@ -194,7 +186,7 @@ public class Discordbot
 		await Task.Delay(this.Config.Discord.StartDelay);
 		var activity = new DiscordActivity(this.Config.Discord.Status, ActivityType.ListeningTo);
 		await Client.ConnectAsync(activity, UserStatus.DoNotDisturb);
-		
+
 		ulong debug_channel = 928054033741152307;
 		try
 		{
@@ -211,14 +203,14 @@ public class Discordbot
 
 		Console.WriteLine($"Current guild set to: {this.LastGuild.Name}");
 		Console.WriteLine($"Current channel set to: {this.LastChannel.Name}");
-		
+
 		while (true)
 		{
 			string? message = Console.ReadLine()?.Trim();
-			
-			if (message is null) 
+
+			if (message is null)
 				continue;
-			
+
 			var success = await this.ConsoleCommandHandler(message);
 			if (!success && this.DebugEnabled)
 				await this.LastChannel.SendMessageAsync(message);
