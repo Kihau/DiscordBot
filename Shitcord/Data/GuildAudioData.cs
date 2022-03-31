@@ -293,6 +293,8 @@ public class GuildAudioData
         this._stopTimer?.Dispose();
         this._leaveTimer?.Dispose();
         this.TimeoutStarted = false;
+
+        this.ResumeAsync().GetAwaiter().GetResult();
     }
 
     public async Task SetVolumeAsync(int volume)

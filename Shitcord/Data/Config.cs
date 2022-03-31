@@ -98,7 +98,8 @@ public class SshConfig
     [JsonPropertyName("key")]
     public string Keyfile { get; set; } = "/path/to/a/keyfile";
 
-    [JsonPropertyName("enabled")] public bool IsEnabled { get; set; } = false;
+    [JsonPropertyName("enabled")] 
+    public bool IsEnabled { get; set; } = false;
 }
 
 [Serializable]
