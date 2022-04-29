@@ -152,6 +152,37 @@ public class AudioModule : BaseCommandModule
         await ctx.Channel.SendMessageAsync(embed.Build());
     }
 
+    [Command("queuefirst"), Aliases("qf")]
+    [Description("Enqueues a song (or playlist) on top of a current queue")]
+    public async Task QueueFirstCommand(CommandContext ctx,
+        [RemainingText, Description("Name of the song, song uri or playlist uri")]
+        string message)
+    {
+        IEnumerable<LavalinkTrack> tracks;
+        if (Uri.TryCreate(message, UriKind.Absolute, out var uri))
+            tracks = await this.Audio.GetTracksAsync(uri);
+        else tracks = await this.Audio.GetTracksAsync(message);
+
+        var lavalinkTracks = tracks.ToList();
+
+        var embed = new DiscordEmbedBuilder();
+        if (lavalinkTracks.Any())
+        {
+            var description = lavalinkTracks.Count == 1
+                ? $"[{lavalinkTracks.First().Title}]({lavalinkTracks.First().Uri})"
+                : $"Enqueued {lavalinkTracks.Count} songs";
+
+            embed.WithTitle(":thumbsup:  |  Enqueued: ")
+                .WithDescription(description)
+                .WithColor(DiscordColor.Purple);
+
+            this.Data.EnqueueFirst(lavalinkTracks);
+        }
+        else throw new CommandException("Failed to enqueue");
+
+        await ctx.Channel.SendMessageAsync(embed.Build());
+    }
+
     [Command("queuemany"), Aliases("qm")]
     [Description("Enqueues multiple songs")]
     public async Task QueueManyCommand(CommandContext ctx,
