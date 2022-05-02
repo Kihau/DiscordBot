@@ -72,7 +72,9 @@ public class Discordbot
 	private Task PrintMessage(DiscordClient client, MessageCreateEventArgs e)
 	{
 		if (this.DebugEnabled)
-			Console.WriteLine($"[{e.Guild.Name}] {e.Author.Username}@{e.Channel.Name}: {e.Message.Content}");
+			Console.WriteLine(
+				$"[{e.Guild.Name}] {e.Author.Username}@{e.Channel.Name}: {e.Message.Content}"
+			);
 
 		// if (e.Author.Id != 278778540554715137)
 		// 	return Task.CompletedTask;
