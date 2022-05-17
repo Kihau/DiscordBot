@@ -135,6 +135,7 @@ public class Discordbot
 			.AddSingleton<LavalinkService>()
 			.AddSingleton<SshService>()
 			.AddSingleton<TimeService>()
+			.AddSingleton<ReplyService>()
 			.AddSingleton(this);
 
 		var services = collection.BuildServiceProvider();

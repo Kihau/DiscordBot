@@ -16,11 +16,13 @@ public class UtilityModule : BaseCommandModule
 {
     public Discordbot Bot { get; }
     public TimeService Time { get; set; }
+    public ReplyService Reply { get; }
 
-    public UtilityModule(Discordbot bot, TimeService timerService)
+    public UtilityModule(Discordbot bot, TimeService timerService, ReplyService reply)
     {
         this.Bot = bot;
         this.Time = timerService;
+        this.Reply = reply;
     }
 
     public override async Task BeforeExecutionAsync(CommandContext ctx)
@@ -50,11 +52,36 @@ public class UtilityModule : BaseCommandModule
     [Description("Get http error response")]
     public async Task PingCommand(CommandContext ctx, int reponse) =>
         await ctx.RespondAsync($"https://http.cat/{reponse}");
-    
+
+    [Command("matchreplyadd")]
+    [Description("Adds auto respose for a certain string in a message")]
+    public async Task MatchReplyAddCommand(CommandContext ctx, string match, string response) 
+        => this.Reply.AddReplyData(ctx.Guild, new ReplyData(match.ToLower(), response)); 
+
+    [Command("matchreplyremove")]
+    [Description("Removes auto respose for a certain string in a message")]
+    public async Task MatchReplyRemoveCommand(CommandContext ctx, string match) 
+        => this.Reply.RemoveReplyData(ctx.Guild, match.ToLower());
+
     [Command("ping")]
     [Description("pong?")]
     public async Task HttpErrorCommand(CommandContext ctx) =>
         await ctx.RespondAsync($"Current bot ping is: `{ctx.Client.Ping}ms`");
+
+    [Command("info")]
+    [Description("Displays info about the bot")]
+    public async Task InfoCommand(CommandContext ctx) 
+    {
+        // TODO: Print info about the bot
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle($"Shitcord V0.6")
+            // Embed bot image url (small top right icon)
+            //.WithImageUrl(user.GetAvatarUrl(ImageFormat.Auto, size))
+            .WithTimestamp(DateTime.UtcNow)
+            .WithFooter("Created by: Kihau")
+            .WithColor(DiscordColor.Purple);
+        await ctx.RespondAsync(embed);
+    }
     
     
     [Command("uptime")]
