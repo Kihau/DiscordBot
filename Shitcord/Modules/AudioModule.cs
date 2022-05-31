@@ -88,7 +88,8 @@ public class AudioModule : BaseCommandModule
                     .WithTitle(":thumbsup:  |  Enqueued: ")
                     .WithDescription($"Enqueued {lavalinkTracks.Length} songs")
                     .WithColor(DiscordColor.Purple));
-            }
+            } 
+            else throw new CommandException("Could not find requested song");
 
             this.Data.EnqueueFirst(lavalinkTracks);
         }

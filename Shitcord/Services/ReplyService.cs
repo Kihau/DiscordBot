@@ -35,6 +35,8 @@ public class ReplyService
         this.Client.MessageCreated += ReplyMessageHandler;
     }
 
+    // TODO: Add interaction handler ???
+
     public async Task ReplyMessageHandler(DiscordClient client, MessageCreateEventArgs args) 
     {
         if (!this.ReplyDataSet.ContainsKey(args.Guild.Id))
@@ -63,9 +65,8 @@ public class ReplyService
 
     public void RemoveReplyData(DiscordGuild guild, string match) 
     {
-        if (!this.ReplyDataSet.ContainsKey(guild.Id)) {
-            return;
-        } 
+        if (!this.ReplyDataSet.ContainsKey(guild.Id)) 
+            throw new CommandException("Response list is empty");
 
         var dataset = this.ReplyDataSet[guild.Id];
         ReplyData? found = null;
@@ -77,8 +78,22 @@ public class ReplyService
             }
         }
 
-        if (found is null)
+        if (found == null)
             throw new CommandException("Response not found.");
         else dataset.Remove(found.Value);
     }
+
+    public void RemoveReplyDataAt(DiscordGuild guild, int index) 
+    {
+        if (!this.ReplyDataSet.ContainsKey(guild.Id)) 
+            throw new CommandException("Response list is empty");
+
+        var dataset = this.ReplyDataSet[guild.Id];
+        if (index > 0 && index < dataset.Count)
+            dataset.RemoveAt(index);
+        else throw new CommandException("Given index is incorrect");
+    }
+
+    public IReadOnlyList<ReplyData>? GetReplyData(DiscordGuild guild) 
+        => this.ReplyDataSet.GetValueOrDefault(guild.Id); 
 }

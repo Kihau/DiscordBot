@@ -16,27 +16,22 @@ public class UtilityModule : BaseCommandModule
 {
     public Discordbot Bot { get; }
     public TimeService Time { get; set; }
-    public ReplyService Reply { get; }
 
     public UtilityModule(Discordbot bot, TimeService timerService, ReplyService reply)
     {
         this.Bot = bot;
         this.Time = timerService;
-        this.Reply = reply;
     }
 
     public override async Task BeforeExecutionAsync(CommandContext ctx)
-    {
-        //this.Data = this.Time.GetOrAddData(ctx.Guild);
-        await base.BeforeExecutionAsync(ctx);
-    }
+        => await base.BeforeExecutionAsync(ctx);
 
     [Command("purge")]
     [Description("Removes messages in current (or specified) channel")]
     public async Task PurgeCommand(CommandContext ctx, uint count, DiscordChannel? channel = null)
     {
         var member = ctx.Member;
-        if ((member.Permissions & Permissions.ManageMessages) == 0)
+        if ((member?.Permissions & Permissions.ManageMessages) == 0)
             return;
 
         if (channel == null)
@@ -47,21 +42,51 @@ public class UtilityModule : BaseCommandModule
         await channel.DeleteMessagesAsync(messeges);
     }
 
+    // TODO: Add more description to this module
+    // TODO: Add matching options (agressive, whole string, etc.)
+    [Group("reply"), Description("Reply commands")]
+    public class ReplyModule : BaseCommandModule
+    {
+        public ReplyService Reply { get; }
+        public ReplyModule(ReplyService reply) => this.Reply = reply;
+
+        [Command("add")]
+        [Description("Adds auto respose for a certain string in a message")]
+        public async Task AddCommand(CommandContext ctx, string match, string response) 
+            => this.Reply.AddReplyData(ctx.Guild, new ReplyData(match.ToLower(), response)); 
+
+        [Command("remove")]
+        [Description("Removes auto respose for a certain string in a message")]
+        public async Task RemoveCommand(CommandContext ctx, string match) 
+            => this.Reply.RemoveReplyData(ctx.Guild, match.ToLower());
+
+
+        [Command("removeat")]
+        [Description("Removes auto respose for a certain reply index")]
+        public async Task RemoveAtCommand(CommandContext ctx, int index) 
+            => this.Reply.RemoveReplyDataAt(ctx.Guild, index);
+
+        [Command("list")]
+        [Description("List all matchreply queries")]
+        public async Task ListCommand(CommandContext ctx) 
+        {
+            var data = this.Reply.GetReplyData(ctx.Guild); 
+            
+            // TODO:
+            // Create embed out of this data (or something)
+            // Add interactions ???
+            var embed = new DiscordEmbedBuilder()
+                .WithTitle("Added reply strings:")
+                .WithColor(DiscordColor.Purple);
+        }
+    }
+
     // TODO: Check if request exist
     [Command("httpcat"), Aliases("http")]
     [Description("Get http error response")]
     public async Task PingCommand(CommandContext ctx, int reponse) =>
         await ctx.RespondAsync($"https://http.cat/{reponse}");
 
-    [Command("matchreplyadd")]
-    [Description("Adds auto respose for a certain string in a message")]
-    public async Task MatchReplyAddCommand(CommandContext ctx, string match, string response) 
-        => this.Reply.AddReplyData(ctx.Guild, new ReplyData(match.ToLower(), response)); 
-
-    [Command("matchreplyremove")]
-    [Description("Removes auto respose for a certain string in a message")]
-    public async Task MatchReplyRemoveCommand(CommandContext ctx, string match) 
-        => this.Reply.RemoveReplyData(ctx.Guild, match.ToLower());
 
     [Command("ping")]
     [Description("pong?")]
