@@ -81,7 +81,10 @@ public class AudioModule : BaseCommandModule
                 tracks = await this.Audio.GetTracksAsync(uri);
             else tracks = await this.Audio.GetTracksAsync(message);
 
-            var lavalinkTracks = tracks as LavalinkTrack[] ?? tracks.ToArray();
+            var lavalinkTracks = tracks.ToArray();
+            if (lavalinkTracks.Length == 0)
+                throw new CommandException("Could not find requested song");
+
             if (lavalinkTracks.Length > 1)
             {
                 msgBuilder.AddEmbed(new DiscordEmbedBuilder()
@@ -89,7 +92,6 @@ public class AudioModule : BaseCommandModule
                     .WithDescription($"Enqueued {lavalinkTracks.Length} songs")
                     .WithColor(DiscordColor.Purple));
             } 
-            else throw new CommandException("Could not find requested song");
 
             this.Data.EnqueueFirst(lavalinkTracks);
         }
