@@ -108,6 +108,7 @@ public class Discordbot
 			commands.RegisterCommands<AudioModule>();
 		commands.RegisterCommands<UtilityModule>();
 		commands.RegisterCommands<AuthModule>();
+		commands.RegisterCommands<FunModule>();
 
 		if (this.DebugEnabled)
 			commands.RegisterCommands<TestingModule>();

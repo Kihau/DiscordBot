@@ -107,6 +107,41 @@ public class UtilityModule : BaseCommandModule
             .WithColor(DiscordColor.Purple);
         await ctx.RespondAsync(embed);
     }
+
+    //[Command("nuke"), Description("Complitely nukes a channel")]
+    //public async Task NukeChannelAsync(CommandContext context,
+        //[Description("Channel name (ex. `#channel`)")] DiscordChannel req_channel = null)
+    //{
+        //var channel = req_channel ?? context.Channel;
+
+        //if (channel.Type == ChannelType.Text)
+        //{
+            //// Create comfirmation embed
+            //var confirm = new DiscordEmbedBuilder()
+                //.WithTitle($"__***DETONACJA KANAŁU:***__ `{channel.Name}`")
+                //.AddField($"Czy jesteś pewny, że chcesz nieodwracalnie wyczyścić ten kanał?",
+                    //":white_check_mark: - TAK, chcę wyczyścić ten kanał\n :x: - NIE, rozmyśliłem się")
+                //.WithColor(DiscordColor.Violet).Build();
+            //var message = await context.RespondAsync(embed: confirm);
+
+            //// Add yes and no reactions
+            //await message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
+            //await message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":x:"));
+
+            //var result = await message.WaitForReactionAsync(context.User, TimeSpan.FromSeconds(10));
+            //await message.DeleteAsync();
+            
+            //if (!result.TimedOut && result.Result.Emoji == DiscordEmoji.FromName(context.Client, ":white_check_mark:"))
+            //{
+                //await context.RespondAsync("__**TACTICAL NUKE INCOMING!**__\nhttps://tenor.com/view/explosion-mushroom-cloud-atomic-bomb-bomb-boom-gif-4464831");
+            
+                //await Task.Delay(1000);
+            
+                //await channel.CloneAsync();
+                //await channel.DeleteAsync();
+            //}
+        //}
+    //}
     
     
     [Command("uptime")]
