@@ -93,7 +93,9 @@ namespace Shitcord.Services;
                 }
                 
                 if (defer)
-                    await e.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+                    await e.Interaction.CreateResponseAsync(
+                        InteractionResponseType.DeferredMessageUpdate
+                    );
 
                 await data.UpdateSongMessage();
                 await data.UpdateQueueMessage();
@@ -101,6 +103,7 @@ namespace Shitcord.Services;
             return Task.CompletedTask;
         }
         
+        // TODO: Check if global events
         private Task BotVoiceTimeout(DiscordClient sender, VoiceStateUpdateEventArgs e)
         {
             this.AudioData.TryGetValue(e.Guild.Id, out var data);
@@ -112,7 +115,8 @@ namespace Shitcord.Services;
             
             if (data.Channel.Users.Count == 1) 
                 data.StartTimeout();
-            else if (data.TimeoutStarted) data.CancelTimeout();
+            else if (data.TimeoutStarted) 
+                data.CancelTimeout();
 
             return Task.CompletedTask;
         }

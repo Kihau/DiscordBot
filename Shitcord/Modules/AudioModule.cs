@@ -189,7 +189,8 @@ public class AudioModule : BaseCommandModule
     [Command("queuemany"), Aliases("qm")]
     [Description("Enqueues multiple songs")]
     public async Task QueueManyCommand(CommandContext ctx,
-        [RemainingText, Description("Multiple song names (ex. >>qm \"Doin Your Mom\" \"Burning memories\")")]
+        [RemainingText, Description(
+            "Multiple song names (ex. >>qm \"Doin Your Mom\" \"Burning memories\")")]
         params string[] message)
     {
         var tracks = new List<LavalinkTrack>();
@@ -302,7 +303,8 @@ public class AudioModule : BaseCommandModule
                 this.Data.Filters.Timescale = null;
                 break;
             default:
-                throw new CommandException("Incorrect usage, please specify if nightcore state (ex. >>nightcore on)");
+                throw new CommandException(
+                        "Incorrect usage, please specify if nightcore state (ex. >>nightcore on)");
         }
 
         await this.Data.SetAudioFiltersAsync();
@@ -310,7 +312,8 @@ public class AudioModule : BaseCommandModule
 
     [Command("skip"), Aliases("s")]
     [Description("Skips tracks")]
-    public async Task SkipCommand(CommandContext ctx, [Description("Number of tracks to skip")] int count = 1)
+    public async Task SkipCommand(CommandContext ctx, [Description("Number of tracks to skip")] 
+            int count = 1)
         => await this.Data.SkipAsync(count);
 
     [Command("remove"), Aliases("r")]
@@ -387,7 +390,8 @@ public class AudioModule : BaseCommandModule
 
     [Command("volume")]
     [Description("Sets volume level of a command")]
-    public async Task VolumeLavaCommand(CommandContext ctx, [Description("volume level (greater than 0)")] int level)
+    public async Task VolumeLavaCommand(CommandContext ctx, 
+            [Description("volume level (greater than 0)")] int level)
         => await this.Data.SetVolumeAsync(level);
 
     [Command("leave")]

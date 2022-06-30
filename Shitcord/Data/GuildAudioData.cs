@@ -1,9 +1,9 @@
-using System.Collections.Concurrent;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
 using DSharpPlus.Lavalink.Entities;
 using DSharpPlus.Lavalink.EventArgs;
+using System.Collections.Concurrent;
 
 namespace Shitcord.Data;
 
@@ -248,17 +248,29 @@ public class GuildAudioData
 
     public void StartTimeout()
     {
-        //this._timeoutTimer?.Dispose();
         this._stopTimer?.Dispose();
         this._leaveTimer?.Dispose();
         
         this._stopTimer = new Timer(
-            this.StopTimerCallback, null, new TimeSpan(0, 0, 10, 0), Timeout.InfiniteTimeSpan);
+            this.StopTimerCallback, null, 
+            new TimeSpan(0, 0, 10, 0), Timeout.InfiniteTimeSpan
+        );
         
         this._leaveTimer = new Timer(
-            this.LeaveTimerCallback, null, new TimeSpan(0, 1, 0, 0), Timeout.InfiniteTimeSpan);
+            this.LeaveTimerCallback, null, 
+            new TimeSpan(0, 0, 0, 5), Timeout.InfiniteTimeSpan
+        );
 
         this.TimeoutStarted = true;
+    }
+
+    public void CancelTimeout()
+    {
+        this._stopTimer?.Dispose();
+        this._leaveTimer?.Dispose();
+        this.TimeoutStarted = false;
+
+        this.ResumeAsync().GetAwaiter().GetResult();
     }
 
     private async void StopTimerCallback(object? sender)
@@ -285,16 +297,6 @@ public class GuildAudioData
 
         if (this._leaveTimer != null) 
             await this._leaveTimer.DisposeAsync();
-    }
-
-    public void CancelTimeout()
-    {
-        //this._timeoutTimer?.Dispose();
-        this._stopTimer?.Dispose();
-        this._leaveTimer?.Dispose();
-        this.TimeoutStarted = false;
-
-        this.ResumeAsync().GetAwaiter().GetResult();
     }
 
     public async Task SetVolumeAsync(int volume)
@@ -379,34 +381,6 @@ public class GuildAudioData
             this.Queue.Enqueue(item);
     }
     
-    // public async Task SetTimescaleAsync(Karaoke karaoke)
-    // {
-    //     this.Filters.Karaoke = karaoke;
-    //
-    //     if (this.Player is not {IsConnected: true})
-    //         return;
-    //
-    //     await this.Player.SetAudiofiltersAsync(this.Filters);
-    // }
-    
-    // public async Task ApplyFiltersAsync()
-    // {
-    //     if (this.Player is not {IsConnected: true})
-    //         return;
-    //
-    //     await this.Player.SetAudiofiltersAsync(this.Filters);
-    // }
-    
-    // public async Task SetTimescaleAsync(TimeScale timescale)
-    // {
-    //     this.Filters.Timescale = timescale;
-    //
-    //     if (this.Player is not {IsConnected: true})
-    //         return;
-    //
-    //     await this.Player.SetAudiofiltersAsync(this.Filters);
-    // }
-    
     public async Task SetAudioFiltersAsync(AudioFilters? filters = null)
     {
         if (filters != null)
@@ -421,16 +395,6 @@ public class GuildAudioData
         await this.Player.SetAudiofiltersAsync(this.Filters);
     }
     
-    // public async Task ResetFiltersAsync()
-    // {
-    //     this.Filters = new AudioFilters();
-    //
-    //     if (this.Player is not {IsConnected: true})
-    //         return;
-    //     
-    //     await this.Player.SetAudiofiltersAsync(this.Filters);
-    // }
-
     public LavalinkTrack? Dequeue() =>
         this.Queue.TryDequeue(out var track) ? track : null;
 

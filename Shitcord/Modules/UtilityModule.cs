@@ -4,6 +4,7 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity.Extensions;
 using Shitcord.Services;
 
 namespace Shitcord.Modules;
@@ -84,13 +85,13 @@ public class UtilityModule : BaseCommandModule
     // TODO: Check if request exist
     [Command("httpcat"), Aliases("http")]
     [Description("Get http error response")]
-    public async Task PingCommand(CommandContext ctx, int reponse) =>
+    public async Task HttpErrorCommand(CommandContext ctx, int reponse) =>
         await ctx.RespondAsync($"https://http.cat/{reponse}");
 
 
     [Command("ping")]
     [Description("pong?")]
-    public async Task HttpErrorCommand(CommandContext ctx) =>
+    public async Task PingCommand(CommandContext ctx) =>
         await ctx.RespondAsync($"Current bot ping is: `{ctx.Client.Ping}ms`");
 
     [Command("info")]
@@ -108,40 +109,51 @@ public class UtilityModule : BaseCommandModule
         await ctx.RespondAsync(embed);
     }
 
-    //[Command("nuke"), Description("Complitely nukes a channel")]
-    //public async Task NukeChannelAsync(CommandContext context,
-        //[Description("Channel name (ex. `#channel`)")] DiscordChannel req_channel = null)
-    //{
-        //var channel = req_channel ?? context.Channel;
+    [Command("nuke"), Description("Complitely nukes a channel")]
+    async Task NukeChannelAsync(CommandContext ctx,
+        [Description("Channel name (ex. `#channel`)")] DiscordChannel? req_channel = null)
+    {
+        var member = ctx.Member;
+        if ((member?.Permissions & Permissions.ManageChannels) == 0)
+            return;
 
-        //if (channel.Type == ChannelType.Text)
-        //{
-            //// Create comfirmation embed
-            //var confirm = new DiscordEmbedBuilder()
-                //.WithTitle($"__***DETONACJA KANAŁU:***__ `{channel.Name}`")
-                //.AddField($"Czy jesteś pewny, że chcesz nieodwracalnie wyczyścić ten kanał?",
-                    //":white_check_mark: - TAK, chcę wyczyścić ten kanał\n :x: - NIE, rozmyśliłem się")
-                //.WithColor(DiscordColor.Violet).Build();
-            //var message = await context.RespondAsync(embed: confirm);
+        var channel = req_channel ?? ctx.Channel;
 
-            //// Add yes and no reactions
-            //await message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":white_check_mark:"));
-            //await message.CreateReactionAsync(DiscordEmoji.FromName(context.Client, ":x:"));
+        if (channel.Type == ChannelType.Text)
+        {
+            // Create comfirmation embed
+            var confirm = new DiscordEmbedBuilder()
+                .WithTitle($"__***CHANNEL DETONATION:***__ `{channel.Name}`")
+                .AddField($"Are you sure you want to irreversibly clear this channel?",
+                    ":white_check_mark: - YES, I want to nuke this channel\n" +
+                     ":x: - NO, I changed my mind")
+                .WithColor(DiscordColor.Violet).Build();
+            var message = await ctx.RespondAsync(embed: confirm);
 
-            //var result = await message.WaitForReactionAsync(context.User, TimeSpan.FromSeconds(10));
-            //await message.DeleteAsync();
-            
-            //if (!result.TimedOut && result.Result.Emoji == DiscordEmoji.FromName(context.Client, ":white_check_mark:"))
-            //{
-                //await context.RespondAsync("__**TACTICAL NUKE INCOMING!**__\nhttps://tenor.com/view/explosion-mushroom-cloud-atomic-bomb-bomb-boom-gif-4464831");
-            
-                //await Task.Delay(1000);
-            
-                //await channel.CloneAsync();
-                //await channel.DeleteAsync();
-            //}
-        //}
-    //}
+            // Add yes and no reactions
+            await message.CreateReactionAsync(
+                    DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"));
+
+            await message.CreateReactionAsync(
+                    DiscordEmoji.FromName(ctx.Client, ":x:"));
+
+            var result = await message
+                .WaitForReactionAsync(ctx.User, TimeSpan.FromSeconds(10));
+            await message.DeleteAsync();
+
+            if (!result.TimedOut && result.Result.Emoji
+                    == DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"))
+            {
+                await ctx.RespondAsync("__**TACTICAL NUKE INCOMING!**__\nhttps://tenor.com" +
+                        "/view/explosion-mushroom-cloud-atomic-bomb-bomb-boom-gif-4464831");
+
+                await Task.Delay(1000);
+
+                await channel.CloneAsync();
+                await channel.DeleteAsync();
+            }
+        }
+    }
     
     
     [Command("uptime")]

@@ -3,8 +3,11 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Loader;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.Interactivity;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Interactivity.Enums;
+using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Lavalink;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -67,6 +70,12 @@ public class Discordbot
 
 		if (this.Config.Lava.IsEnabled)
 			Client.UseLavalink();
+
+        Client.UseInteractivity(new InteractivityConfiguration 
+        { 
+            PollBehaviour = PollBehaviour.KeepEmojis,
+            Timeout = TimeSpan.FromSeconds(30)
+        });
 	}
 
 	private Task PrintMessage(DiscordClient client, MessageCreateEventArgs e)
