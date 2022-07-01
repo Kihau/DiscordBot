@@ -1,8 +1,4 @@
-﻿using System.Reflection;
-using System.Threading.Channels;
-using System.Xml;
-using Shitcord;
-using Shitcord.Data;
+﻿using Shitcord;
 
 // TODO: Create one discord message (a terminal) and print actual terminal output (add interaction button)
 // TODO: In config file store default prefix - guild prefixes store in database

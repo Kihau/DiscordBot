@@ -3,7 +3,7 @@ using Microsoft.Data.Sqlite;
 namespace Shitcord.Data;
 
 public class DatabaseData{
-    private const string DATABASE_NAME = "ServerDatabase.sqlite";
+    private const string DATABASE_NAME = "Resources/BotDatabase.sqlite";
     private SqliteConnection connection;
     public DatabaseData(){
       //create database if it doesn't exist
