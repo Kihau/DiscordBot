@@ -7,7 +7,6 @@ using DSharpPlus.Lavalink.Entities;
 using Shitcord.Data;
 using Shitcord.Extensions;
 using Shitcord.Services;
-
 namespace Shitcord.Modules;
 
 //[Group("audio")]
