@@ -164,27 +164,33 @@ public class UtilityModule : BaseCommandModule
         var d = uptime.Days > 0 ? uptime.Days + "d " : "";
         var h = uptime.Hours > 0 ? uptime.Hours + "h " : "";
         var m = uptime.Minutes > 0 ? uptime.Minutes + "m " : "";
+        var bot_uptime = $"Bot uptime: `{d}{h}{m}{uptime.Seconds}s`\n";
 
-        var sys = new Process();
-        sys.StartInfo.FileName = "uptime";
-        sys.StartInfo.Arguments = "-s yyyy-mm-dd HH:MM:SS";
-        sys.StartInfo.CreateNoWindow = true;
-        sys.StartInfo.UseShellExecute = false;
-        sys.StartInfo.RedirectStandardOutput = true;
-        sys.Start();
-        await sys.WaitForExitAsync();
-        
-        var sys_uptime = DateTime.Now - DateTime.ParseExact(
-            (await sys.StandardOutput.ReadLineAsync())!,
-            "yyyy-MM-dd HH:mm:ss",
-            CultureInfo.InvariantCulture);
-        
-        var sd = sys_uptime.Days > 0 ? sys_uptime.Days + "d " : "";
-        var sh = sys_uptime.Hours > 0 ? sys_uptime.Hours + "h " : "";
-        var sm = sys_uptime.Minutes > 0 ? sys_uptime.Minutes + "m " : "";
+        string system_uptime = "";
+        if (System.OperatingSystem.IsLinux()) {
+            var sys = new Process();
+            sys.StartInfo.FileName = "uptime";
+            sys.StartInfo.Arguments = "-s yyyy-mm-dd HH:MM:SS";
+            sys.StartInfo.CreateNoWindow = true;
+            sys.StartInfo.UseShellExecute = false;
+            sys.StartInfo.RedirectStandardOutput = true;
+            sys.Start();
+            await sys.WaitForExitAsync();
+            
+            var sys_uptime = DateTime.Now - DateTime.ParseExact(
+                (await sys.StandardOutput.ReadLineAsync())!,
+                "yyyy-MM-dd HH:mm:ss",
+                CultureInfo.InvariantCulture);
+            
+            var sd = sys_uptime.Days > 0 ? sys_uptime.Days + "d " : "";
+            var sh = sys_uptime.Hours > 0 ? sys_uptime.Hours + "h " : "";
+            var sm = sys_uptime.Minutes > 0 ? sys_uptime.Minutes + "m " : "";
 
-        await ctx.RespondAsync($"Bot uptime: `{d}{h}{m}{uptime.Seconds}s`\n" +
-                               $"System uptime: `{sd}{sh}{sm}{sys_uptime.Seconds}s`\n");
+            system_uptime = $"System uptime: `{sd}{sh}{sm}{sys_uptime.Seconds}s`\n";
+        } 
+
+        await ctx.RespondAsync(bot_uptime + system_uptime);
+                               
     }
 
     [Command("avatar"), Description("Displays user avatar")]
