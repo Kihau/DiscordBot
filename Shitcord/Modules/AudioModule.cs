@@ -175,7 +175,7 @@ public class AudioModule : BaseCommandModule
                 ? $"[{lavalinkTracks.First().Title}]({lavalinkTracks.First().Uri})"
                 : $"Enqueued {lavalinkTracks.Count} songs";
 
-            embed.WithTitle(":thumbsup:  |  Enqueued: ")
+            embed.WithTitle(":thumbsup:  |  Enqueued first: ")
                 .WithDescription(description)
                 .WithColor(DiscordColor.Purple);
 
