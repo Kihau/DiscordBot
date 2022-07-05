@@ -4,12 +4,18 @@ using DSharpPlus.Lavalink;
 using DSharpPlus.Lavalink.Entities;
 using DSharpPlus.Lavalink.EventArgs;
 using System.Collections.Concurrent;
+using Shitcord.Services;
 
 namespace Shitcord.Data;
 
+/// This data is stored inside a hashmap (in AudioService) and mapped to each guild
 public class GuildAudioData
 {
+    // I really don't need to store those two referances but whatever
+    // It's not that this bot is going to be in hundreds of thousands of guilds
     private LavalinkNodeConnection Lavalink { get; }
+    private DatabaseService DatabaseContext { get; }
+
     private ConcurrentQueue<LavalinkTrack> Queue { get; }
     public LavalinkTrack? CurrentTrack { get; private set; }
     private DiscordGuild Guild { get; }
@@ -42,23 +48,18 @@ public class GuildAudioData
     // Change it later (maybe not?)
     public int page = 0;
 
-    public GuildAudioData(DiscordGuild guild, LavalinkNodeConnection lavalink, DiscordClient client)
+    public GuildAudioData(DiscordGuild guild, LavalinkNodeConnection lavalink,
+        DiscordClient client, DatabaseService database)
     {
         this.Guild = guild;
         this.Lavalink = lavalink;
-        this.Queue = new ConcurrentQueue<LavalinkTrack>();
-        this.Filters = new AudioFilters();
-    }
+        this.DatabaseContext = database;
 
-    /*
-    public GuildAudioData(DiscordGuild guild, LavalinkNodeConnection lavalink, DiscordClient client)
-    {
-        this.Guild = guild;
-        this.Lavalink = lavalink;
+        // Try to load UpdateMessages here
+
         this.Queue = new ConcurrentQueue<LavalinkTrack>();
         this.Filters = new AudioFilters();
     }
-    */
 
     public async Task CreateConnectionAsync(DiscordChannel vchannel)
     {
@@ -73,6 +74,14 @@ public class GuildAudioData
         await this.Player.SetVolumeAsync(this.Volume);
         await this.Player.SetAudiofiltersAsync(this.Filters);
         this.Player.PlaybackFinished += PlaybackFinished;
+    }
+
+    public void LoadUpdatesFromDatabase() 
+    {
+    }
+
+    public void SaveUpdatesToDatabase() 
+    {
     }
 
     public async Task SetSongUpdate(DiscordChannel channel)

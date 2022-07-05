@@ -17,14 +17,16 @@ namespace Shitcord.Services;
         private LavalinkService Lavalink { get; }
         private Dictionary<ulong, GuildAudioData> AudioData { get; }
         private DiscordClient Client { get; }
+        private DatabaseService DatabaseContext { get; }
         private Random Rng { get; }
         
-        public AudioService(Discordbot bot, LavalinkService lavalink)
+        public AudioService(Discordbot bot, LavalinkService lavalink, DatabaseService ctx)
         {
             this.Lavalink = lavalink;
             this.AudioData = new Dictionary<ulong, GuildAudioData>();
             this.Client = bot.Client;
             this.Rng = new Random();
+            this.DatabaseContext = ctx;
             
             this.Client.VoiceStateUpdated += BotVoiceTimeout;
             this.Client.ComponentInteractionCreated += AudioUpdateButtons;
@@ -126,7 +128,7 @@ namespace Shitcord.Services;
             if (this.AudioData.TryGetValue(guild.Id, out var data))
                 return data;
 
-            data = new GuildAudioData(guild, this.Lavalink.Node, this.Client);
+            data = new GuildAudioData(guild, this.Lavalink.Node, this.Client, this.DatabaseContext);
             this.AudioData.Add(guild.Id, data);
             return data;
         }

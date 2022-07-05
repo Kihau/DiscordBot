@@ -141,12 +141,12 @@ public class Discordbot
 	private IServiceProvider CreateServices()
 	{
 		var collection = new ServiceCollection()
+            .AddSingleton<DatabaseService>()
 			.AddSingleton<AudioService>()
 			.AddSingleton<LavalinkService>()
 			.AddSingleton<SshService>()
 			.AddSingleton<TimeService>()
 			.AddSingleton<ReplyService>()
-            .AddSingleton<DatabaseService>()
 			.AddSingleton(this);
 
 		var services = collection.BuildServiceProvider();
