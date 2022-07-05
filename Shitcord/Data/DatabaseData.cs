@@ -7,6 +7,10 @@ public class DatabaseData
 {
     private const string DATABASE_NAME = "Resources/BotDatabase.sqlite";
     private readonly SqliteConnection connection;
+    private const int COLUMNS = 5;
+    private const int ID_LENGTH = 18;
+    private readonly short[] columnLengths = {8,13,13,9,9};
+
     public DatabaseData()
     {
         //create database if it doesn't exist
@@ -25,8 +29,10 @@ public class DatabaseData
     {
         string createStatement = @"CREATE TABLE IF NOT EXISTS Songs(
                                guild_id bigint PRIMARY KEY,
-                               qu       bigint,
-                               su       bigint
+                               qu_channel_id   bigint,
+                               su_channel_id   bigint,
+                               qu_msg_id       bigint,
+                               su_msg_id       bigint
                                );";
         var createCommand = new SqliteCommand(createStatement, connection);
         connection.Open();
@@ -34,14 +40,14 @@ public class DatabaseData
         connection.Close();
     }
 
-    public bool InsertRow(long guild_id, long qu, long su)
+    public bool InsertRow(long guild_id, long qu_channel, long su_channel, long qu_msg, long su_msg)
     {
         if (IsGuildInTable(guild_id))
         {
             return false;
         }
         string statement = $@"INSERT INTO Songs VALUES
-                        ({guild_id}, {qu}, {su});";
+                        ({guild_id}, {qu_channel}, {su_channel}, {qu_msg}, {su_msg});";
         var insertCommand = new SqliteCommand(statement, connection);
         connection.Open();
         int rowsInserted = insertCommand.ExecuteNonQuery();
@@ -57,18 +63,20 @@ public class DatabaseData
         var command = new SqliteCommand(statement, connection);
         connection.Open();
         var reader = command.ExecuteReader();
-        builder.Append("guild_id").Append(' ');
-        builder.Append("qu").Append(' ');
-        builder.Append("su").Append('\n');
-
+        builder.Append(Spaces(ID_LENGTH - columnLengths[0])).Append("guild_id").Append(' ');
+        builder.Append(Spaces(ID_LENGTH - columnLengths[1])).Append("qu_channel_id").Append(' ');
+        builder.Append(Spaces(ID_LENGTH - columnLengths[2])).Append("su_channel_id").Append(' ');
+        builder.Append(Spaces(ID_LENGTH - columnLengths[3])).Append("qu_msg_id").Append(' ');
+        builder.Append(Spaces(ID_LENGTH - columnLengths[4])).Append("su_msg_id").Append('\n');
+        
         while (reader.Read())
         {
-            string str1 = reader.GetString(0);
-            string str2 = reader.GetString(1);
-            string str3 = reader.GetString(2);
-            builder.Append(str1).Append(' ');
-            builder.Append(str2).Append(' ');
-            builder.Append(str3).Append('\n');
+            for (int i = 0; i < COLUMNS; i++)
+            {
+                string column = reader.GetString(i);
+                builder.Append(column).Append(' ');
+            }
+            builder.Append('\n');
         }
 
         connection.Close();
@@ -85,11 +93,14 @@ public class DatabaseData
         return rows;
     }
 
-    public bool UpdateQU(long guild_id, long qu)
-        => UpdateValue(guild_id, "qu", qu);
-
-    public bool UpdateSU(long guild_id, long su)
-        => UpdateValue(guild_id, "su", su);
+    public bool UpdateQUChannel(long guild_id, long qu_channel)
+        => UpdateValue(guild_id, "qu_channel_id", qu_channel);
+    public bool UpdateSUChannel(long guild_id, long su_channel)
+        => UpdateValue(guild_id, "su_channel_id", su_channel);
+    public bool UpdateQUMessage(long guild_id, long qu_msg)
+        => UpdateValue(guild_id, "qu_msg_id", qu_msg);
+    public bool UpdateSUMessage(long guild_id, long su_msg)
+        => UpdateValue(guild_id, "su_msg_id", su_msg);
 
     private bool UpdateValue(long guild_id, string valueName, long value)
     {
@@ -109,7 +120,7 @@ public class DatabaseData
         delCommand.ExecuteNonQuery();
         connection.Close();
     }
-    
+
     public bool DeleteRow(long guild_id)
     {
         string delStatement = "DELETE FROM Songs WHERE guild_id = " + guild_id;
@@ -120,11 +131,16 @@ public class DatabaseData
         return rowsAffected > 0;
     }
 
-    public long ReadSU(long guild_id)
-        => ReadValue(guild_id, "su");
+    public long ReadQUChannel(long guild_id)
+        => ReadValue(guild_id, "qu_channel_id");
+    public long ReadSUChannel(long guild_id)
+        => ReadValue(guild_id, "su_channel_id");
+    public long ReadQUMessage(long guild_id)
+        => ReadValue(guild_id, "qu_msg_id");
+    public long ReadSUMessage(long guild_id)
+        => ReadValue(guild_id, "su_msg_id");
 
-    public long ReadQU(long guild_id)
-        => ReadValue(guild_id, "qu");
+    
 
     //-1 is returned if value wasn't found
     private long ReadValue(long guild_id, string valueName)
@@ -143,5 +159,15 @@ public class DatabaseData
         long val2 = reader.GetInt64(0);
         connection.Close();
         return val2;
+    }
+
+    private StringBuilder Spaces(int len)
+    {
+        StringBuilder spaces = new StringBuilder(len, len);
+        for (int i = 0; i < len; i++)
+        {
+            spaces.Append(' ');
+        }
+        return spaces;
     }
 }
