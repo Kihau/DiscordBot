@@ -61,16 +61,6 @@ public class GuildAudioData
         this.Filters = new AudioFilters();
     }
 
-    /*
-    public GuildAudioData(DiscordGuild guild, LavalinkNodeConnection lavalink, DiscordClient client)
-    {
-        this.Guild = guild;
-        this.Lavalink = lavalink;
-        this.Queue = new ConcurrentQueue<LavalinkTrack>();
-        this.Filters = new AudioFilters();
-    }
-    */
-
     public async Task CreateConnectionAsync(DiscordChannel vchannel)
     {
         if (this.Player is {IsConnected: true})
@@ -88,6 +78,8 @@ public class GuildAudioData
 
     public void LoadUpdatesFromDatabase() 
     {
+        var qu_channel = DatabaseContext.ReadQUChannel((long)Guild.Id);
+        var su_channel = DatabaseContext.ReadSUChannel((long)Guild.Id);
     }
 
     public void SaveUpdatesToDatabase() 
