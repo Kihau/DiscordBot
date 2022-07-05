@@ -146,6 +146,7 @@ public class Discordbot
 			.AddSingleton<SshService>()
 			.AddSingleton<TimeService>()
 			.AddSingleton<ReplyService>()
+            .AddSingleton<DatabaseService>()
 			.AddSingleton(this);
 
 		var services = collection.BuildServiceProvider();

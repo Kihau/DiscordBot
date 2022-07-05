@@ -39,8 +39,6 @@ public class GuildAudioData
     public DiscordMessage? SongUpdateMessage { get; set; }
     public DiscordChannel? SongUpdateChannel { get; set; }
 
-    private const int[] nums = { 11 };
-
     // Change it later (maybe not?)
     public int page = 0;
 
@@ -51,6 +49,16 @@ public class GuildAudioData
         this.Queue = new ConcurrentQueue<LavalinkTrack>();
         this.Filters = new AudioFilters();
     }
+
+    /*
+    public GuildAudioData(DiscordGuild guild, LavalinkNodeConnection lavalink, DiscordClient client)
+    {
+        this.Guild = guild;
+        this.Lavalink = lavalink;
+        this.Queue = new ConcurrentQueue<LavalinkTrack>();
+        this.Filters = new AudioFilters();
+    }
+    */
 
     public async Task CreateConnectionAsync(DiscordChannel vchannel)
     {
