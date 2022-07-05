@@ -11,12 +11,13 @@ using Shitcord.Extensions;
 
 namespace Shitcord.Services;
 
-public struct ReplyData 
+public struct ReplyData
 {
     public string match;
     public string response;
 
-    public ReplyData(string m, string r) {
+    public ReplyData(string m, string r)
+    {
         match = m;
         response = r;
     }
@@ -37,42 +38,47 @@ public class ReplyService
 
     // TODO: Add interaction handler ???
 
-    public async Task ReplyMessageHandler(DiscordClient client, MessageCreateEventArgs args) 
+    public async Task ReplyMessageHandler(DiscordClient client, MessageCreateEventArgs args)
     {
         if (!this.ReplyDataSet.ContainsKey(args.Guild.Id))
             return;
-        
+
         var dataset = this.ReplyDataSet[args.Guild.Id];
-        foreach (var data in dataset) {
+        foreach (var data in dataset)
+        {
             var msg = args.Message.Content.ToLower();
-            if (msg.Contains(data.match, StringComparison.OrdinalIgnoreCase)) {
+            if (msg.Contains(data.match, StringComparison.OrdinalIgnoreCase))
+            {
                 await args.Message.RespondAsync(data.response);
                 return;
             }
         }
     }
 
-    public void AddReplyData(DiscordGuild guild, ReplyData data) 
+    public void AddReplyData(DiscordGuild guild, ReplyData data)
     {
-        if (!this.ReplyDataSet.ContainsKey(guild.Id)) {
+        if (!this.ReplyDataSet.ContainsKey(guild.Id))
+        {
             this.ReplyDataSet.Add(guild.Id, new List<ReplyData>());
-        } 
+        }
 
         var item = this.ReplyDataSet[guild.Id];
         if (!item.Contains(data))
             item.Add(data);
     }
 
-    public void RemoveReplyData(DiscordGuild guild, string match) 
+    public void RemoveReplyData(DiscordGuild guild, string match)
     {
-        if (!this.ReplyDataSet.ContainsKey(guild.Id)) 
+        if (!this.ReplyDataSet.ContainsKey(guild.Id))
             throw new CommandException("Response list is empty");
 
         var dataset = this.ReplyDataSet[guild.Id];
         ReplyData? found = null;
 
-        foreach (var data in dataset) {
-            if (data.match == match) {
+        foreach (var data in dataset)
+        {
+            if (data.match == match)
+            {
                 found = data;
                 break;
             }
@@ -83,9 +89,9 @@ public class ReplyService
         else dataset.Remove(found.Value);
     }
 
-    public void RemoveReplyDataAt(DiscordGuild guild, int index) 
+    public void RemoveReplyDataAt(DiscordGuild guild, int index)
     {
-        if (!this.ReplyDataSet.ContainsKey(guild.Id)) 
+        if (!this.ReplyDataSet.ContainsKey(guild.Id))
             throw new CommandException("Response list is empty");
 
         var dataset = this.ReplyDataSet[guild.Id];
@@ -94,6 +100,6 @@ public class ReplyService
         else throw new CommandException("Given index is incorrect");
     }
 
-    public IReadOnlyList<ReplyData>? GetReplyData(DiscordGuild guild) 
-        => this.ReplyDataSet.GetValueOrDefault(guild.Id); 
+    public IReadOnlyList<ReplyData>? GetReplyData(DiscordGuild guild)
+        => this.ReplyDataSet.GetValueOrDefault(guild.Id);
 }

@@ -34,9 +34,12 @@ public class GuildAudioData
     private Timer? _leaveTimer;
 
     // TODO: Update message only when content has changed (ratelimits)
-    public DiscordChannel? UpdatesChannel { get; set; }
-    public DiscordMessage? SongUpdates { get; set; }
-    public DiscordMessage? QueueUpdates { get; set; }
+    public DiscordMessage? QueueUpdateMessage { get; set; }
+    public DiscordChannel? QueueUpdateChannel { get; set; }
+    public DiscordMessage? SongUpdateMessage { get; set; }
+    public DiscordChannel? SongUpdateChannel { get; set; }
+
+    private const int[] nums = { 11 };
 
     // Change it later (maybe not?)
     public int page = 0;
@@ -66,30 +69,30 @@ public class GuildAudioData
 
     public async Task SetSongUpdate(DiscordChannel channel)
     {
-        this.UpdatesChannel = channel;
+        this.SongUpdateChannel = channel;
 
         try
         {
-            if (this.SongUpdates != null)
-                await this.SongUpdates.DeleteAsync();
+            if (this.SongUpdateMessage != null)
+                await this.SongUpdateMessage.DeleteAsync();
         } catch { /* ignored */ }
 
         var mess = GenerateSongMessage();
-        this.SongUpdates = await this.UpdatesChannel.SendMessageAsync(mess);
+        this.SongUpdateMessage = await this.SongUpdateChannel.SendMessageAsync(mess);
     }
 
     public async Task SetQueueUpdate(DiscordChannel channel)
     {
-        this.UpdatesChannel = channel;
+        this.QueueUpdateChannel = channel;
 
         try
         {
-            if (this.QueueUpdates != null)
-                await this.QueueUpdates.DeleteAsync();
+            if (this.QueueUpdateMessage != null)
+                await this.QueueUpdateMessage.DeleteAsync();
         } catch { /* ignored */ }
 
         var mess = GenerateQueueMessage();
-        this.QueueUpdates = await this.UpdatesChannel.SendMessageAsync(mess);
+        this.QueueUpdateMessage = await this.QueueUpdateChannel.SendMessageAsync(mess);
     }
 
     public DiscordMessageBuilder GenerateQueueMessage()
@@ -151,18 +154,18 @@ public class GuildAudioData
 
     public Task UpdateQueueMessage()
     {
-        if (this.QueueUpdates == null || this.UpdatesChannel == null)
+        if (this.QueueUpdateMessage == null || this.QueueUpdateChannel == null)
             return Task.CompletedTask;
 
         Task.Run(async () =>
         {
             var message = this.GenerateQueueMessage();
-            if (DateTime.Now - this.QueueUpdates.Timestamp < TimeSpan.FromHours(1))
-                await this.QueueUpdates.ModifyAsync(message);
+            if (DateTime.Now - this.QueueUpdateMessage.Timestamp < TimeSpan.FromHours(1))
+                await this.QueueUpdateMessage.ModifyAsync(message);
             else
             {
-                await this.QueueUpdates.DeleteAsync();
-                this.QueueUpdates = await this.UpdatesChannel.SendMessageAsync(message);
+                await this.QueueUpdateMessage.DeleteAsync();
+                this.QueueUpdateMessage = await this.QueueUpdateChannel.SendMessageAsync(message);
             }
         });
 
@@ -228,18 +231,18 @@ public class GuildAudioData
 
     public Task UpdateSongMessage()
     {
-        if (this.SongUpdates == null || this.UpdatesChannel == null)
+        if (this.SongUpdateMessage == null || this.SongUpdateChannel == null)
             return Task.CompletedTask;
 
         Task.Run(async () =>
         {
             var message = this.GenerateSongMessage();
-            if (DateTime.Now - this.SongUpdates.Timestamp < TimeSpan.FromHours(1))
-                await this.SongUpdates.ModifyAsync(message);
+            if (DateTime.Now - this.SongUpdateMessage.Timestamp < TimeSpan.FromHours(1))
+                await this.SongUpdateMessage.ModifyAsync(message);
             else
             {
-                await this.SongUpdates.DeleteAsync();
-                this.SongUpdates = await this.UpdatesChannel.SendMessageAsync(message);
+                await this.SongUpdateMessage.DeleteAsync();
+                this.SongUpdateMessage = await this.SongUpdateChannel.SendMessageAsync(message);
             }
         });
 
