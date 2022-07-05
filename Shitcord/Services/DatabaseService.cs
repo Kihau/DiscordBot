@@ -30,13 +30,12 @@ public class DatabaseService
 
     private void CreateTableIfNotExists()
     {
-        string createStatement = 
-            @"CREATE TABLE IF NOT EXISTS Songs(
-                guild_id bigint PRIMARY KEY,
-                qu_channel_id   bigint,
-                su_channel_id   bigint,
-                qu_msg_id       bigint,
-                su_msg_id       bigint
+        const string createStatement = @"CREATE TABLE IF NOT EXISTS Songs(
+                guild_id       bigint  not null  PRIMARY KEY,
+                qu_channel_id  bigint  not null,
+                su_channel_id  bigint  not null,
+                qu_msg_id      bigint  not null,
+                su_msg_id      bigint  not null
             );";
 
         var createCommand = new SqliteCommand(createStatement, connection);
@@ -67,7 +66,7 @@ public class DatabaseService
     public override String ToString()
     {
         StringBuilder builder = new StringBuilder(64);
-        string statement = "SELECT * FROM Songs";
+        const string statement = "SELECT * FROM Songs";
         var command = new SqliteCommand(statement, connection);
         var reader = command.ExecuteReader();
         builder.Append(Spaces(ID_LENGTH - columnLengths[0])).Append("guild_id").Append(' ');
@@ -120,7 +119,7 @@ public class DatabaseService
 
     public void DeleteAllRows()
     {
-        string delStatement = "DELETE FROM Songs";
+        const string delStatement = "DELETE FROM Songs";
         var delCommand = new SqliteCommand(delStatement, connection);
         delCommand.ExecuteNonQuery();
     }
