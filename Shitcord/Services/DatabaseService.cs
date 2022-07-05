@@ -31,11 +31,11 @@ public class DatabaseService
     private void CreateTableIfNotExists()
     {
         const string createStatement = @"CREATE TABLE IF NOT EXISTS Songs(
-                guild_id        bigint      not null PRIMARY KEY,
-                qu_channel_id   bigint      not null,
-                su_channel_id   bigint      not null,
-                qu_msg_id       bigint      not null,
-                su_msg_id       bigint      not null
+                guild_id       bigint  not null  PRIMARY KEY,
+                qu_channel_id  bigint  not null,
+                su_channel_id  bigint  not null,
+                qu_msg_id      bigint  not null,
+                su_msg_id      bigint  not null
             );";
 
         var createCommand = new SqliteCommand(createStatement, connection);
