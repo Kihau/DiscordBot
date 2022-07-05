@@ -78,12 +78,21 @@ public class GuildAudioData
 
     public void LoadUpdatesFromDatabase() 
     {
-        var qu_channel = DatabaseContext.ReadQUChannel((long)Guild.Id);
-        var su_channel = DatabaseContext.ReadSUChannel((long)Guild.Id);
+        var qu_channel = DatabaseContext.ReadQUChannel(Guild.Id);
+        var su_channel = DatabaseContext.ReadSUChannel(Guild.Id);
     }
 
     public void SaveUpdatesToDatabase() 
     {
+        var db = DatabaseContext;
+        if (db.IsGuildInTable(Guild.Id)) {
+            db.UpdateQUChannel(Guild.Id, QueueUpdateChannel.Id);
+            db.UpdateSUChannel(Guild.Id, SongUpdateChannel.Id);
+
+            db.UpdateQUMessage(Guild.Id, QueueUpdateMessage.Id);
+            db.UpdateSUMessage(Guild.Id, SongUpdateMessage.Id);
+        } else db.InsertRow(Guild.Id, QueueUpdateChannel.Id, SongUpdateChannel.Id, 
+            QueueUpdateMessage.Id, SongUpdateMessage.Id);
     }
 
     public async Task SetSongUpdate(DiscordChannel channel)
