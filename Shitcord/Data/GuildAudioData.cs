@@ -152,6 +152,34 @@ public class GuildAudioData
         SaveUpdatesToDatabase();
     }
 
+    public async Task DestroyQueueUpdate()
+    {
+        this.QueueUpdateChannel = null;
+
+        try
+        {
+            if (this.QueueUpdateMessage != null)
+                await this.QueueUpdateMessage.DeleteAsync();
+        } catch { /* ignored */ }
+
+        this.QueueUpdateMessage = null;
+        SaveUpdatesToDatabase();
+    }
+
+    public async Task DestroySongUpdate()
+    {
+        this.SongUpdateChannel = null;
+
+        try
+        {
+            if (this.SongUpdateMessage != null)
+                await this.SongUpdateMessage.DeleteAsync();
+        } catch { /* ignored */ }
+
+        this.SongUpdateMessage = null;
+        SaveUpdatesToDatabase();
+    }
+
     public DiscordMessageBuilder GenerateQueueMessage()
     {
         var tracks = this.GetNextTracks();
