@@ -1,6 +1,5 @@
 using System.Text;
 using Microsoft.Data.Sqlite;
-using Shitcord.Extensions;
 
 namespace Shitcord.Services;
 
@@ -14,7 +13,7 @@ public class DatabaseService
 
     public DatabaseService()
     {
-        //create database if it doesn't exist
+        // Create database if it doesn't exist
         if (!File.Exists(DATABASE_NAME))
             File.Create(DATABASE_NAME);
 
@@ -28,7 +27,8 @@ public class DatabaseService
 
     private void CreateTableIfNotExists()
     {
-        const string createStatement = @"CREATE TABLE IF NOT EXISTS Songs(
+        const string createStatement =
+            @"CREATE TABLE IF NOT EXISTS Songs(
                 guild_id       bigint  not null  PRIMARY KEY,
                 qu_channel_id  bigint,
                 su_channel_id  bigint,
@@ -46,14 +46,13 @@ public class DatabaseService
         if (IsGuildInTable(guild_id))
             return false;
 
-        long guild_map = (long)guild_id;
         string qu_channel_map = qu_channel?.ToString() ?? "null";
         string su_channel_map = su_channel?.ToString() ?? "null";
         string qu_msg_map = qu_msg?.ToString() ?? "null";
         string su_msg_map = su_msg?.ToString() ?? "null";
         string statement = 
             $@"INSERT INTO Songs VALUES (
-                {guild_map}, {qu_channel_map}, {su_channel_map}, {qu_msg_map}, {su_msg_map}
+                {guild_id}, {qu_channel_map}, {su_channel_map}, {qu_msg_map}, {su_msg_map}
             );";
 
         var insertCommand = new SqliteCommand(statement, connection);
@@ -107,9 +106,8 @@ public class DatabaseService
 
     private bool UpdateValue(ulong guild_id, string valueName, ulong? value)
     {
-        long guild_map = (long)guild_id;
         string val_map = value?.ToString() ?? "null";
-        string statement = $"UPDATE Songs SET {valueName} = {val_map} WHERE guild_id = {guild_map}";
+        string statement = $"UPDATE Songs SET {valueName} = {val_map} WHERE guild_id = {guild_id}";
         var updateCommand = new SqliteCommand(statement, connection);
         int rowsUpdated = updateCommand.ExecuteNonQuery();
         return rowsUpdated == 1;
@@ -124,8 +122,7 @@ public class DatabaseService
 
     public bool DeleteRow(ulong guild_id)
     {
-        long mapped = (long)guild_id;
-        string delStatement = "DELETE FROM Songs WHERE guild_id = " + mapped;
+        string delStatement = "DELETE FROM Songs WHERE guild_id = " + guild_id;
         var delCommand = new SqliteCommand(delStatement, connection);
         int rowsAffected = delCommand.ExecuteNonQuery();
         return rowsAffected > 0;
@@ -140,15 +137,12 @@ public class DatabaseService
     public ulong? ReadSUMessage(ulong guild_id)
         => ReadValue(guild_id, "su_msg_id");
 
-    //0 is returned if value wasn't found
     public ulong? ReadValue(ulong guild_id, string valueName)
     {
-        long mapped = (long)guild_id;
-        string selectStatement = "SELECT " + valueName + " FROM Songs WHERE guild_id = " + mapped;
+        string selectStatement = "SELECT " + valueName + " FROM Songs WHERE guild_id = " + guild_id;
         var readCommand = new SqliteCommand(selectStatement, connection);
         SqliteDataReader reader = readCommand.ExecuteReader();
         
-        // TODO: Throw instead
         if (!reader.HasRows)
             return null;
         

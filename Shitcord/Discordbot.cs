@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.Runtime.InteropServices.ComTypes;
-using System.Runtime.Loader;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Interactivity;
@@ -145,7 +143,7 @@ public class Discordbot
 			.AddSingleton<AudioService>()
 			.AddSingleton<LavalinkService>()
 			.AddSingleton<SshService>()
-			.AddSingleton<TimeService>()
+			.AddSingleton<WeatherService>()
 			.AddSingleton<ReplyService>()
 			.AddSingleton(this);
 
@@ -153,7 +151,7 @@ public class Discordbot
 		return services;
 	}
 
-	private async Task<bool> ConsoleCommandHandler(string msg)
+	private bool ConsoleCommandHandler(string msg)
 	{
 		var cnext = this.Client.GetCommandsNext();
 
@@ -225,7 +223,7 @@ public class Discordbot
 			if (message is null)
 				continue;
 
-			var success = await this.ConsoleCommandHandler(message);
+			var success = this.ConsoleCommandHandler(message);
 			if (!success && this.DebugEnabled)
 				await this.LastChannel.SendMessageAsync(message);
 		}

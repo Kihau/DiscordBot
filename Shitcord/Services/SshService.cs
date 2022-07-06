@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
@@ -57,7 +56,7 @@ public class SshService
         return Task.CompletedTask;
     }
 
-    private string _pwd;
+    private string _pwd = "";
     private void ExecuteSshCmd(DiscordChannel channel, string command)
     {
         _pwd = this.Ssh.RunCommand("cat .current").Result.Trim();

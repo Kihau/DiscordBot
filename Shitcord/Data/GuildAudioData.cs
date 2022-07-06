@@ -91,7 +91,7 @@ public class GuildAudioData
                     .GetAwaiter().GetResult();
                 QueueUpdateMessage = message; 
                 UpdateQueueMessage();
-            } catch { /* INGNORED */ }
+            } catch { /* Ignored */ }
         } 
 
         var su_channel_id = db.ReadSUChannel(Guild.Id);
@@ -105,7 +105,7 @@ public class GuildAudioData
                     .GetAwaiter().GetResult();
                 SongUpdateMessage = message; 
                 UpdateSongMessage();
-            } catch { /* INGNORED */ }
+            } catch { /* Ignored */ }
         } 
     }
 
@@ -579,6 +579,14 @@ public class GuildAudioData
         
         await this.Player.StopAsync();
         this.Enqueue(tracks);
+    }
+
+    public async Task SeekAsync(TimeSpan timestamp) 
+    {
+        if (this.Player is not {IsConnected: true})
+            return;
+
+        await this.Player.SeekAsync(timestamp);
     }
 
     public LavalinkTrack[] GetNextTracks()

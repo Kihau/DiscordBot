@@ -327,8 +327,13 @@ public class AudioModule : BaseCommandModule
     [Command("skip"), Aliases("s")]
     [Description("Skips tracks")]
     public async Task SkipCommand(CommandContext ctx, [Description("Number of tracks to skip")] 
-            int count = 1)
-        => await this.Data.SkipAsync(count);
+            int count = 1) => await this.Data.SkipAsync(count);
+
+
+    [Command("seek")]
+    [Description("Seeks track to specified position")]
+    public async Task SeekCommand(CommandContext ctx, [Description("Song timestap")]
+            TimeSpan timestamp) => await this.Data.SeekAsync(timestamp);
 
     [Command("remove"), Aliases("r")]
     [Description("Removes a song from the queue")]
