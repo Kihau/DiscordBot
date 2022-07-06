@@ -137,7 +137,7 @@ public class AuthModule : BaseCommandModule
         var db = Db.ToString();
 	 	if (console)
 			Console.WriteLine($"{db}");
-		else await ctx.RespondAsync($"{db}");
+		else await ctx.RespondAsync($"```\n{db}```\n");
 	}
 
 	[Command("eval")]
