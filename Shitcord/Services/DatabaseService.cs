@@ -108,7 +108,7 @@ public class DatabaseService
     private bool UpdateValue(ulong guild_id, string valueName, ulong? value)
     {
         long guild_map = (long)guild_id;
-        string val_map = ((long?)value).ToString() ?? "null";
+        string val_map = value?.ToString() ?? "null";
         string statement = $"UPDATE Songs SET {valueName} = {val_map} WHERE guild_id = {guild_map}";
         var updateCommand = new SqliteCommand(statement, connection);
         int rowsUpdated = updateCommand.ExecuteNonQuery();

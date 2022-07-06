@@ -113,6 +113,9 @@ public class AudioModule : BaseCommandModule
     [Command("ongupdates"), Aliases("su")]
     public async Task SetSongUpdatesCommand(CommandContext ctx, DiscordChannel? channel = null)
     {
+        if (channel is null)
+            await ctx.Message.DeleteAsync();
+
         channel ??= ctx.Channel;
         await this.Data.SetSongUpdate(channel);
     }
@@ -120,10 +123,12 @@ public class AudioModule : BaseCommandModule
     [Command("queueupdates"), Aliases("qu")]
     public async Task SetQueueUpdatesCommand(CommandContext ctx, DiscordChannel? channel = null)
     {
+        if (channel is null)
+            await ctx.Message.DeleteAsync();
+
         channel ??= ctx.Channel;
         await this.Data.SetQueueUpdate(channel);
     }
-
 
     [Command("destroysongupdates"), Aliases("dsu")]
     public async Task DestroySongUpdatesCommand(CommandContext ctx)
