@@ -78,6 +78,11 @@ public class DatabaseService
             for (int i = 0; i < COLUMNS; i++)
             {
                 string column = reader.IsDBNull(i) ? "null" : reader.GetString(i);
+                int spaces = ID_LENGTH - column.Length;
+                if (spaces > 0)
+                {
+                    builder.Append(Spaces(spaces));
+                }
                 builder.Append(column).Append(' ');
             }
             builder.Append('\n');
