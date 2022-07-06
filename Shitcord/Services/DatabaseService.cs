@@ -22,8 +22,6 @@ public class DatabaseService
 
         connection.Open();
         CreateTableIfNotExists();
-
-        //TODO:for every connected guild IsGuildInTable if not contained InsertRow
     }
 
     ~DatabaseService() => connection.Close();
@@ -32,10 +30,10 @@ public class DatabaseService
     {
         const string createStatement = @"CREATE TABLE IF NOT EXISTS Songs(
                 guild_id       bigint  not null  PRIMARY KEY,
-                qu_channel_id  bigint  not null,
-                su_channel_id  bigint  not null,
-                qu_msg_id      bigint  not null,
-                su_msg_id      bigint  not null
+                qu_channel_id  bigint,
+                su_channel_id  bigint,
+                qu_msg_id      bigint,
+                su_msg_id      bigint
             );";
 
         var createCommand = new SqliteCommand(createStatement, connection);
@@ -43,16 +41,16 @@ public class DatabaseService
     }
 
     public bool InsertRow(
-            ulong guild_id, ulong qu_channel, ulong su_channel, ulong qu_msg, ulong su_msg
+            ulong guild_id, ulong? qu_channel, ulong? su_channel, ulong? qu_msg, ulong? su_msg
     ) {
         if (IsGuildInTable(guild_id))
             return false;
 
-        long guild_map = TypeMapper.UlongToLong(guild_id);
-        long qu_channel_map = TypeMapper.UlongToLong(qu_channel);
-        long su_channel_map = TypeMapper.UlongToLong(su_channel);
-        long qu_msg_map = TypeMapper.UlongToLong(qu_msg);
-        long su_msg_map = TypeMapper.UlongToLong(su_msg);
+        long guild_map = (long)guild_id;
+        string qu_channel_map = qu_channel?.ToString() ?? "null";
+        string su_channel_map = su_channel?.ToString() ?? "null";
+        string qu_msg_map = qu_msg?.ToString() ?? "null";
+        string su_msg_map = su_msg?.ToString() ?? "null";
         string statement = 
             $@"INSERT INTO Songs VALUES (
                 {guild_map}, {qu_channel_map}, {su_channel_map}, {qu_msg_map}, {su_msg_map}
@@ -79,7 +77,7 @@ public class DatabaseService
         {
             for (int i = 0; i < COLUMNS; i++)
             {
-                string column = reader.GetString(i);
+                string column = reader.IsDBNull(i) ? "null" : reader.GetString(i);
                 builder.Append(column).Append(' ');
             }
             builder.Append('\n');
@@ -87,9 +85,10 @@ public class DatabaseService
 
         return builder.ToString();
     }
+
     public bool IsGuildInTable(ulong guild_id)
     {
-        long mapped = TypeMapper.UlongToLong(guild_id);
+        long mapped = (long)guild_id;
         string existsStatement = "SELECT guild_id FROM Songs WHERE guild_id = " + mapped;
         var cmd = new SqliteCommand(existsStatement, connection);
         SqliteDataReader reader = cmd.ExecuteReader();
@@ -97,20 +96,19 @@ public class DatabaseService
         return rows;
     }
 
-    public bool UpdateQUChannel(ulong guild_id, ulong qu_channel)
+    public bool UpdateQUChannel(ulong guild_id, ulong? qu_channel)
         => UpdateValue(guild_id, "qu_channel_id", qu_channel);
-    public bool UpdateSUChannel(ulong guild_id, ulong su_channel)
+    public bool UpdateSUChannel(ulong guild_id, ulong? su_channel)
         => UpdateValue(guild_id, "su_channel_id", su_channel);
-    public bool UpdateQUMessage(ulong guild_id, ulong qu_msg)
+    public bool UpdateQUMessage(ulong guild_id, ulong? qu_msg)
         => UpdateValue(guild_id, "qu_msg_id", qu_msg);
-    public bool UpdateSUMessage(ulong guild_id, ulong su_msg)
+    public bool UpdateSUMessage(ulong guild_id, ulong? su_msg)
         => UpdateValue(guild_id, "su_msg_id", su_msg);
 
-    private bool UpdateValue(ulong guild_id, string valueName, ulong value)
+    private bool UpdateValue(ulong guild_id, string valueName, ulong? value)
     {
-        long guild_map = TypeMapper.UlongToLong(guild_id);
-        long val_map = TypeMapper.UlongToLong(value);
-
+        long guild_map = (long)guild_id;
+        string val_map = ((long?)value).ToString() ?? "null";
         string statement = $"UPDATE Songs SET {valueName} = {val_map} WHERE guild_id = {guild_map}";
         var updateCommand = new SqliteCommand(statement, connection);
         int rowsUpdated = updateCommand.ExecuteNonQuery();
@@ -126,39 +124,39 @@ public class DatabaseService
 
     public bool DeleteRow(ulong guild_id)
     {
-        long mapped = TypeMapper.UlongToLong(guild_id);
+        long mapped = (long)guild_id;
         string delStatement = "DELETE FROM Songs WHERE guild_id = " + mapped;
         var delCommand = new SqliteCommand(delStatement, connection);
         int rowsAffected = delCommand.ExecuteNonQuery();
         return rowsAffected > 0;
     }
 
-    public ulong ReadQUChannel(ulong guild_id)
+    public ulong? ReadQUChannel(ulong guild_id)
         => ReadValue(guild_id, "qu_channel_id");
-    public ulong ReadSUChannel(ulong guild_id)
+    public ulong? ReadSUChannel(ulong guild_id)
         => ReadValue(guild_id, "su_channel_id");
-    public ulong ReadQUMessage(ulong guild_id)
+    public ulong? ReadQUMessage(ulong guild_id)
         => ReadValue(guild_id, "qu_msg_id");
-    public ulong ReadSUMessage(ulong guild_id)
+    public ulong? ReadSUMessage(ulong guild_id)
         => ReadValue(guild_id, "su_msg_id");
 
     //0 is returned if value wasn't found
-    public ulong ReadValue(ulong guild_id, string valueName)
+    public ulong? ReadValue(ulong guild_id, string valueName)
     {
-        long mapped = TypeMapper.UlongToLong(guild_id);
+        long mapped = (long)guild_id;
         string selectStatement = "SELECT " + valueName + " FROM Songs WHERE guild_id = " + mapped;
         var readCommand = new SqliteCommand(selectStatement, connection);
         SqliteDataReader reader = readCommand.ExecuteReader();
         
         // TODO: Throw instead
         if (!reader.HasRows)
-            return 0;
+            return null;
         
         if (!reader.Read())
-            return 0;
+            return null;
         
         long val2 = reader.GetInt64(0);
-        return TypeMapper.LongToUlong(val2);
+        return (ulong)val2;
     }
 
     private StringBuilder Spaces(int len)

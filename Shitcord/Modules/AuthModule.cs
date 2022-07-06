@@ -9,6 +9,7 @@ using DSharpPlus.Entities;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Shitcord.Extensions;
+using Shitcord.Services;
 
 namespace Shitcord.Modules;
 
@@ -16,9 +17,12 @@ namespace Shitcord.Modules;
 public class AuthModule : BaseCommandModule
 {
 	public Discordbot Bot { get; }
+    public DatabaseService Db { get; }
 
-	public AuthModule(Discordbot bot)
-		=> this.Bot = bot;
+	public AuthModule(Discordbot bot, DatabaseService db) {
+		this.Bot = bot;
+        this.Db = db;
+    }
 
 	public override async Task BeforeExecutionAsync(CommandContext ctx)
 	{
@@ -125,6 +129,15 @@ public class AuthModule : BaseCommandModule
 		if (console)
 			Console.WriteLine($"Current guild set to: {Bot.LastGuild.Name}");
 		else await ctx.RespondAsync($"Current guild set to: {Bot.LastGuild.Name}");
+	}
+
+	[Command("printdatabase"), Aliases("printdb"), Description("Prints database used by the bot")]
+	public async Task PrintDatabaseCommand(CommandContext ctx, bool console = true)
+	{
+        var db = Db.ToString();
+	 	if (console)
+			Console.WriteLine($"{db}");
+		else await ctx.RespondAsync($"{db}");
 	}
 
 	[Command("eval")]

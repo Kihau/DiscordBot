@@ -56,6 +56,7 @@ public class GuildAudioData
         this.DatabaseContext = database;
 
         // Try to load UpdateMessages here
+        LoadUpdatesFromDatabase();
 
         this.Queue = new ConcurrentQueue<LavalinkTrack>();
         this.Filters = new AudioFilters();
@@ -78,21 +79,47 @@ public class GuildAudioData
 
     public void LoadUpdatesFromDatabase() 
     {
-        var qu_channel = DatabaseContext.ReadQUChannel(Guild.Id);
-        var su_channel = DatabaseContext.ReadSUChannel(Guild.Id);
+        var db = DatabaseContext;
+        var qu_channel_id = db.ReadQUChannel(Guild.Id);
+        var qu_message_id = db.ReadQUMessage(Guild.Id);
+
+        if (qu_channel_id != null && qu_message_id != null) {
+            try { 
+                var channel = Guild.GetChannel(qu_channel_id.Value);
+                QueueUpdateChannel = channel;
+                var message = channel.GetMessageAsync(qu_message_id.Value)
+                    .GetAwaiter().GetResult();
+                QueueUpdateMessage = message; 
+                UpdateQueueMessage();
+            } catch { /* INGNORED */ }
+        } 
+
+        var su_channel_id = db.ReadSUChannel(Guild.Id);
+        var su_message_id = db.ReadSUMessage(Guild.Id);
+
+        if (su_channel_id != null && su_message_id != null) {
+            try { 
+                var channel = Guild.GetChannel(su_channel_id.Value);
+                SongUpdateChannel = channel;
+                var message = channel.GetMessageAsync(su_message_id.Value)
+                    .GetAwaiter().GetResult();
+                SongUpdateMessage = message; 
+                UpdateSongMessage();
+            } catch { /* INGNORED */ }
+        } 
     }
 
     public void SaveUpdatesToDatabase() 
     {
         var db = DatabaseContext;
         if (db.IsGuildInTable(Guild.Id)) {
-            db.UpdateQUChannel(Guild.Id, QueueUpdateChannel.Id);
-            db.UpdateSUChannel(Guild.Id, SongUpdateChannel.Id);
+            db.UpdateQUChannel(Guild.Id, QueueUpdateChannel?.Id);
+            db.UpdateSUChannel(Guild.Id, SongUpdateChannel?.Id);
 
-            db.UpdateQUMessage(Guild.Id, QueueUpdateMessage.Id);
-            db.UpdateSUMessage(Guild.Id, SongUpdateMessage.Id);
-        } else db.InsertRow(Guild.Id, QueueUpdateChannel.Id, SongUpdateChannel.Id, 
-            QueueUpdateMessage.Id, SongUpdateMessage.Id);
+            db.UpdateQUMessage(Guild.Id, QueueUpdateMessage?.Id);
+            db.UpdateSUMessage(Guild.Id, SongUpdateMessage?.Id);
+        } else db.InsertRow(Guild.Id, QueueUpdateChannel?.Id, SongUpdateChannel?.Id, 
+            QueueUpdateMessage?.Id, SongUpdateMessage?.Id);
     }
 
     public async Task SetSongUpdate(DiscordChannel channel)
@@ -107,6 +134,7 @@ public class GuildAudioData
 
         var mess = GenerateSongMessage();
         this.SongUpdateMessage = await this.SongUpdateChannel.SendMessageAsync(mess);
+        SaveUpdatesToDatabase();
     }
 
     public async Task SetQueueUpdate(DiscordChannel channel)
@@ -121,6 +149,7 @@ public class GuildAudioData
 
         var mess = GenerateQueueMessage();
         this.QueueUpdateMessage = await this.QueueUpdateChannel.SendMessageAsync(mess);
+        SaveUpdatesToDatabase();
     }
 
     public DiscordMessageBuilder GenerateQueueMessage()
@@ -194,6 +223,7 @@ public class GuildAudioData
             {
                 await this.QueueUpdateMessage.DeleteAsync();
                 this.QueueUpdateMessage = await this.QueueUpdateChannel.SendMessageAsync(message);
+                SaveUpdatesToDatabase();
             }
         });
 
@@ -271,6 +301,7 @@ public class GuildAudioData
             {
                 await this.SongUpdateMessage.DeleteAsync();
                 this.SongUpdateMessage = await this.SongUpdateChannel.SendMessageAsync(message);
+                SaveUpdatesToDatabase();
             }
         });
 
