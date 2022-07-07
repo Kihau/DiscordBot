@@ -16,6 +16,7 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
 
+        <PackageReference Include="DSharpPlus.Interactivity" Version="4.1.0" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.1.0" />
         <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.6" />
         <PackageReference Include="SSH.NET" Version="2020.0.1" />
@@ -23,8 +24,9 @@
 
     <ItemGroup>
       <ProjectReference Include="..\DSharpPlus\DSharpPlus.CommandsNext\DSharpPlus.CommandsNext.csproj" />
-      <ProjectReference Include="..\DSharpPlus\DSharpPlus.Interactivity\DSharpPlus.Interactivity.csproj" />
+      <!--<ProjectReference Include="..\DSharpPlus\DSharpPlus.Interactivity\DSharpPlus.Interactivity.csproj" />-->
       <ProjectReference Include="..\DSharpPlus\DSharpPlus.Lavalink\DSharpPlus.Lavalink.csproj" />
+      <ProjectReference Include="..\DSharpPlus\DSharpPlus.Rest\DSharpPlus.Rest.csproj" />
       <ProjectReference Include="..\DSharpPlus\DSharpPlus\DSharpPlus.csproj" />
     </ItemGroup>
 
