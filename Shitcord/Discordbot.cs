@@ -73,7 +73,7 @@ public class Discordbot
         { 
             PollBehaviour = PollBehaviour.KeepEmojis,
             Timeout = TimeSpan.FromSeconds(30)
-        });
+	    });
 	}
 
 	private Task PrintMessage(DiscordClient client, MessageCreateEventArgs e)
