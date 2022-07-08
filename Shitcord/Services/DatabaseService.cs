@@ -52,11 +52,9 @@ public class DatabaseService
         string su_channel_map = su_channel?.ToString() ?? "null";
         string qu_msg_map = qu_msg?.ToString() ?? "null";
         string su_msg_map = su_msg?.ToString() ?? "null";
-        string volume_map = volume?.ToString() ?? "null";
-        string loop_map = loop?.ToString() ?? "null";
         string statement = 
             $@"INSERT INTO GuildAudioData VALUES (
-                {guild_id}, {qu_channel_map}, {su_channel_map}, {qu_msg_map}, {su_msg_map}, {volume_map}, {loop_map}
+                {guild_id}, {qu_channel_map}, {su_channel_map}, {qu_msg_map}, {su_msg_map}, {volume}, {loop}
             );";
 
         var insertCommand = new SqliteCommand(statement, connection);
