@@ -56,7 +56,7 @@ public class GuildAudioData
         this.DatabaseContext = database;
 
         // Try to load UpdateMessages here
-        LoadUpdatesFromDatabase();
+        LoadFromDatabase();
 
         this.Queue = new ConcurrentQueue<LavalinkTrack>();
         this.Filters = new AudioFilters();
@@ -77,7 +77,7 @@ public class GuildAudioData
         this.Player.PlaybackFinished += PlaybackFinished;
     }
 
-    public void LoadUpdatesFromDatabase() 
+    public void LoadFromDatabase() 
     {
         var db = DatabaseContext;
         var qu_channel_id = db.ReadQUChannel(Guild.Id);
@@ -107,9 +107,12 @@ public class GuildAudioData
                 UpdateSongMessage();
             } catch { /* Ignored */ }
         } 
+
+        IsLooping = db.ReadLooping(Guild.Id) ?? false;
+        Volume = db.ReadVolume(Guild.Id) ?? 100;
     }
 
-    public void SaveUpdatesToDatabase() 
+    public void SaveToDatabase() 
     {
         var db = DatabaseContext;
         if (db.IsGuildInTable(Guild.Id)) {
@@ -118,8 +121,10 @@ public class GuildAudioData
 
             db.UpdateQUMessage(Guild.Id, QueueUpdateMessage?.Id);
             db.UpdateSUMessage(Guild.Id, SongUpdateMessage?.Id);
+            db.UpdateVolume(Guild.Id, Volume);
+            db.UpdateLooping(Guild.Id, IsLooping);
         } else db.InsertRow(Guild.Id, QueueUpdateChannel?.Id, SongUpdateChannel?.Id, 
-            QueueUpdateMessage?.Id, SongUpdateMessage?.Id, 100, false);
+            QueueUpdateMessage?.Id, SongUpdateMessage?.Id, Volume, IsLooping);
     }
 
     public async Task SetSongUpdate(DiscordChannel channel)
@@ -134,7 +139,7 @@ public class GuildAudioData
 
         var mess = GenerateSongMessage();
         this.SongUpdateMessage = await this.SongUpdateChannel.SendMessageAsync(mess);
-        SaveUpdatesToDatabase();
+        SaveToDatabase();
     }
 
     public async Task SetQueueUpdate(DiscordChannel channel)

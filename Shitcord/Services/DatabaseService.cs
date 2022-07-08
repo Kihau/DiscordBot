@@ -34,8 +34,8 @@ public class DatabaseService
                 su_channel_id  bigint,
                 qu_msg_id      bigint,
                 su_msg_id      bigint,
-                volume         int,
-                looping        boolean
+                volume         int not null,
+                looping        boolean not null
             );";
 
         var createCommand = new SqliteCommand(createGuildData, connection);
@@ -43,7 +43,8 @@ public class DatabaseService
     }
 
     public bool InsertRow(
-            ulong guild_id, ulong? qu_channel, ulong? su_channel, ulong? qu_msg, ulong? su_msg, int? volume, bool? loop
+        ulong guild_id, ulong? qu_channel, ulong? su_channel,
+        ulong? qu_msg, ulong? su_msg, int? volume, bool? loop
     ) {
         if (IsGuildInTable(guild_id))
             return false;
@@ -54,7 +55,8 @@ public class DatabaseService
         string su_msg_map = su_msg?.ToString() ?? "null";
         string statement = 
             $@"INSERT INTO GuildAudioData VALUES (
-                {guild_id}, {qu_channel_map}, {su_channel_map}, {qu_msg_map}, {su_msg_map}, {volume}, {loop}
+                {guild_id}, {qu_channel_map}, {su_channel_map}, 
+                {qu_msg_map}, {su_msg_map}, {volume}, {loop}
             );";
 
         var insertCommand = new SqliteCommand(statement, connection);
@@ -82,10 +84,10 @@ public class DatabaseService
             {
                 string column = reader.IsDBNull(i) ? "null" : reader.GetString(i);
                 int spaces = BASE_WIDTH - column.Length;
+
                 if (spaces > 0)
-                {
                     builder.Append(Spaces(spaces));
-                }
+
                 builder.Append(column).Append(' ');
             }
             builder.Append('\n');
@@ -112,15 +114,16 @@ public class DatabaseService
         => UpdateValue(guild_id, "qu_msg_id", qu_msg);
     public bool UpdateSUMessage(ulong guild_id, ulong? su_msg)
         => UpdateValue(guild_id, "su_msg_id", su_msg);
-    public bool UpdateVolume (ulong guild_id, int? volume)
+    public bool UpdateVolume (ulong guild_id, int volume)
         => UpdateValue(guild_id, "volume", volume);
-    public bool UpdateLooping(ulong guild_id, bool? looping)
+    public bool UpdateLooping(ulong guild_id, bool looping)
         => UpdateValue(guild_id, "looping", looping);
 
-    private bool UpdateValue <T>(ulong guild_id, string valueName, T? value)
+    private bool UpdateValue<T>(ulong guild_id, string valueName, T? value)
     {
         string val_map = value?.ToString() ?? "null";
-        string statement = $"UPDATE GuildAudioData SET {valueName} = {val_map} WHERE guild_id = {guild_id}";
+        string statement = 
+            $"UPDATE GuildAudioData SET {valueName} = {val_map} WHERE guild_id = {guild_id}";
         return executeUpdate(statement);
     }
 
@@ -161,7 +164,8 @@ public class DatabaseService
 
     public ulong? ReadBigInt (ulong guild_id, string valueName)
     {
-        string selectStatement = "SELECT " + valueName + " FROM GuildAudioData WHERE guild_id = " + guild_id;
+        string selectStatement = "SELECT " + valueName + 
+            " FROM GuildAudioData WHERE guild_id = " + guild_id;
         var readCommand = new SqliteCommand(selectStatement, connection);
         SqliteDataReader reader = readCommand.ExecuteReader();
         
@@ -173,7 +177,8 @@ public class DatabaseService
     }
     public int? ReadInt (ulong guild_id, string valueName)
     {
-        string selectStatement = "SELECT " + valueName + " FROM GuildAudioData WHERE guild_id = " + guild_id;
+        string selectStatement = "SELECT " + valueName + 
+            " FROM GuildAudioData WHERE guild_id = " + guild_id;
         var reader = executeRead(selectStatement);
         
         if (!reader.HasRows || !reader.Read())
@@ -184,7 +189,8 @@ public class DatabaseService
     }
     public bool? ReadBool(ulong guild_id, string valueName)
     {
-        string selectStatement = "SELECT " + valueName + " FROM GuildAudioData WHERE guild_id = " + guild_id;
+        string selectStatement = "SELECT " + valueName + 
+            " FROM GuildAudioData WHERE guild_id = " + guild_id;
         var reader = executeRead(selectStatement);
         
         if (!reader.HasRows || !reader.Read())
