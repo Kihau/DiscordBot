@@ -14,6 +14,7 @@ namespace Shitcord.Services;
         private DatabaseService DatabaseContext { get; }
         private Random Rng { get; }
         
+        // TODO: Try to read data from database for each guild(ID) in Client object. 
         public AudioService(Discordbot bot, LavalinkService lavalink, DatabaseService ctx)
         {
             this.Lavalink = lavalink;
