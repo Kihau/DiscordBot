@@ -154,7 +154,7 @@ public class GuildAudioData
 
         var mess = GenerateQueueMessage();
         this.QueueUpdateMessage = await this.QueueUpdateChannel.SendMessageAsync(mess);
-        SaveUpdatesToDatabase();
+        SaveToDatabase();
     }
 
     public async Task DestroyQueueUpdate()
@@ -168,7 +168,7 @@ public class GuildAudioData
         } catch { /* ignored */ }
 
         this.QueueUpdateMessage = null;
-        SaveUpdatesToDatabase();
+        SaveToDatabase();
     }
 
     public async Task DestroySongUpdate()
@@ -182,7 +182,7 @@ public class GuildAudioData
         } catch { /* ignored */ }
 
         this.SongUpdateMessage = null;
-        SaveUpdatesToDatabase();
+        SaveToDatabase();
     }
 
     public DiscordMessageBuilder GenerateQueueMessage()
@@ -256,7 +256,7 @@ public class GuildAudioData
             {
                 await this.QueueUpdateMessage.DeleteAsync();
                 this.QueueUpdateMessage = await this.QueueUpdateChannel.SendMessageAsync(message);
-                SaveUpdatesToDatabase();
+                SaveToDatabase();
             }
         });
 
@@ -334,7 +334,7 @@ public class GuildAudioData
             {
                 await this.SongUpdateMessage.DeleteAsync();
                 this.SongUpdateMessage = await this.SongUpdateChannel.SendMessageAsync(message);
-                SaveUpdatesToDatabase();
+                SaveToDatabase();
             }
         });
 
