@@ -119,7 +119,7 @@ public class GuildAudioData
             db.UpdateQUMessage(Guild.Id, QueueUpdateMessage?.Id);
             db.UpdateSUMessage(Guild.Id, SongUpdateMessage?.Id);
         } else db.InsertRow(Guild.Id, QueueUpdateChannel?.Id, SongUpdateChannel?.Id, 
-            QueueUpdateMessage?.Id, SongUpdateMessage?.Id);
+            QueueUpdateMessage?.Id, SongUpdateMessage?.Id, -1, false);
     }
 
     public async Task SetSongUpdate(DiscordChannel channel)
