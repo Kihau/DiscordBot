@@ -16,12 +16,12 @@ namespace Shitcord.Modules;
 public class UtilityModule : BaseCommandModule
 {
     public Discordbot Bot { get; }
-    public TimeService Time { get; set; }
+    public WeatherService Weather { get; set; }
 
-    public UtilityModule(Discordbot bot, TimeService timerService, ReplyService reply)
+    public UtilityModule(Discordbot bot, WeatherService weather, ReplyService reply)
     {
         this.Bot = bot;
-        this.Time = timerService;
+        this.Weather = weather;
     }
 
     public override async Task BeforeExecutionAsync(CommandContext ctx)

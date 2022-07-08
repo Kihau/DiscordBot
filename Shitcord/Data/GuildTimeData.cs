@@ -16,12 +16,14 @@ public class GuildTimeData
     private DiscordGuild _guild;
     private Timer _updateTimer;
     
-    public GuildTimeData(DiscordGuild guild)
+    public GuildTimeData(DiscordGuild guild, DiscordChannel channel, Timer timer)
     {
         _guild = guild;
+        _updateTimer = timer;
+        _channel = channel;
     }
     
-    public async Task SetDateChannel(DiscordChannel channel)
+    public void SetDateChannel(DiscordChannel channel)
     {
         _channel = channel;
         _updateTimer = new Timer(UpdateDateChannel);
