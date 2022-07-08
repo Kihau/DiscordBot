@@ -15,31 +15,31 @@ public class GuildAudioData
     // It's not that this bot is going to be in hundreds of thousands of guilds
     private LavalinkNodeConnection Lavalink { get; }
     private DatabaseService DatabaseContext { get; }
-
-    private ConcurrentQueue<LavalinkTrack> Queue { get; }
-    public LavalinkTrack? CurrentTrack { get; private set; }
     private DiscordGuild Guild { get; }
 
-    public bool IsLooping { get; private set; }
+    private ConcurrentQueue<LavalinkTrack> Queue { get; }
+    private LavalinkGuildConnection? Player { get; set; }
+    public LavalinkTrack? CurrentTrack { get; private set; }
     public DiscordChannel? Channel => this.Player?.Channel;
-    public bool IsConnected => this.Player != null;
-    public bool IsPaused { get; private set; }
-    public bool IsStopped => this.CurrentTrack == null;
-    public int Volume { get; private set; } = 100;
-
     public bool SkipEventFire { get; set; } = false;
 
-    public AudioFilters Filters { get; set; } = new();
-    
-    private LavalinkGuildConnection? Player { get; set; }
+    // TODO: Looping mode (song, queue, shuffle. none)
+    public bool IsLooping { get; private set; }
+    public bool IsPaused { get; private set; }
+    public bool IsConnected => this.Player != null;
+    public bool IsStopped => this.CurrentTrack == null;
 
-    public bool TimeoutStarted { get; private set; }
-    //private Timer? _timeoutTimer;
+    public int Volume { get; private set; } = 100;
+    public AudioFilters Filters { get; set; } = new();
+
     // TODO: Autoresume, autojoin guild dependent 
+    // TODO: Custom timeout times for those two
     private Timer? _stopTimer;
     private Timer? _leaveTimer;
+    public bool TimeoutStarted { get; private set; }
 
     // TODO: Update message only when content has changed (ratelimits)
+    // TODO: Set custom timeout for updating messages (to not queue unnesessary updates)
     public DiscordMessage? QueueUpdateMessage { get; set; }
     public DiscordChannel? QueueUpdateChannel { get; set; }
     public DiscordMessage? SongUpdateMessage { get; set; }
@@ -77,7 +77,7 @@ public class GuildAudioData
         this.Player.PlaybackFinished += PlaybackFinished;
     }
 
-    public void LoadFromDatabase() 
+    private void LoadFromDatabase() 
     {
         var db = DatabaseContext;
         var qu_channel_id = db.ReadQUChannel(Guild.Id);
@@ -112,7 +112,7 @@ public class GuildAudioData
         Volume = db.ReadVolume(Guild.Id) ?? 100;
     }
 
-    public void SaveToDatabase() 
+    private void SaveToDatabase() 
     {
         var db = DatabaseContext;
         if (db.IsGuildInTable(Guild.Id)) {

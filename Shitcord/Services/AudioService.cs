@@ -14,29 +14,39 @@ namespace Shitcord.Services;
         private DatabaseService DatabaseContext { get; }
         private Random Rng { get; }
         
-        // TODO: Try to read data from database for each guild(ID) in Client object. 
-        public AudioService(Discordbot bot, LavalinkService lavalink, DatabaseService ctx)
+        public AudioService(Discordbot bot, LavalinkService lavalink, DatabaseService dbctx)
         {
             this.Lavalink = lavalink;
             this.AudioData = new Dictionary<ulong, GuildAudioData>();
             this.Client = bot.Client;
             this.Rng = new Random();
-            this.DatabaseContext = ctx;
+            this.DatabaseContext = dbctx;
+
+            LoadAllDataFromDatabase();
             
             this.Client.VoiceStateUpdated += BotVoiceTimeout;
             this.Client.ComponentInteractionCreated += AudioUpdateButtons;
         }
 
-        private Task AudioUpdateButtons(DiscordClient client, ComponentInteractionCreateEventArgs e)
+        public void LoadAllDataFromDatabase()
         {
+            foreach (var (id, guild) in Client.Guilds) {
+                if (DatabaseContext.IsGuildInTable(id))
+                    GetOrAddData(guild);
+            }
+        }
+
+        private Task AudioUpdateButtons(
+            DiscordClient client, ComponentInteractionCreateEventArgs args
+        ) {
             Task.Run(async () =>
             {
-                this.AudioData.TryGetValue(e.Guild.Id, out var data);
+                this.AudioData.TryGetValue(args.Guild.Id, out var data);
                 if (data == null) 
                     return;
 
                 bool defer = true;
-                switch (e.Id)
+                switch (args.Id)
                 {
                     // Song Info
                     case "skip_btn":
@@ -53,7 +63,7 @@ namespace Shitcord.Services;
                         else await data.PauseAsync();
                         break;
                     case "join_btn":
-                        var member = await e.Guild.GetMemberAsync(e.User.Id);
+                        var member = await args.Guild.GetMemberAsync(args.User.Id);
                         if (member.VoiceState != null)
                             await data.CreateConnectionAsync(member.VoiceState.Channel);
                         break;
@@ -90,7 +100,7 @@ namespace Shitcord.Services;
                 }
                 
                 if (defer)
-                    await e.Interaction.CreateResponseAsync(
+                    await args.Interaction.CreateResponseAsync(
                         InteractionResponseType.DeferredMessageUpdate
                     );
 
@@ -101,9 +111,9 @@ namespace Shitcord.Services;
         }
         
         // TODO: Check if global events
-        private Task BotVoiceTimeout(DiscordClient sender, VoiceStateUpdateEventArgs e)
+        private Task BotVoiceTimeout(DiscordClient sender, VoiceStateUpdateEventArgs args)
         {
-            this.AudioData.TryGetValue(e.Guild.Id, out var data);
+            this.AudioData.TryGetValue(args.Guild.Id, out var data);
             if (data is not {IsConnected: true}) 
                 return Task.CompletedTask;
 
@@ -123,7 +133,10 @@ namespace Shitcord.Services;
             if (this.AudioData.TryGetValue(guild.Id, out var data))
                 return data;
 
-            data = new GuildAudioData(guild, this.Lavalink.Node, this.Client, this.DatabaseContext);
+            data = new GuildAudioData(
+                guild, this.Lavalink.Node, this.Client, this.DatabaseContext
+            );
+
             this.AudioData.Add(guild.Id, data);
             return data;
         }
