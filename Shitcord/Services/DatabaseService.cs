@@ -106,6 +106,18 @@ public class DatabaseService
         return rows;
     }
 
+    public void UpdateTable(
+        ulong guild_id, ulong? qu_channel, ulong? su_channel,
+        ulong? qu_msg, ulong? su_msg, int? volume, bool? loop
+    ) {
+        UpdateValue(guild_id, "qu_channel_id", qu_channel);
+        UpdateValue(guild_id, "su_channel_id", su_channel);
+        UpdateValue(guild_id, "qu_msg_id", qu_msg);
+        UpdateValue(guild_id, "su_msg_id", su_msg);
+        UpdateValue(guild_id, "volume", volume);
+        UpdateValue(guild_id, "looping", loop);
+    }
+
     public bool UpdateQUChannel(ulong guild_id, ulong? qu_channel)
         => UpdateValue(guild_id, "qu_channel_id", qu_channel);
     public bool UpdateSUChannel(ulong guild_id, ulong? su_channel)

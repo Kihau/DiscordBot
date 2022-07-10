@@ -62,6 +62,8 @@ public class GuildAudioData
         this.Filters = new AudioFilters();
     }
 
+    ~GuildAudioData() => SaveToDatabase();
+
     public async Task CreateConnectionAsync(DiscordChannel vchannel)
     {
         if (this.Player is {IsConnected: true})
@@ -116,13 +118,9 @@ public class GuildAudioData
     {
         var db = DatabaseContext;
         if (db.IsGuildInTable(Guild.Id)) {
-            db.UpdateQUChannel(Guild.Id, QueueUpdateChannel?.Id);
-            db.UpdateSUChannel(Guild.Id, SongUpdateChannel?.Id);
-
-            db.UpdateQUMessage(Guild.Id, QueueUpdateMessage?.Id);
-            db.UpdateSUMessage(Guild.Id, SongUpdateMessage?.Id);
-            db.UpdateVolume(Guild.Id, Volume);
-            db.UpdateLooping(Guild.Id, IsLooping);
+            // TODO: Updating all values is not good - change it?
+            db.UpdateTable(Guild.Id, QueueUpdateChannel?.Id, SongUpdateChannel?.Id, 
+                QueueUpdateMessage?.Id, SongUpdateMessage?.Id, Volume, IsLooping);
         } else db.InsertRow(Guild.Id, QueueUpdateChannel?.Id, SongUpdateChannel?.Id, 
             QueueUpdateMessage?.Id, SongUpdateMessage?.Id, Volume, IsLooping);
     }
@@ -401,6 +399,7 @@ public class GuildAudioData
 
         await this.Player.SetVolumeAsync(volume);
         this.Volume = volume;
+        SaveToDatabase();
     }
 
     public async Task DestroyConnectionAsync()
@@ -496,6 +495,7 @@ public class GuildAudioData
     public bool ChangeLoopingState()
     {
         this.IsLooping = !this.IsLooping;
+        SaveToDatabase();
         return IsLooping;
     }
 
