@@ -10,7 +10,6 @@ public class MarkovService
     private DatabaseService DatabaseContext { get; }
     static Dictionary<string, Dictionary<string, int>> markovStrings = new();
     private char[] _excludeCharacters = { '.', ',', ':', ';', '?', '!' }; 
-    private string[] _ignoreWithPrevices = { ">>", "!", "..", "/" };
 
     public bool Enabled { get; set; } = true;
     public bool LearnEnabled { get; set; } = true;
@@ -106,11 +105,6 @@ public class MarkovService
         string input = e.Message.Content.ToLower();
         List<string> data = input.Split(' ').ToList();
         for (int i = 0; i < data.Count; i++) {
-            foreach (var prefix in _ignoreWithPrevices) {
-                if (data[i++].StartsWith(prefix))
-                    continue;
-            }
-
             if (_excludeCharacters.Contains(data[i].Last()))
                 data[i] = data[i].Remove(data[i].Length - 1);
             else if (_excludeCharacters.Contains(data[i].First()))
