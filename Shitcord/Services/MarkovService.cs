@@ -59,7 +59,7 @@ public class MarkovService
             }
             
             var alignedDict = nextDict.ToArray();
-            var probabilites = new List<double>();
+            var probabilities = new List<double>();
 
             int fitness_sum = alignedDict.Select(x => x.Value).Sum();
             double prev_probability = 0.0;
@@ -67,14 +67,14 @@ public class MarkovService
             
             for (int i = 0; i < alignedDict.Length; i++) {
                 prev_probability += fitness / fitness_sum;
-                probabilites.Add(prev_probability);
+                probabilities.Add(prev_probability);
             }
 
             int found = 0;
             var gen_num = rng.NextDouble();
             
-            while (found < probabilites.Count) {
-                if (gen_num < probabilites[found])
+            while (found < probabilities.Count) {
+                if (gen_num < probabilities[found])
                     break;
                 found++;
             }
