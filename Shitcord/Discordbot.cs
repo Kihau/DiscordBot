@@ -145,6 +145,7 @@ public class Discordbot
 			.AddSingleton<SshService>()
 			.AddSingleton<WeatherService>()
 			.AddSingleton<ReplyService>()
+            .AddSingleton<MarkovService>()
 			.AddSingleton(this);
 
 		var services = collection.BuildServiceProvider();
@@ -199,6 +200,7 @@ public class Discordbot
 		var activity = new DiscordActivity(this.Config.Discord.Status, ActivityType.ListeningTo);
 		await Client.ConnectAsync(activity, UserStatus.DoNotDisturb);
 
+        // Execute this after clinet.ready event
 		ulong debug_channel = 928054033741152307;
 		try
 		{

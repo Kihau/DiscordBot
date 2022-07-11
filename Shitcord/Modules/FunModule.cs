@@ -13,6 +13,29 @@ namespace Shitcord.Modules;
 [Description("Fun and silly commands")]
 public class FunModule : BaseCommandModule 
 {
+    private MarkovService Markov { get; init; }
+
+    public FunModule(MarkovService service) => this.Markov = service;
+
+    [Command("markov")]
+    public async Task MarkovCommand(CommandContext ctx, [RemainingText] string question) 
+        => await ctx.RespondAsync(Markov.GenerateMarkovString(12, 20));
+
+    [Command("markovfeed")]
+    public async Task MarkovFeedCommand(CommandContext ctx)
+    {
+        Markov.LearnEnabled = !Markov.LearnEnabled;
+        await ctx.RespondAsync($"Markov learning is now set to: `{Markov.LearnEnabled}`");
+    }
+
+    [Command("markovsave")]
+    public async Task MarkovSaveCommand(CommandContext ctx)
+        => Markov.SaveMarkovBinaryData();
+
+    [Command("markovload")]
+    public async Task MarkovLoadCommand(CommandContext ctx)
+        => Markov.LoadMarkovBinaryData();
+
     [Command("sex")]
     public async Task SexCommand(CommandContext ctx) 
         => await ctx.RespondAsync("Sex is not enabled on this server.");

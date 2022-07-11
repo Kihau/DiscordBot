@@ -34,7 +34,6 @@ public class GuildAudioData
 
     // TODO: Autoresume, autojoin guild dependent 
     // TODO: Custom timeout times for those two
-    private Timer? _stopTimer;
     private Timer? _leaveTimer;
     public bool TimeoutStarted { get; private set; }
 
@@ -341,17 +340,11 @@ public class GuildAudioData
 
     public void StartTimeout()
     {
-        this._stopTimer?.Dispose();
         this._leaveTimer?.Dispose();
-        
-        this._stopTimer = new Timer(
-            this.StopTimerCallback, null, 
-            new TimeSpan(0, 0, 10, 0), Timeout.InfiniteTimeSpan
-        );
         
         this._leaveTimer = new Timer(
             this.LeaveTimerCallback, null, 
-            new TimeSpan(0, 0, 0, 5), Timeout.InfiniteTimeSpan
+            new TimeSpan(0, 0, 0, 10), Timeout.InfiniteTimeSpan
         );
 
         this.TimeoutStarted = true;
@@ -359,26 +352,12 @@ public class GuildAudioData
 
     public void CancelTimeout()
     {
-        this._stopTimer?.Dispose();
         this._leaveTimer?.Dispose();
         this.TimeoutStarted = false;
 
         this.ResumeAsync().GetAwaiter().GetResult();
     }
 
-    private async void StopTimerCallback(object? sender)
-    {
-        if (this.Player is not {IsConnected: true}) return;
-
-        await this.PauseAsync();
-
-        await this.UpdateSongMessage();
-        await this.UpdateQueueMessage();
-
-        if (this._stopTimer != null) 
-            await this._stopTimer.DisposeAsync();
-    }
-    
     private async void LeaveTimerCallback(object? sender)
     {
         if (this.Player is not {IsConnected: true}) return;
