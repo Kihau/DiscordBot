@@ -392,10 +392,12 @@ public class AudioModule : BaseCommandModule
         {
             var embed = new DiscordEmbedBuilder()
                 .WithTitle(":musical_note:  |  Now playing: ")
-                .WithDescription($"[{this.Data.CurrentTrack.Title}]({this.Data.CurrentTrack.Uri})\n" +
-                                 $":play_pause: Current timestamp: {this.Data.GetTimestamp()}\n" +
-                                 $":play_pause: Song length: {this.Data.CurrentTrack.Length}\n" +
-                                 $":play_pause: Song Author: {this.Data.CurrentTrack.Author}\n")
+                .WithDescription(
+                    $"[{this.Data.CurrentTrack.Title}]({this.Data.CurrentTrack.Uri})\n" +
+                    $":play_pause: Current timestamp: {this.Data.GetTimestamp()}\n" +
+                    $":play_pause: Song length: {this.Data.CurrentTrack.Length}\n" +
+                    $":play_pause: Song Author: {this.Data.CurrentTrack.Author}\n"
+                )
                 .WithColor(DiscordColor.Purple);
             await ctx.Channel.SendMessageAsync(embed.Build());
         }
@@ -531,24 +533,32 @@ public class AudioModule : BaseCommandModule
         }
 
         [Command("karaoke"), Priority(0)]
-        public async Task KaraokeLavaCommand(CommandContext ctx) => this.Data.Filters.Karaoke = null;
+        public async Task KaraokeLavaCommand(CommandContext ctx) 
+            => this.Data.Filters.Karaoke = null;
         [Command("timescale"), Priority(0)]
-        public async Task TimescaleLavaCommand(CommandContext ctx) => this.Data.Filters.Timescale = null;
+        public async Task TimescaleLavaCommand(CommandContext ctx) 
+            => this.Data.Filters.Timescale = null;
         [Command("tremolo"), Priority(0)]
-        public async Task TremoloLavaCommand(CommandContext ctx) => this.Data.Filters.Tremolo = null;
+        public async Task TremoloLavaCommand(CommandContext ctx) 
+            => this.Data.Filters.Tremolo = null;
         [Command("vibrato"), Priority(0)]
-        public async Task VibratoLavaCommand(CommandContext ctx) => this.Data.Filters.Vibrato = null;
+        public async Task VibratoLavaCommand(CommandContext ctx) 
+            => this.Data.Filters.Vibrato = null;
         [Command("rotation"), Priority(0)]
-        public async Task RotationLavaCommand(CommandContext ctx) => this.Data.Filters.Rotation = null;
+        public async Task RotationLavaCommand(CommandContext ctx) 
+            => this.Data.Filters.Rotation = null;
         [Command("lowpass"), Priority(0)]
-        public async Task LowPassLavaCommand(CommandContext ctx) => this.Data.Filters.Lowpass = null;
+        public async Task LowPassLavaCommand(CommandContext ctx) 
+            => this.Data.Filters.Lowpass = null;
         [Command("channelmix"), Priority(0)]
-        public async Task ChannelMixLavaCommand(CommandContext ctx) => this.Data.Filters.Channelmix = null;
+        public async Task ChannelMixLavaCommand(CommandContext ctx) 
+            => this.Data.Filters.Channelmix = null;
 
         [Command("karaoke")]
-        public async Task KaraokeLavaCommand(CommandContext ctx, double level = 1, double monoLevel = 1,
-            double filterBand = 220, double filterWidth = 100)
-        {
+        public async Task KaraokeLavaCommand(
+            CommandContext ctx, double level = 1, double monoLevel = 1,
+            double filterBand = 220, double filterWidth = 100
+        ) {
             this.Data.Filters.Karaoke = new Karaoke
             {
                 Level = level,
@@ -574,7 +584,8 @@ public class AudioModule : BaseCommandModule
         }
 
         [Command("tremolo")]
-        public async Task TremoloLavaCommand(CommandContext ctx, double frequency = 2.0, double depth = 0.5)
+        public async Task TremoloLavaCommand(
+            CommandContext ctx, double frequency = 2.0, double depth = 0.5)
         {
             this.Data.Filters.Tremolo = new Tremolo
             {
@@ -584,8 +595,9 @@ public class AudioModule : BaseCommandModule
         }
 
         [Command("vibrato")]
-        public async Task VibratoLavaCommand(CommandContext ctx, double frequency = 2.0, double depth = 0.5)
-        {
+        public async Task VibratoLavaCommand(
+            CommandContext ctx, double frequency = 2.0, double depth = 0.5
+        ) {
             this.Data.Filters.Vibrato = new Vibrato
             {
                 Frequency = frequency,
@@ -600,10 +612,11 @@ public class AudioModule : BaseCommandModule
         }
 
         [Command("distortion")]
-        public async Task DistortionLavaCommand(CommandContext ctx, double sinOffset = 0, double sinScale = 1,
-            double cosOffset = 0, double cosScale = 1, double tanOffset = 0, double tanScale = 1, double offset = 0,
-            double scale = 1)
-        {
+        public async Task DistortionLavaCommand(
+            CommandContext ctx, double sinOffset = 0, double sinScale = 1,
+            double cosOffset = 0, double cosScale = 1, double tanOffset = 0,
+            double tanScale = 1, double offset = 0, double scale = 1
+        ) {
             this.Data.Filters.Distortion = new Distortion
             {
                 SinOffset = sinOffset,
@@ -624,9 +637,10 @@ public class AudioModule : BaseCommandModule
         }
 
         [Command("channelmix")]
-        public async Task ChannelMixLavaCommand(CommandContext ctx, double leftToLeft = 1, double leftToRight = 0,
-            double rightToLeft = 0, double rightToRight = 1)
-        {
+        public async Task ChannelMixLavaCommand(
+            CommandContext ctx, double leftToLeft = 1, double leftToRight = 0, 
+            double rightToLeft = 0, double rightToRight = 1
+        ) {
             this.Data.Filters.Channelmix = new ChannelMix
             {
                 LeftToLeft = leftToLeft,

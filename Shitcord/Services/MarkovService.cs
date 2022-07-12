@@ -10,6 +10,7 @@ public class MarkovService
     private DiscordClient Client { get; }
     private DatabaseService DatabaseContext { get; }
     private Random Rng { get; }
+    // TODO(?): Discard old data
     static Dictionary<string, Dictionary<string, int>> markovStrings = new();
     private char[] _excludeCharacters = { '.', ',', ':', ';', '?', '!' }; 
 
@@ -38,8 +39,9 @@ public class MarkovService
         Client.MessageCreated += MarkovMessageHandler;
     }
 
-    // NOTE: The prob_array must be sorted!
-    private int CalculateRandomIndex(KeyValuePair<string, int>[] prob_array) {
+    // NOTE: The prob_array must be sorted - otherwise the algorithm won't work!
+    private int CalculateRandomIndex(KeyValuePair<string, int>[] prob_array) 
+    {
         int fitness_sum = prob_array.Select(x => x.Value).Sum();
         double calc_probability = 0.0;
         
@@ -47,7 +49,6 @@ public class MarkovService
         int index = 0;
         for (index = 0; index < prob_array.Length; index++) {
             calc_probability += (double)prob_array[index].Value / fitness_sum;
-
             if (gen_probability < calc_probability)
                 break;
         }
@@ -59,7 +60,7 @@ public class MarkovService
         return index;
     }
 
-    // TODO: Detect if markov is repeating same strings
+    // TODO: Detect if markov is repeating same strings - 3 chains at least
     public string GenerateMarkovString()
     {
         if (markovStrings.Count == 0)
@@ -77,6 +78,7 @@ public class MarkovService
 
             if (markovStrings.TryGetValue(rand_key, out var nextDict)) {
                 if (nextDict.Count != 0) {
+                    // TODO: Check: Is this sorting correct? Can I optimalize it?
                     var alignedDict = nextDict.OrderBy(x => x.Value).ToArray();
                     int found = CalculateRandomIndex(alignedDict);
                     rand_key = alignedDict[found].Key;
@@ -91,12 +93,14 @@ public class MarkovService
             } else break;
         } while (current_len++ < max_len);
 
-        return $"{Char.ToUpper(generated_string[0])}{generated_string.Remove(0, 1)}";
+        //return $"{generated_string[0]}{generated_string.Remove(0, 1)}";
+        return generated_string;
     }
 
     public void FeedStringsToMarkov(List<string> data) 
     {
         for (int i = 0; i < data.Count - 1; i++) {
+            // TODO(?): Do not store string if the next value is the same as the previous one 
             if (markovStrings.TryGetValue(data[i], out var nextDict)) {
                 if (nextDict.ContainsKey(data[i + 1]))
                     nextDict[data[i + 1]]++;
@@ -106,6 +110,7 @@ public class MarkovService
         markovStrings.TryAdd(data[data.Count - 1], new());
     }
 
+    // TODO(?): Ignore strings that start with the bot prefix
     private Task MarkovMessageHandler(DiscordClient client, MessageCreateEventArgs e)
     {
         if (!GatherData)
@@ -114,14 +119,22 @@ public class MarkovService
         if (e.Author.IsBot)
             return Task.CompletedTask;
 
-        string input = e.Message.Content.ToLower();
-        List<string> data = input.Split(' ').ToList();
+        //string input = e.Message.Content.ToLower();
+        string input = e.Message.Content;
+        List<string> data = input.Split(
+            new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries
+        ).ToList();
+
+        // TODO (?): Some logic to remove unnesessary characters
+        /*
         for (int i = 0; i < data.Count; i++) {
             if (_excludeCharacters.Contains(data[i].Last()))
-                data[i] = data[i].Remove(data[i].Length - 1);
-            else if (_excludeCharacters.Contains(data[i].First()))
-                data[i] = data[i].Remove(0);
+                data[i] = data[i].Substring(0, data[i].Length - 2);
+
+            if (_excludeCharacters.Contains(data[i].First()))
+                data[i] = data[i].Substring(1);
         }
+        */
 
         FeedStringsToMarkov(data);
         return Task.CompletedTask;
