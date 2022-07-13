@@ -83,6 +83,64 @@ public class MarkovModule : BaseCommandModule
         ));
     }
 
+    [Command("info"), Description("Displays markov data for the current guild")]
+    public async Task MarkovPrintInfoCommand(CommandContext ctx) 
+    {
+        double chance = (double)Data.ResponseChance / GuildMarkovData.MAX_CHANCE;
+        var description = 
+            $"Markov enabled: `{Data.IsEnabled}`\n" +
+            $"Min chain length: `{Data.MinChainLength}`\n" +
+            $"Max chain length: `{Data.MaxChainLength}`\n" +  
+            $"Auto response timeout: `{Data.ResponseTimeout}`\n" + 
+            $"Number of excluded channels: `{Data.ExcludedChannelIDs.Count}`\n" + 
+            $"Auto response chance: `{chance * 100}%`\n";
+
+        var embed = new DiscordEmbedBuilder()
+            .WithTitle("Markov info for the current guild:")
+            .WithDescription(description)
+            .WithColor(DiscordColor.Purple)
+            .Build();
+
+        await ctx.Channel.SendMessageAsync(embed);
+    }
+
+    [Command("exclude"), Description("Excludes a channel to not gather data from")]
+    public async Task MarkovExcludeChannelCommand(CommandContext ctx, DiscordChannel channel)
+    {
+        if (Data.ExcludedChannelIDs.Contains(channel.Id)) {
+            Data.ExcludedChannelIDs.Remove(channel.Id);
+            await ctx.RespondAsync(
+                $"Channel `{channel.Name}` is now excluded from data gathering"
+            );
+        } else {
+            Data.ExcludedChannelIDs.Add(channel.Id);
+            await ctx.RespondAsync(
+                $"Channel `{channel.Name}` is no longer excluded from data gathering"
+            );
+        }
+    }
+
+    [Command("excludeall"), Description("Excludes all channels from data gathering")]
+    public async Task MarkovExcludeAllChannelsCommand(CommandContext ctx)
+    {
+        var channels_to_add = ctx.Guild.Channels
+            .Where(x => !Data.ExcludedChannelIDs.Contains(x.Key))
+            .Select(x => x.Key)
+            .ToArray();
+
+        foreach (var channel in channels_to_add)
+            Data.ExcludedChannelIDs.Add(channel);
+
+        await ctx.RespondAsync("All channels in the guild are now excluded");
+    }
+
+    [Command("excludeclear"), Description("Removes all channels from exclusion list")]
+    public async Task MarkovExcludeClearChannelsCommand(CommandContext ctx)
+    {
+        Data.ExcludedChannelIDs.Clear();
+        await ctx.RespondAsync("Removed all channels from the *excluded* list");
+    }
+
     [Command("save")]
     public async Task MarkovSaveCommand(CommandContext ctx)
         => Markov.SaveMarkovBinaryData();

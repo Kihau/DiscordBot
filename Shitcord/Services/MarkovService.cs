@@ -143,6 +143,10 @@ public class MarkovService
             return;
         }
 
+        // Do not gather data from channels excluded by the user
+        if (data.ExcludedChannelIDs.Contains(e.Channel.Id))
+            return;
+
         // NOTE: Max word length is set to 64 chars
         List<string> parsed_input = input.Split(
             new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries
