@@ -26,13 +26,13 @@ public class DeleteQuery
         val = value;
         return this;
     }
-    public DeleteQuery IsLess(object value)
+    public DeleteQuery IsLessThan(object value)
     {
         oper = "<";
         val = value;
         return this;
     }
-    public DeleteQuery IsMore(object value)
+    public DeleteQuery IsMoreThan(object value)
     {
         oper = ">";
         val = value;
