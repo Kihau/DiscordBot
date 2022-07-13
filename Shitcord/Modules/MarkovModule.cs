@@ -24,13 +24,19 @@ public class MarkovModule : BaseCommandModule
         await base.BeforeExecutionAsync(ctx);
     }
 
-    [Command("disable"), Description("Disables markov")]
-    public async Task MarkovDisableCommand(CommandContext ctx) => Data.IsEnabled = false;
+    [Command("disable"), Description("Disables markov service")]
+    public async Task MarkovDisableCommand(CommandContext ctx) { 
+        Data.IsEnabled = false;
+        await ctx.RespondAsync($"Markov service is now disabled");
+    }
 
-    [Command("enable"), Description("Enables markov")]
-    public async Task MarkovEnableCommand(CommandContext ctx) => Data.IsEnabled = true; 
+    [Command("enable"), Description("Enables markov service")]
+    public async Task MarkovEnableCommand(CommandContext ctx) {
+        Data.IsEnabled = true; 
+        await ctx.RespondAsync($"Markov service is now enabled");
+    }
 
-    [Command("response"), Description("Sets markov autoresponse (input nothing to switch it)")]
+    [Command("autoresponse"), Description("Sets markov autoresponse (input nothing to switch it)")]
     public async Task MarkovResponseSetCommand(CommandContext ctx, bool? input) 
     {
         if (input is null)
@@ -75,18 +81,6 @@ public class MarkovModule : BaseCommandModule
             Data.MinChainLength, Data.MaxChainLength
         ));
     }
-
-    // TODO: Change name of this command (also respond when someone taggs the bot)
-    //[Command("markov")]
-    //public async Task MarkovCommand(CommandContext ctx, [RemainingText] string question) 
-    //    => await ctx.RespondAsync(Markov.GenerateMarkovString());
-
-    //[Command("markovfeed")]
-    //public async Task MarkovFeedCommand(CommandContext ctx)
-    //{
-    //    Markov.GatherData = !Markov.GatherData;
-    //    await ctx.RespondAsync($"Markov learning is now set to: `{Markov.GatherData}`");
-    //}
 
     [Command("save")]
     public async Task MarkovSaveCommand(CommandContext ctx)
