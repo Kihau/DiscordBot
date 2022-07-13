@@ -1,6 +1,4 @@
-using Shitcord.Database.Queries;
-
-namespace Shitcord.Services.Database;
+namespace Shitcord.Database.Queries;
 
 public class DeleteQuery
 {

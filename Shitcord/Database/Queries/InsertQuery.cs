@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace Shitcord.Services.Database;
+namespace Shitcord.Database.Queries;
 
 public class InsertQuery
 {

@@ -1,5 +1,4 @@
-using Shitcord.Services.Database;
-namespace Shitcord.Services.Queries;
+namespace Shitcord.Database.Queries;
 
 public class QueryBuilder
 {

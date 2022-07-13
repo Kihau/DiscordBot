@@ -1,5 +1,4 @@
 using Shitcord.Database.Queries;
-using Shitcord.Services.Queries;
 
 namespace Shitcord.Tests;
 

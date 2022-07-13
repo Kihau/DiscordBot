@@ -1,7 +1,6 @@
 using System.Text;
-using Shitcord.Database.Queries;
 
-namespace Shitcord.Services.Database;
+namespace Shitcord.Database.Queries;
 
 public class UpdateQuery
 {
