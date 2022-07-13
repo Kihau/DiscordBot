@@ -74,6 +74,9 @@ public class MarkovService
         
         var rand_key = startStrings[index];
         do {
+            if (generated_string.Length + rand_key.Length + 1 >= 2000)
+                break;
+
             generated_string += rand_key + " ";
 
             if (markovStrings.TryGetValue(rand_key, out var nextDict)) {
@@ -100,7 +103,7 @@ public class MarkovService
     public void FeedStringsToMarkov(List<string> data) 
     {
         for (int i = 0; i < data.Count - 1; i++) {
-            // TODO(?): Do not store string if the next value is the same as the previous one 
+            // TODO(?): Do not store chain string if the next value is the same as the previous one 
             if (markovStrings.TryGetValue(data[i], out var nextDict)) {
                 if (nextDict.ContainsKey(data[i + 1]))
                     nextDict[data[i + 1]]++;
@@ -139,9 +142,10 @@ public class MarkovService
             await e.Message.RespondAsync(response);
         }
 
+        // NOTE: Max word length is set to 64 chars
         List<string> parsed_input = input.Split(
             new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries
-        ).ToList();
+        ).Where(x => x.Length <= 64).ToList();
 
         // TODO (?): Some logic to remove unnesessary characters
         /*
