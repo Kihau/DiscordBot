@@ -1,26 +1,26 @@
 using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using System.Runtime.Serialization.Formatters.Binary;
 using Shitcord.Extensions;
+using Shitcord.Data;
 
 namespace Shitcord.Services;
 
 public class MarkovService
 {
     private DiscordClient Client { get; }
+    private Dictionary<ulong, GuildMarkovData> MarkovData { get; } = new();
     private DatabaseService DatabaseContext { get; }
     private Random Rng { get; }
     // TODO(?): Discard old data
     static Dictionary<string, Dictionary<string, int>> markovStrings = new();
     private char[] _excludeCharacters = { '.', ',', ':', ';', '?', '!' }; 
 
-    public bool IsEnabled { get; set; } = true;
-    public bool GatherData { get; set; } = true;
-
     // TODO: Those will be stored for each guild (together with IsEnabled, GatherData, 
     // AutoResponseTimeout, EnableAutoResponse, ExcludedChannel(?), IncludedChannels(?))
-    private const int min_len = 12;
-    private const int max_len = 20;
+    //private const int min_len = 12;
+    //private const int max_len = 20;
     
     // TODO: A very lazy solution - store it in database later on
     private string _markovBinaryPath = "markov.bin";
@@ -61,7 +61,7 @@ public class MarkovService
     }
 
     // TODO: Detect if markov is repeating same strings - 3 chains at least
-    public string GenerateMarkovString()
+    public string GenerateMarkovString(int min_len, int max_len)
     {
         if (markovStrings.Count == 0)
             throw new CommandException("Markov is speechless. It needs to learn more");
@@ -110,18 +110,36 @@ public class MarkovService
         markovStrings.TryAdd(data[data.Count - 1], new());
     }
 
-    // TODO(?): Ignore strings that start with the bot prefix
-    private Task MarkovMessageHandler(DiscordClient client, MessageCreateEventArgs e)
+    public GuildMarkovData GetOrAddData(DiscordGuild guild)
     {
-        if (!GatherData)
-            return Task.CompletedTask;
+        if (MarkovData.TryGetValue(guild.Id, out var data))
+            return data;
 
+        data = new GuildMarkovData();
+        MarkovData.Add(guild.Id, data);
+
+        return data;
+    }
+
+    // TODO(?): Ignore strings that start with the bot prefix
+    private async Task MarkovMessageHandler(DiscordClient client, MessageCreateEventArgs e)
+    {
         if (e.Author.IsBot)
-            return Task.CompletedTask;
+            return;
 
-        //string input = e.Message.Content.ToLower();
+        var data = GetOrAddData(e.Guild);
+
+        if (!data.IsEnabled)
+            return;
+
         string input = e.Message.Content;
-        List<string> data = input.Split(
+        // When the bot is tagged, respond with a markov message
+        if (input.StartsWith(Client.CurrentUser.Mention)) { 
+            var response = GenerateMarkovString(data.MinChainLength, data.MaxChainLength);
+            await e.Message.RespondAsync(response);
+        }
+
+        List<string> parsed_input = input.Split(
             new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries
         ).ToList();
 
@@ -136,8 +154,7 @@ public class MarkovService
         }
         */
 
-        FeedStringsToMarkov(data);
-        return Task.CompletedTask;
+        FeedStringsToMarkov(parsed_input);
     }
 
     public void LoadMarkovBinaryData()
