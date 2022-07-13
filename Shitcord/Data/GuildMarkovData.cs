@@ -8,17 +8,18 @@ namespace Shitcord.Data;
 public class GuildMarkovData
 {
     public bool IsEnabled { get; set; } = true;
-
-    public const int MAX_CHANCE = 100;
-    public int MessageChance { get; set; } = 10;
-
-    public bool IncludeAddChannels { get; set; } = false;
+    // TODO: vvvvvvv
+    public bool IncludeAddChannels { get; set; } = true;
     public List<ulong> IncludedChannelIDs { get; set; } = new();
 
-    public bool ResponseEnables { get; set; } = false;
+    public const int MAX_CHANCE = 1000;
+    public bool ResponseEnabled { get; set; } = false;
+    public int ResponseChance { get; set; } = 100;
     public TimeSpan ResponseTimeout { get; set; } = new(0, 30, 0);
-    public DateTime ResponseTimer { get; set; } = DateTime.Now;
+    public DateTime LastResponse { get; set; } = DateTime.Now;
 
+    public const int DEFAULT_MIN = 8;
+    public const int DEFAULT_MAX = 28;
     public int MinChainLength { get; set; } = 8;
     public int MaxChainLength { get; set; } = 28;
 }

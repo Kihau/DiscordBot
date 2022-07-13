@@ -140,6 +140,7 @@ public class MarkovService
         if (input.StartsWith(Client.CurrentUser.Mention)) { 
             var response = GenerateMarkovString(data.MinChainLength, data.MaxChainLength);
             await e.Message.RespondAsync(response);
+            return;
         }
 
         // NOTE: Max word length is set to 64 chars
@@ -159,6 +160,25 @@ public class MarkovService
         */
 
         FeedStringsToMarkov(parsed_input);
+
+        // Logic to auto respond to user messages with markov strings
+        if (!data.ResponseEnabled)
+            return;
+
+        var time = DateTime.Now - data.LastResponse;
+        if (time < data.ResponseTimeout)
+            return;
+
+        var rolled_chance = Rng.Next(GuildMarkovData.MAX_CHANCE);
+        if (data.ResponseChance >= rolled_chance) {
+            data.LastResponse = DateTime.Now;
+            var markov_text = GenerateMarkovString(data.MinChainLength, data.MaxChainLength);
+
+            var direct_respond = Rng.Next(2) == 1;
+            if (direct_respond) 
+                await e.Message.RespondAsync(markov_text);
+            else await e.Channel.SendMessageAsync(markov_text);
+        }
     }
 
     public void LoadMarkovBinaryData()
