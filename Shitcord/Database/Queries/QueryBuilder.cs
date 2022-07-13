@@ -3,7 +3,7 @@ namespace Shitcord.Services.Queries;
 
 public class QueryBuilder
 {
-    public SelectQuery Retrieve(string colName)
+    public SelectQuery Retrieve(params string[] colName)
     {
         return new SelectQuery(colName);
     }

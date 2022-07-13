@@ -1,12 +1,11 @@
+using Shitcord.Database.Queries;
+
 namespace Shitcord.Services.Database;
 
 public class DeleteQuery
 {
     private string table;
-    private string c1;
-    private string oper;
-    private object val;
-
+    private Condition condition;
     //DELETE FROM t WHERE c1 = val;
     
     public DeleteQuery From(string tableName)
@@ -14,43 +13,23 @@ public class DeleteQuery
         table = tableName;
         return this;
     }
-    public DeleteQuery Where(string columnName)
+    public DeleteQuery Where(Condition condition)
     {
-        c1 = columnName;
+        this.condition = condition;
         return this;
     }
-    //hides the method from the object class
-    public new DeleteQuery Equals(object value)
-    {
-        oper = "=";
-        val = value;
-        return this;
-    }
-    public DeleteQuery IsLessThan(object value)
-    {
-        oper = "<";
-        val = value;
-        return this;
-    }
-    public DeleteQuery IsMoreThan(object value)
-    {
-        oper = ">";
-        val = value;
-        return this;
-    }
-    
+
     public string Build()
     {
         if (table == null)
         {
             throw new Exception("A required field is null");
         }
-        if (c1==null || oper==null || val==null)
+        if (condition == null)
         {
             //deletes all rows from table
             return $"DELETE FROM {table}";
         }
-        return $"DELETE FROM {table} WHERE {c1} {oper} {val};";
+        return $"DELETE FROM {table} WHERE {condition.Get()};";
     }
-
 }
