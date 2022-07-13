@@ -15,6 +15,8 @@ public class SelectQuery
     private readonly string[] cols;
     private string table;
     private Condition condition;
+    private string orderBy;
+    private bool isAscending = true;
 
     public SelectQuery(params string[] columnNames)
     {
@@ -34,6 +36,13 @@ public class SelectQuery
         this.condition = condition;
         return this;
     }
+    public SelectQuery OrderBy(string columnName, bool isAscending = true)
+    {
+        orderBy = columnName;
+        this.isAscending = isAscending;
+        return this;
+    }
+
     private void AppendColumns(StringBuilder sb)
     {
         for (int i = 0; ; i++)
@@ -71,6 +80,15 @@ public class SelectQuery
         {
             selectQuery.Append("WHERE ");
             selectQuery.Append($"{condition.Get()}");
+        }
+
+        if (orderBy != null)
+        {
+            selectQuery.Append($"ORDER BY {orderBy} ");
+            if (!isAscending)
+            {
+                selectQuery.Append("DESC");
+            }
         }
         return selectQuery.ToString();
     }
