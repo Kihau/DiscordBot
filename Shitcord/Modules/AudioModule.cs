@@ -110,7 +110,7 @@ public class AudioModule : BaseCommandModule
         await ctx.Channel.SendMessageAsync(msgBuilder);
     }
 
-    [Command("ongupdates"), Aliases("su")]
+    [Command("songupdates"), Aliases("su")]
     public async Task SetSongUpdatesCommand(CommandContext ctx, DiscordChannel? channel = null)
     {
         if (channel is null)

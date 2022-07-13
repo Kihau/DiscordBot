@@ -9,7 +9,6 @@ using Shitcord.Extensions;
 using Shitcord.Services;
 namespace Shitcord.Modules;
 
-//[Group("audio")]
 [Description("Fun and silly commands")]
 public class FunModule : BaseCommandModule 
 {

@@ -116,6 +116,7 @@ public class Discordbot
 		commands.RegisterCommands<UtilityModule>();
 		commands.RegisterCommands<AuthModule>();
 		commands.RegisterCommands<FunModule>();
+        commands.RegisterCommands<MarkovModule>();
 
 		if (this.DebugEnabled)
 			commands.RegisterCommands<TestingModule>();
