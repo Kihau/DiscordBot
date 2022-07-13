@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.Data.Sqlite;
+using Shitcord.Database;
 
 namespace Shitcord.Services;
 
@@ -218,12 +219,37 @@ public class DatabaseService
         return readCommand.ExecuteReader();
     }
 
-    private StringBuilder Spaces(int len)
+    private static StringBuilder Spaces(int len)
     {
         StringBuilder spaces = new StringBuilder(len, len);
         for (int i = 0; i < len; i++)
             spaces.Append(' ');
 
         return spaces;
+    }
+
+    public static string ProduceCreateTableQuery(string tableName, List<Column> columns)
+    {
+        StringBuilder query = new StringBuilder($"CREATE TABLE IF NOT EXISTS {tableName} (");
+        for (int i = 0; ; i++){
+            Column column = columns[i];
+            string identifiers = "";
+            if (!column.nullable)
+            {
+                identifiers = " not null";
+            }
+            if (column.primaryKey)
+            {
+                identifiers = " not null PRIMARY KEY";
+            }
+            query.Append($"{column.name} {column.type}{identifiers}");
+            if (i == columns.Count - 1){
+                break;
+            }
+            query.Append(',');
+        }
+        
+        query.Append(");");
+        return query.ToString();
     }
 }

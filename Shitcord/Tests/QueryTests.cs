@@ -94,6 +94,5 @@ class QueryTests
             Console.WriteLine("Given: " + given);
             Console.WriteLine("Expected: " + expected);
         }
-            
     }
 }
