@@ -34,10 +34,18 @@ class QueryTests
             .Where(Condition.New("field3").IsLike("N%"))
             .Build();
         
+        const string expectedOrderBy = "SELECT (field1) FROM t WHERE c LIKE \"[d-f]%\" ORDER BY chain_str DESC";
+        string selectOrderBy = QueryBuilder.New()
+            .Retrieve("field1").From("t")
+            .Where(Condition.New("c").IsLike("[d-f]%"))
+            .OrderBy("chain_str", false)
+            .Build();
+        
         Console.WriteLine("Selects:");
         compareStartsWith(select1, expected1);
         compareStartsWith(select2, expected2);
         compareStartsWith(select3, expected3);
+        compareStartsWith(selectOrderBy, expectedOrderBy);
     }
 
     static void conditionTests()
