@@ -1,0 +1,92 @@
+using Shitcord.Database.Queries;
+using Shitcord.Services.Queries;
+
+namespace Shitcord.Tests;
+
+class QueryTests
+{
+    private static int tests = 0;
+    public static void runTests()
+    {
+        selectTests();
+        insertTests();
+        updateTests();
+        conditionTests();
+    }
+
+    private static void selectTests()
+    {
+        const string expected1 = "SELECT (name,lastname,another) FROM markov WHERE chain_data_id = 23";
+        string select1 = QueryBuilder.New()
+            .Retrieve("name", "lastname", "another").From("markov")
+            .Where(Condition.New("chain_data_id").Equals(23))
+            .Build();
+        
+        const string expected2 = "SELECT * FROM markov WHERE id = 11";
+        string select2 = QueryBuilder.New()
+            .Retrieve("(*)").From("markov")
+            .Where(Condition.New("id").Equals(11))
+            .Build();
+        
+        const string expected3 = "SELECT (field1,field2) FROM markov WHERE field3 LIKE \"N%\"";
+        string select3 = QueryBuilder.New()
+            .Retrieve("field1", "field2").From("markov")
+            .Where(Condition.New("field3").IsLike("N%"))
+            .Build();
+        
+        Console.WriteLine("Selects:");
+        compareStartsWith(select1, expected1);
+        compareStartsWith(select2, expected2);
+        compareStartsWith(select3, expected3);
+    }
+
+    static void conditionTests()
+    {
+        const string expected1 = "student_name = \"Jack\" AND age > 18";
+        string condition1 = Condition.New("student_name").Equals("Jack").And("age").IsMoreThan(18).Get();
+
+        const string expected2 = "lastname LIKE \"%ierce\" AND age > 18 AND name = \"Bruh\" OR major LIKE \"Math%\"";
+        string condition2 = Condition.New("lastname").IsLike("%ierce")
+            .And("age").IsMoreThan(18)
+            .And("name").Equals("Bruh")
+            .Or("major").IsLike("Math%")
+            .Get();
+        
+        Console.WriteLine("Conditions:");
+        compareStartsWith(condition1, expected1);
+        compareStartsWith(condition2, expected2);
+    }
+    static void insertTests()
+    {
+        string expected1 = "INSERT INTO MyTable (build,an,dwq) VALUES (2,\"bur\",True)";
+        string insert1 = QueryBuilder.New().Insert().Into("MyTable").Values(2, "bur", true).Columns("build", "an", "dwq").Build();
+        
+        Console.WriteLine("Inserts:");
+        compareStartsWith(insert1, expected1);
+    }
+
+    static void updateTests()
+    {
+        const string expected = "UPDATE random_table SET name = \"bis\" WHERE id < 234";
+        string insert1 = QueryBuilder.New().Update("random_table")
+            .Set("name", "bis")
+            .Where(Condition.New("id").IsLessThan(234))
+            .Build();
+        
+        Console.WriteLine("Updates:");
+        compareStartsWith(insert1, expected);
+    }
+    private static void compareStartsWith(string given, string expected)
+    {
+        bool compare = given.StartsWith(expected);
+        if (compare)
+            Console.WriteLine($"#{tests++} Passed");
+        else
+        {
+            Console.WriteLine($"#{tests++} Failed");
+            Console.WriteLine("Given: " + given);
+            Console.WriteLine("Expected: " + expected);
+        }
+            
+    }
+}
