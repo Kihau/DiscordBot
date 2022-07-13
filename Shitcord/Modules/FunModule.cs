@@ -17,15 +17,16 @@ public class FunModule : BaseCommandModule
 
     public FunModule(MarkovService service) => this.Markov = service;
 
+    // TODO: Change name of this command (also respond when someone taggs the bot)
     [Command("markov")]
     public async Task MarkovCommand(CommandContext ctx, [RemainingText] string question) 
-        => await ctx.RespondAsync(Markov.GenerateMarkovString(12, 20));
+        => await ctx.RespondAsync(Markov.GenerateMarkovString());
 
     [Command("markovfeed")]
     public async Task MarkovFeedCommand(CommandContext ctx)
     {
-        Markov.LearnEnabled = !Markov.LearnEnabled;
-        await ctx.RespondAsync($"Markov learning is now set to: `{Markov.LearnEnabled}`");
+        Markov.GatherData = !Markov.GatherData;
+        await ctx.RespondAsync($"Markov learning is now set to: `{Markov.GatherData}`");
     }
 
     [Command("markovsave")]

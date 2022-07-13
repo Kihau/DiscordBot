@@ -1,6 +1,7 @@
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using System.Runtime.Serialization.Formatters.Binary;
+using Shitcord.Extensions;
 
 namespace Shitcord.Services;
 
@@ -8,11 +9,17 @@ public class MarkovService
 {
     private DiscordClient Client { get; }
     private DatabaseService DatabaseContext { get; }
+    private Random Rng { get; }
     static Dictionary<string, Dictionary<string, int>> markovStrings = new();
     private char[] _excludeCharacters = { '.', ',', ':', ';', '?', '!' }; 
 
-    public bool Enabled { get; set; } = true;
-    public bool LearnEnabled { get; set; } = true;
+    public bool IsEnabled { get; set; } = true;
+    public bool GatherData { get; set; } = true;
+
+    // TODO: Those will be stored for each guild (together with IsEnabled, GatherData, 
+    // AutoResponseTimeout, EnableAutoResponse, ExcludedChannel(?), IncludedChannels(?))
+    private const int min_len = 12;
+    private const int max_len = 20;
     
     // TODO: A very lazy solution - store it in database later on
     private string _markovBinaryPath = "markov.bin";
@@ -21,6 +28,7 @@ public class MarkovService
     {
         Client = bot.Client;
         DatabaseContext = database;
+        Rng = new Random();
 
         //Client.Ready += (sender, e) => {
         //    sender.MessageCreated += MarkovMessageHandler;
@@ -30,56 +38,57 @@ public class MarkovService
         Client.MessageCreated += MarkovMessageHandler;
     }
 
-    public string GenerateMarkovString(int min_len, int max_len)
+    // NOTE: The prob_array must be sorted!
+    private int CalculateRandomIndex(KeyValuePair<string, int>[] prob_array) {
+        int fitness_sum = prob_array.Select(x => x.Value).Sum();
+        double calc_probability = 0.0;
+        
+        var gen_probability = Rng.NextDouble();
+        int index = 0;
+        for (index = 0; index < prob_array.Length; index++) {
+            calc_probability += (double)prob_array[index].Value / fitness_sum;
+
+            if (gen_probability < calc_probability)
+                break;
+        }
+
+        // Probably don't need this, but better safe than sorry.
+        if (index == prob_array.Length)
+            index--;
+
+        return index;
+    }
+
+    // TODO: Detect if markov is repeating same strings
+    public string GenerateMarkovString()
     {
+        if (markovStrings.Count == 0)
+            throw new CommandException("Markov is speechless. It needs to learn more");
+
         string generated_string = "";
         int current_len = 0;
 
-        if (markovStrings.Count == 0)
-            return "";
-
-        var rng = new Random();
-        var index = rng.Next(markovStrings.Count - 1);
         var startStrings = markovStrings.Keys.ToArray();
+        var index = Rng.Next(startStrings.Length);
         
         var rand_key = startStrings[index];
         do {
             generated_string += rand_key + " ";
-            if (!markovStrings.TryGetValue(rand_key, out var nextDict)) {
-                if (current_len++ < min_len) {
-                    index = rng.Next(markovStrings.Count - 1);
+
+            if (markovStrings.TryGetValue(rand_key, out var nextDict)) {
+                if (nextDict.Count != 0) {
+                    var alignedDict = nextDict.OrderBy(x => x.Value).ToArray();
+                    int found = CalculateRandomIndex(alignedDict);
+                    rand_key = alignedDict[found].Key;
+                } else if (current_len < min_len) {
+                    index = Rng.Next(startStrings.Length);
                     rand_key = startStrings[index];
-                    continue;
-                }
-                break;
-            }
-
-            if (nextDict.Count == 0) {
-                continue;
-            }
-            
-            var alignedDict = nextDict.ToArray();
-            var probabilities = new List<double>();
-
-            int fitness_sum = alignedDict.Select(x => x.Value).Sum();
-            double prev_probability = 0.0;
-            double fitness = 0.0;
-            
-            for (int i = 0; i < alignedDict.Length; i++) {
-                prev_probability += fitness / fitness_sum;
-                probabilities.Add(prev_probability);
-            }
-
-            int found = 0;
-            var gen_num = rng.NextDouble();
-            
-            while (found < probabilities.Count) {
-                if (gen_num < probabilities[found])
-                    break;
-                found++;
-            }
-
-            rand_key = alignedDict[--found].Key;
+                } else break;
+                
+            } else if (current_len < min_len) {
+                index = Rng.Next(startStrings.Length);
+                rand_key = startStrings[index];
+            } else break;
         } while (current_len++ < max_len);
 
         return $"{Char.ToUpper(generated_string[0])}{generated_string.Remove(0, 1)}";
@@ -99,7 +108,10 @@ public class MarkovService
 
     private Task MarkovMessageHandler(DiscordClient client, MessageCreateEventArgs e)
     {
-        if (!LearnEnabled)
+        if (!GatherData)
+            return Task.CompletedTask;
+
+        if (e.Author.IsBot)
             return Task.CompletedTask;
 
         string input = e.Message.Content.ToLower();
