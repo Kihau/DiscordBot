@@ -1,59 +1,77 @@
-using Shitcord.Extensions;
+using System.Text;
+using Shitcord.Database.Queries;
 
 namespace Shitcord.Services.Database;
 
 public class SelectQuery
 {
-    //SELECT c1 FROM t WHERE c2 = val;
-    
-    private readonly string c1;
-    private string table;
-    private string c2;
-    private string oper;
-    private object val;
 
-    public SelectQuery(string colName)
+    //SELECT c1 FROM t WHERE c2 = val;
+    //alternatively:
+    //SELECT (c1, c2, c3) FROM t WHERE c2 = val;
+    //select every column:
+    //SELECT * FROM t WHERE c2 = val;
+    
+    private readonly string[] cols;
+    private string table;
+    private Condition condition;
+
+    public SelectQuery(params string[] columnNames)
     {
-        c1 = colName;
+        if (columnNames.Length < 1)
+        {
+            throw new Exception("No column parameters were given");
+        }
+        cols = columnNames;
     }
     public SelectQuery From(string tableName)
     {
         table = tableName;
         return this;
     }
-    public SelectQuery Where(string columnName)
+    public SelectQuery Where(Condition condition)
     {
-        c2 = columnName;
+        this.condition = condition;
         return this;
     }
-    //hides the method from the object class
-    public new SelectQuery Equals(object value)
+    private void AppendColumns(StringBuilder sb)
     {
-        oper = "=";
-        val = value;
-        return this;
-    }
-    public SelectQuery IsLessThan(object value)
-    {
-        oper = "<";
-        val = value;
-        return this;
-    }
-    public SelectQuery IsMoreThan(object value)
-    {
-        oper = ">";
-        val = value;
-        return this;
+        for (int i = 0; ; i++)
+        {
+            if (i == cols.Length - 1)
+            {
+                sb.Append(cols[i]);
+                break;
+            }
+            sb.Append(cols[i]).Append(',');
+        }
     }
     public string Build()
     {
-        if (table==null || c2==null || oper==null || val==null)
+        if (table==null)
         {
             throw new Exception("A required field is null");
         }
 
-        return val is string
-            ? $"SELECT {c1} FROM {table} WHERE {c2} {oper} \"{val}\"" 
-            : $"SELECT {c1} FROM {table} WHERE {c2} {oper} {val}";
+        StringBuilder selectQuery = new StringBuilder("SELECT ");
+        
+        if(cols.Length==1 && (cols[0]=="*" || cols[0]=="(*)"))
+        {
+            selectQuery.Append('*').Append(' ');
+        }
+        else
+        {
+            selectQuery.Append('(');
+            AppendColumns(selectQuery);
+            selectQuery.Append(')').Append(' ');
+        }
+
+        selectQuery.Append($"FROM {table} ");
+        if (condition != null)
+        {
+            selectQuery.Append("WHERE ");
+            selectQuery.Append($"{condition.Get()}");
+        }
+        return selectQuery.ToString();
     }
 }

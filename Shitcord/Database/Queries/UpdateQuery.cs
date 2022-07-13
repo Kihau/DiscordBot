@@ -1,4 +1,5 @@
 using System.Text;
+using Shitcord.Database.Queries;
 
 namespace Shitcord.Services.Database;
 
@@ -9,9 +10,7 @@ public class UpdateQuery
     private readonly string table;
     private string c1;
     private object val1;
-    private string c2;
-    private string oper;
-    private object val2;
+    private Condition condition;
 
     public UpdateQuery(string tableName)
     {
@@ -24,29 +23,9 @@ public class UpdateQuery
         val1 = value;
         return this;
     }
-    public UpdateQuery Where(string fieldName)
+    public UpdateQuery Where(Condition condition)
     {
-        c2 = fieldName;
-        return this;
-    }
-    //hides the method from the object class
-    public new UpdateQuery Equals(object value)
-    {
-        oper = "=";
-        val2 = value;
-        return this;
-    }
-    
-    public UpdateQuery IsLessThan(object value)
-    {
-        oper = "<";
-        val2 = value;
-        return this;
-    }
-    public UpdateQuery IsMoreThan(object value)
-    {
-        oper = ">";
-        val2 = value;
+        this.condition = condition;
         return this;
     }
     public string Build()
@@ -57,33 +36,26 @@ public class UpdateQuery
         }
 
         StringBuilder queryBuilder = new StringBuilder($"UPDATE {table} SET {c1} = ");
-        if (c2 == null && oper == null && val2 == null)
+        AttachValue(queryBuilder);
+        if (condition == null)
         {
-            AttachValue(queryBuilder, val1);
             return queryBuilder.ToString();
         }
+        
+        queryBuilder.Append($" WHERE {condition.Get()}");
 
-        if (c2 == null || oper == null || val2 == null)
-        {
-            throw new Exception("A required field is null");
-        }
-        
-        AttachValue(queryBuilder, val1);
-        queryBuilder.Append($"WHERE {c2} {oper} ");
-        AttachValue(queryBuilder, val2);
-        
         return queryBuilder.ToString();
     }
 
-    private void AttachValue(StringBuilder queryBuilder, object value)
+    private void AttachValue(StringBuilder queryBuilder)
     {
-        if (value is string)
+        if (val1 is string)
         {
-            queryBuilder.Append($"\"{value}\"");
+            queryBuilder.Append($"\"{val1}\"");
         }
         else
         {
-            queryBuilder.Append($"{value}");
+            queryBuilder.Append($"{val1}");
         }
     }
 }
