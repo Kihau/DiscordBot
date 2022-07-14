@@ -60,9 +60,21 @@ class QueryTests
             .Or("major").IsLike("Math%")
             .Get();
         
+        const string expected3 = "customer_name <> \"Alice\" AND customer_name LIKE \"%lice\"";
+        string condition3 = Condition.New("customer_name").IsDiffFrom("Alice")
+            .And("customer_name").IsLike("%lice")
+            .Get();
+        
+        const string expected4 = "targetNumber <> 55 AND targetNumber > \"51\"";
+        string condition4 = Condition.New("targetNumber").IsDiffFrom(55)
+            .And("targetNumber").IsMoreThan("51")
+            .Get();
+        
         Console.WriteLine("Conditions:");
         compareStartsWith(condition1, expected1);
         compareStartsWith(condition2, expected2);
+        compareStartsWith(condition3, expected3);
+        compareStartsWith(condition4, expected4);
     }
     static void insertTests()
     {

@@ -20,7 +20,7 @@ public class SelectQuery
     public SelectQuery(params string[] columnNames)
     {
         if (columnNames.Length < 1)
-            throw new Exception("No column parameters were given");
+            throw new QueryException("No column parameters were given");
         
         cols = columnNames;
     }
@@ -54,7 +54,7 @@ public class SelectQuery
     public string Build()
     {
         if (table==null) 
-            throw new Exception("A required field is null");
+            throw new QueryException("A required field is null");
         
 
         StringBuilder selectQuery = new StringBuilder("SELECT ");
