@@ -106,6 +106,8 @@ public class DatabaseServiceNew
     public bool ExistsInTable(string tableName, Condition condition)
     {
         string existsStatement = QueryBuilder.New().Retrieve("*").From(tableName).Where(condition).Build();
+        Console.WriteLine(existsStatement);
+        Console.WriteLine("length: " + existsStatement.Length);
         var reader = executeRead(existsStatement);
         bool rowsExist = reader.HasRows;
         return rowsExist;
@@ -113,8 +115,9 @@ public class DatabaseServiceNew
     
     public List<List<object>>? GatherData(string selectStatement)
     {
-        var readCommand = new SqliteCommand(selectStatement, connection);
-        var reader =  readCommand.ExecuteReader();
+        Console.WriteLine(selectStatement);
+        Console.WriteLine("length: " + selectStatement.Length);
+        var reader = executeRead(selectStatement);
         return GatherData(reader);
     }
     

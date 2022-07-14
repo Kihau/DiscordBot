@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.Data.Sqlite;
+using Microsoft.VisualBasic;
 using Shitcord.Database;
 using Shitcord.Database.Queries;
 using Shitcord.Services;
@@ -94,18 +95,41 @@ public class DatabaseTests
         
         //to investigate - ExistsInTable causes table lock
         //targeting Y
-        bool existsY = service.ExistsInTable(TABLE, 
+        for (int i = 0; i < 10; i++)
+        {
+            bool existsLast = service.ExistsInTable(TABLE,
+                Condition.New(MarkovTable.FREQUENCY.name).IsLessThan(333)
+                    .And(MarkovTable.FREQUENCY.name).IsMoreThan(10));
+            Console.WriteLine("[Exists] last: " + existsLast);
+        }
+        
+        /*bool existsY = service.ExistsInTable(TABLE, 
             Condition.New(MarkovTable.CHAIN.name).IsDiffFrom("B")
                 .And(MarkovTable.CHAIN.name).IsDiffFrom("C")
                 .And(MarkovTable.CHAIN.name).IsDiffFrom("U"));
-
+        Console.WriteLine("[Exists] records other than B, C, U: " + existsY);
+        
         bool existsFreq = service.ExistsInTable(TABLE,
             Condition.New(MarkovTable.FREQUENCY.name).IsLessThan(999)
                 .And(MarkovTable.FREQUENCY.name).IsMoreThan(40));
-
-        //Console.WriteLine("[Exists] records other than B, C, U: " + existsY);
-        //Console.WriteLine("[Exists] frequency 40<f<999: " + existsFreq);
-
+        Console.WriteLine("[Exists] frequency 40<f<999: " + existsFreq);*/
+        
+        for (int i = 0; i < 10; i++)
+        {
+            string q = QueryBuilder.New().Retrieve("*").From(TABLE)
+                .Where(Condition.New(MarkovTable.FREQUENCY.name).IsLessThan(333)
+                    .And(MarkovTable.FREQUENCY.name).IsMoreThan(40)).Build();
+            List<List<object>> list = service.GatherData(q);
+            if (list == null) {
+                Console.WriteLine("RESULT is null");
+            }
+            else {
+                Console.WriteLine($"RESULT columns {list.Count}, rows: {list[0].Count}");
+            }
+        }
+        
+        
+        
         string table = service.TableToString(TABLE, MarkovTable.COLUMNS);
         Console.WriteLine(table);
     }
