@@ -20,7 +20,7 @@ public class Condition
     {
         if (operatorExpected)
         {
-            throw new Exception("Syntax error");
+            throw new QueryException("Syntax error");
         }
         operatorExpected = true;
         condition.Append("AND").Append(' ').Append(columnName).Append(' ');
@@ -30,7 +30,7 @@ public class Condition
     {
         if (operatorExpected)
         {
-            throw new Exception("Syntax error");
+            throw new QueryException("Syntax error");
         }
         operatorExpected = true;
         condition.Append("OR").Append(' ').Append(columnName).Append(' ');
@@ -41,10 +41,22 @@ public class Condition
     {
         if (!operatorExpected)
         {
-            throw new Exception("Syntax error");
+            throw new QueryException("Syntax error");
         }
         operatorExpected = false;
         condition.Append('=').Append(' ');
+        AppendValue(value);
+        condition.Append(' ');
+        return this;
+    }
+    public Condition IsDiffFrom(object value)
+    {
+        if (!operatorExpected)
+        {
+            throw new QueryException("Syntax error");
+        }
+        operatorExpected = false;
+        condition.Append("<>").Append(' ');
         AppendValue(value);
         condition.Append(' ');
         return this;
@@ -54,7 +66,7 @@ public class Condition
     {
         if (!operatorExpected)
         {
-            throw new Exception("Syntax error");
+            throw new QueryException("Syntax error");
         }
         operatorExpected = false;
         condition.Append("LIKE").Append(' ');
@@ -67,7 +79,7 @@ public class Condition
     {
         if (!operatorExpected)
         {
-            throw new Exception("Syntax error");
+            throw new QueryException("Syntax error");
         }
         operatorExpected = false;
         condition.Append('<').Append(' ');
@@ -79,7 +91,7 @@ public class Condition
     {
         if (!operatorExpected)
         {
-            throw new Exception("Syntax error");
+            throw new QueryException("Syntax error");
         }
         operatorExpected = false;
         condition.Append('>').Append(' ');
@@ -102,7 +114,7 @@ public class Condition
     {
         if (operatorExpected)
         {
-            throw new Exception("Condition is incomplete");
+            throw new QueryException("Condition is incomplete");
         }
         return condition.ToString();
     }

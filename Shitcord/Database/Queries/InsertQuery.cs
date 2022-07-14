@@ -41,14 +41,14 @@ public class InsertQuery
     {
         if (table==null || vals==null)
         {
-            throw new Exception("A required field is null");
+            throw new QueryException("A required field is null");
         }
         StringBuilder queryBuilder = new StringBuilder($"INSERT INTO {table} ");
         if (cols != null)
         {
             if (cols.Length != vals.Length)
             {
-                throw new Exception("Number of column parameters differed from the number of values");
+                throw new QueryException("Number of column parameters differed from the number of values");
             }
             queryBuilder.Append('(');
             AppendColumnNames(queryBuilder, cols);

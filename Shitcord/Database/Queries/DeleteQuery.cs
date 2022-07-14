@@ -21,7 +21,7 @@ public class DeleteQuery
     {
         if (table == null)
         {
-            throw new Exception("A required field is null");
+            throw new QueryException("A required field is null");
         }
         if (condition == null)
         {

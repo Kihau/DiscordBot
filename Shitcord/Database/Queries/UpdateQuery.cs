@@ -31,7 +31,7 @@ public class UpdateQuery
     {
         if (table==null || c1==null || val1==null)
         {
-            throw new Exception("A required field is null");
+            throw new QueryException("A required field is null");
         }
 
         StringBuilder queryBuilder = new StringBuilder($"UPDATE {table} SET {c1} = ");

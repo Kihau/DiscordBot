@@ -9,7 +9,6 @@ public class DatabaseServiceNew
 {
     private const string DATABASE_NAME = "Resources/BotDatabase.sqlite";
     private readonly SqliteConnection connection;
-    private const int BASE_WIDTH = 10;
 
     public DatabaseServiceNew()
     {
@@ -106,7 +105,7 @@ public class DatabaseServiceNew
     //tests if a record exists in the specified table which satisfies given condition
     public bool ExistsInTable(string tableName, Condition condition)
     {
-        string existsStatement = QueryBuilder.New().Retrieve().From(tableName).Where(condition).Build();
+        string existsStatement = QueryBuilder.New().Retrieve("*").From(tableName).Where(condition).Build();
         var cmd = new SqliteCommand(existsStatement, connection);
         SqliteDataReader reader = cmd.ExecuteReader();
         bool rowsExist = reader.HasRows;
