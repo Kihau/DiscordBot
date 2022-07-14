@@ -92,6 +92,7 @@ public class MarkovModule : BaseCommandModule
             $"Min chain length: `{Data.MinChainLength}`\n" +
             $"Max chain length: `{Data.MaxChainLength}`\n" +  
             $"Auto response timeout: `{Data.ResponseTimeout}`\n" + 
+            $"Last response time: `{Data.LastResponse}`\n" + 
             $"Number of excluded channels: `{Data.ExcludedChannelIDs.Count}`\n" + 
             $"Auto response chance: `{chance * 100}%`\n";
 
