@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.Data.Sqlite;
+using Shitcord.Database;
 
 namespace Shitcord.Services;
 
@@ -139,7 +140,7 @@ public class DatabaseService
         return executeUpdate(statement);
     }
 
-    private bool executeUpdate(string statement)
+    public bool executeUpdate(string statement)
     {
         var updateCommand = new SqliteCommand(statement, connection);
         int rowsUpdated = updateCommand.ExecuteNonQuery();
@@ -212,18 +213,80 @@ public class DatabaseService
         return val2;
     }
 
-    private SqliteDataReader executeRead(string selectStatement)
+    public SqliteDataReader executeRead(string selectStatement)
     {
         var readCommand = new SqliteCommand(selectStatement, connection);
         return readCommand.ExecuteReader();
     }
+    
+    //TODO return tuple for results consisting of two columns
+    //TODO return single list for singular columns
+    public List<List<object>>? GatherData(string selectQuery)
+    {
+        return GatherData(executeRead(selectQuery));
+    }
+    public List<List<object>>? GatherData(SqliteDataReader reader)
+    {
+        int columns = reader.FieldCount;
+        //empty result set?
+        if (!reader.HasRows || columns < 0)
+            return null;
+        
+        List<List<object>> dataList = new ();
+        for (int i = 0; i < columns; i++)
+        {
+            //fill resulting list
+            List<object> column = new();
+            dataList.Add(column);
+        }
 
-    private StringBuilder Spaces(int len)
+        while (reader.Read()) {
+            for (int i = 0; i < columns; i++) {
+                List<object> column = dataList[i];
+                object val = reader.GetValue(i);
+                if (val is DBNull)
+                {
+                    column.Add(null);
+                    continue;
+                }
+                column.Add(val);
+            }
+        }
+
+        return dataList;
+    }
+
+    private static StringBuilder Spaces(int len)
     {
         StringBuilder spaces = new StringBuilder(len, len);
         for (int i = 0; i < len; i++)
             spaces.Append(' ');
 
         return spaces;
+    }
+
+    public static string ProduceCreateTableQuery(string tableName, List<Column> columns)
+    {
+        StringBuilder query = new StringBuilder($"CREATE TABLE IF NOT EXISTS {tableName} (");
+        for (int i = 0; ; i++){
+            Column column = columns[i];
+            string identifiers = "";
+            if (!column.nullable)
+            {
+                identifiers = " not null";
+            }
+            if (column.primaryKey)
+            {
+                identifiers = " not null PRIMARY KEY";
+            }
+            query.Append($"{column.name} {column.type}{identifiers}");
+            if (i == columns.Count - 1){
+                break;
+            }
+            query.Append(',');
+        }
+        
+        query.Append(");");
+        return query.ToString();
     }
 }

@@ -63,12 +63,13 @@ public class InsertQuery
 
     private void AppendValues(StringBuilder sb, object[] values)
     {
-        for (int i = 0; ; i++)
-        {
-            if (i == values.Length - 1)
-            {
-                if (values[i] is string)
-                {
+        for (int i = 0; ; i++) {
+            if (i == values.Length - 1) {
+                if (values[i] == null) {
+                    sb.Append("null");
+                    break;
+                }
+                if (values[i] is string) {
                     sb.Append('"');
                     sb.Append(values[i]);
                     sb.Append('"');
@@ -77,8 +78,12 @@ public class InsertQuery
                 sb.Append(values[i]);
                 break;
             }
-            if (values[i] is string)
+            if (values[i] == null)
             {
+                sb.Append("null,");
+                continue;
+            }
+            if (values[i] is string) {
                 sb.Append('"');
                 sb.Append(values[i]);
                 sb.Append("\",");
