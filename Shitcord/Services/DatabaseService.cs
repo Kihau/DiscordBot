@@ -140,7 +140,7 @@ public class DatabaseService
         return executeUpdate(statement);
     }
 
-    private bool executeUpdate(string statement)
+    public bool executeUpdate(string statement)
     {
         var updateCommand = new SqliteCommand(statement, connection);
         int rowsUpdated = updateCommand.ExecuteNonQuery();
@@ -213,10 +213,47 @@ public class DatabaseService
         return val2;
     }
 
-    private SqliteDataReader executeRead(string selectStatement)
+    public SqliteDataReader executeRead(string selectStatement)
     {
         var readCommand = new SqliteCommand(selectStatement, connection);
         return readCommand.ExecuteReader();
+    }
+    
+    //TODO return tuple for results consisting of two columns
+    //TODO return single list for singular columns
+    public List<List<object>>? GatherData(string selectQuery)
+    {
+        return GatherData(executeRead(selectQuery));
+    }
+    public List<List<object>>? GatherData(SqliteDataReader reader)
+    {
+        int columns = reader.FieldCount;
+        //empty result set?
+        if (!reader.HasRows || columns < 0)
+            return null;
+        
+        List<List<object>> dataList = new ();
+        for (int i = 0; i < columns; i++)
+        {
+            //fill resulting list
+            List<object> column = new();
+            dataList.Add(column);
+        }
+
+        while (reader.Read()) {
+            for (int i = 0; i < columns; i++) {
+                List<object> column = dataList[i];
+                object val = reader.GetValue(i);
+                if (val is DBNull)
+                {
+                    column.Add(null);
+                    continue;
+                }
+                column.Add(val);
+            }
+        }
+
+        return dataList;
     }
 
     private static StringBuilder Spaces(int len)

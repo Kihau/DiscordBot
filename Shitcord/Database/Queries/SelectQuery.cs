@@ -20,9 +20,8 @@ public class SelectQuery
     public SelectQuery(params string[] columnNames)
     {
         if (columnNames.Length < 1)
-        {
             throw new Exception("No column parameters were given");
-        }
+        
         cols = columnNames;
     }
     public SelectQuery From(string tableName)
@@ -44,11 +43,9 @@ public class SelectQuery
 
     private void AppendColumns(StringBuilder sb)
     {
-        for (int i = 0; ; i++)
-        {
-            if (i == cols.Length - 1)
-            {
-                sb.Append(cols[i]);
+        for (int i = 0; ; i++) {
+            if (i == cols.Length - 1) {
+                sb.Append(cols[i]).Append(' ');
                 break;
             }
             sb.Append(cols[i]).Append(',');
@@ -56,36 +53,27 @@ public class SelectQuery
     }
     public string Build()
     {
-        if (table==null)
-        {
+        if (table==null) 
             throw new Exception("A required field is null");
-        }
+        
 
         StringBuilder selectQuery = new StringBuilder("SELECT ");
         
-        if(cols.Length==1 && (cols[0]=="*" || cols[0]=="(*)"))
-        {
+        if(cols.Length==1 && cols[0]=="*")
             selectQuery.Append('*').Append(' ');
-        }
-        else
-        {
-            selectQuery.Append('(');
+        else 
             AppendColumns(selectQuery);
-            selectQuery.Append(')').Append(' ');
-        }
+        
 
         selectQuery.Append($"FROM {table} ");
-        if (condition != null)
-        {
+        if (condition != null){
             selectQuery.Append("WHERE ");
             selectQuery.Append($"{condition.Get()}");
         }
 
-        if (orderBy != null)
-        {
+        if (orderBy != null) {
             selectQuery.Append($"ORDER BY {orderBy} ");
-            if (!isAscending)
-            {
+            if (!isAscending) {
                 selectQuery.Append("DESC");
             }
         }
