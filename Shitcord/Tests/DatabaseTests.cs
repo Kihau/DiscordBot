@@ -37,13 +37,8 @@ public class DatabaseTests
 
     private static void testMultipleOperations_3()
     {
-        Console.WriteLine("testMultipleOperations:");
-        int affected = service.executeUpdate($"DROP TABLE IF EXISTS {TABLE}");
-        //WHY IS THE TABLE LOCKED   
-        Console.WriteLine($"{affected} rows, table ain't locked");
-        //create table
-        string createTableQuery = DatabaseServiceNew.ProduceCreateTableQuery(TABLE, MarkovTable.COLUMNS);
-        service.executeUpdate(createTableQuery);
+        Console.WriteLine("testMultipleOperations_3:");
+        deleteIfExistsCreateNew();
         
         //INSERT queries
         service.executeUpdate(QueryBuilder.New().Insert()
@@ -78,13 +73,9 @@ public class DatabaseTests
 
     private static void variousInserts_2()
     {
-        Console.WriteLine("variousInserts:");
-        
-        service.executeUpdate($"DROP TABLE IF EXISTS {TABLE}");
-        //create table
-        string createTableQuery = DatabaseServiceNew.ProduceCreateTableQuery(TABLE, MarkovTable.COLUMNS);
-        service.executeUpdate(createTableQuery);
-        
+        Console.WriteLine("variousInserts_2:");
+        deleteIfExistsCreateNew();
+
         service.executeUpdate(QueryBuilder.New().Insert()
             .Columns(MarkovTable.CHAIN.name)
             .Into(TABLE)
@@ -100,6 +91,8 @@ public class DatabaseTests
         service.executeUpdate(QueryBuilder.New().Insert()
             .Into(TABLE)
             .Values("F", "U", 999).Build());
+        
+        //to investigate - ExistsInTable causes table lock
         //targeting Y
         bool existsY = service.ExistsInTable(TABLE, 
             Condition.New(MarkovTable.CHAIN.name).IsDiffFrom("B")
@@ -110,20 +103,25 @@ public class DatabaseTests
             Condition.New(MarkovTable.FREQUENCY.name).IsLessThan(999)
                 .And(MarkovTable.FREQUENCY.name).IsMoreThan(40));
 
-        Console.WriteLine("[Exists] records other than B, C, U: " + existsY);
-        Console.WriteLine("[Exists] frequency 40<f<999: " + existsFreq);
+        //Console.WriteLine("[Exists] records other than B, C, U: " + existsY);
+        //Console.WriteLine("[Exists] frequency 40<f<999: " + existsFreq);
 
         string table = service.TableToString(TABLE, MarkovTable.COLUMNS);
         Console.WriteLine(table);
     }
 
-
-    private static void testSelectInDatabase_1()
+    private static void deleteIfExistsCreateNew()
     {
         service.executeUpdate($"DROP TABLE IF EXISTS {TABLE}");
         //create table
         string createTableQuery = DatabaseServiceNew.ProduceCreateTableQuery(TABLE, MarkovTable.COLUMNS);
         service.executeUpdate(createTableQuery);
+    }
+
+
+    private static void testSelectInDatabase_1()
+    {
+        deleteIfExistsCreateNew();
         //introduce data
         service.executeUpdate(QueryBuilder.New().Insert().Into(TABLE).Values("i", "dont", 7).Build());
         service.executeUpdate(QueryBuilder.New().Insert().Into(TABLE).Values("on", null, 2).Build());

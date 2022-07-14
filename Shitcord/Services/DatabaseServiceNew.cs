@@ -106,8 +106,7 @@ public class DatabaseServiceNew
     public bool ExistsInTable(string tableName, Condition condition)
     {
         string existsStatement = QueryBuilder.New().Retrieve("*").From(tableName).Where(condition).Build();
-        var cmd = new SqliteCommand(existsStatement, connection);
-        SqliteDataReader reader = cmd.ExecuteReader();
+        var reader = executeRead(existsStatement);
         bool rowsExist = reader.HasRows;
         return rowsExist;
     }
