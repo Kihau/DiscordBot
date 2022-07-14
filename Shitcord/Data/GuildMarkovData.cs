@@ -8,9 +8,8 @@ namespace Shitcord.Data;
 public class GuildMarkovData
 {
     public bool IsEnabled { get; set; } = true;
-    // TODO: vvvvvvv
-    public bool IncludeAddChannels { get; set; } = true;
-    public List<ulong> IncludedChannelIDs { get; set; } = new();
+    // NOTE: Adding channel blocks either auto response and data gathering
+    public List<ulong> ExcludedChannelIDs { get; set; } = new();
 
     public const int MAX_CHANCE = 1000;
     public bool ResponseEnabled { get; set; } = false;
