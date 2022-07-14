@@ -446,11 +446,9 @@ public class AudioModule : BaseCommandModule
         public async Task ResetFiltersCommand(CommandContext ctx)
             => this.Data.Filters = new AudioFilters();
 
-
         [Command("get")]
         public async Task GetFiltersCommand(CommandContext ctx)
             => await ctx.Channel.SendMessageAsync($"```json\n{this.Data.Filters.GetJson()}\n```");
-
 
         [Command("set")]
         public async Task SetFiltersCommand(CommandContext ctx, [RemainingText] string json)
