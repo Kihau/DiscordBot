@@ -188,12 +188,10 @@ public class DatabaseServiceNew
         for (int i = 0; ; i++){
             Column column = columns[i];
             string identifiers = "";
-            if (!column.nullable)
-            {
+            if (!column.nullable) {
                 identifiers = " not null";
             }
-            if (column.primaryKey)
-            {
+            if (column.primaryKey) {
                 identifiers = " not null PRIMARY KEY";
             }
             query.Append($"{column.name} {column.type}{identifiers}");

@@ -29,15 +29,13 @@ public class UpdateQuery
     }
     public string Build()
     {
-        if (table==null || c1==null || val1==null)
-        {
+        if (table==null || c1==null || val1==null) {
             throw new QueryException("A required field is null");
         }
 
         StringBuilder queryBuilder = new StringBuilder($"UPDATE {table} SET {c1} = ");
         AttachValue(queryBuilder);
-        if (condition == null)
-        {
+        if (condition == null) {
             return queryBuilder.ToString();
         }
         
@@ -48,12 +46,10 @@ public class UpdateQuery
 
     private void AttachValue(StringBuilder queryBuilder)
     {
-        if (val1 is string)
-        {
+        if (val1 is string) {
             queryBuilder.Append($"\"{val1}\"");
         }
-        else
-        {
+        else {
             queryBuilder.Append($"{val1}");
         }
     }

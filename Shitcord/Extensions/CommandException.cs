@@ -1,5 +1,3 @@
-using System;
-
 namespace Shitcord.Extensions;
 
 public class CommandException : Exception
