@@ -156,7 +156,7 @@ public class GuildAudioData
         } 
 
         Volume = (int)(long)retrieved[5][0];
-        IsLooping = (bool)retrieved[6][0];
+        IsLooping = (long)retrieved[6][0] >= 1;
     }
 
     /*
