@@ -91,8 +91,8 @@ public class GuildAudioData
             Condition.New(GuildAudioTable.GUILD_ID.name).Equals(Guild.Id)
         );
 
-        // 0        1           2           3       4       5       6
-        //GUILD_ID, QU_CHANNEL, SU_CHANNEL, QU_MSG, SU_MSG, VOLUME, LOOPING 
+        //  0        1           2           3       4       5       6
+        //  GUILD_ID, QU_CHANNEL, SU_CHANNEL, QU_MSG, SU_MSG, VOLUME, LOOPING 
         if (!exists_in_table) {
             DatabaseContext.executeUpdate(QueryBuilder
                 .New().Insert()
@@ -123,11 +123,12 @@ public class GuildAudioData
         if (retrieved is null)
             throw new Exception("Unreachable");
 
-        var s = DatabaseContext.TableToString(GuildAudioTable.TABLE_NAME, GuildAudioTable.COLUMNS);
-        Console.WriteLine(s);
+        var debug_string = DatabaseContext.TableToString(
+            GuildAudioTable.TABLE_NAME, GuildAudioTable.COLUMNS);
+        Console.WriteLine(debug_string);
 
-        var qu_channel_id = (ulong?)retrieved[0][1];
-        var qu_message_id = (ulong?)retrieved[0][3];
+        var qu_channel_id = (ulong?)retrieved[1][0];
+        var qu_message_id = (ulong?)retrieved[3][0];
 
         if (qu_channel_id != null && qu_message_id != null) {
             try { 
@@ -140,8 +141,8 @@ public class GuildAudioData
             } catch { /* Ignored */ }
         } 
 
-        var su_channel_id = (ulong?)retrieved[0][2];
-        var su_message_id = (ulong?)retrieved[0][4];
+        var su_channel_id = (ulong?)retrieved[2][0];
+        var su_message_id = (ulong?)retrieved[4][0];
 
         if (su_channel_id != null && su_message_id != null) {
             try { 
@@ -154,8 +155,8 @@ public class GuildAudioData
             } catch { /* Ignored */ }
         } 
 
-        Volume = (int)retrieved[0][5];
-        IsLooping = (bool)retrieved[0][6];
+        Volume = (int)retrieved[5][0];
+        IsLooping = (bool)retrieved[6][0];
     }
 
     /*
