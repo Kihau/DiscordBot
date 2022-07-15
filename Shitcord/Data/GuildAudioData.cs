@@ -107,6 +107,8 @@ public class GuildAudioData
                     IsLooping
                 ).Build()
             );
+
+            return;
         }
 
         var retrieved = DatabaseContext.GatherData(QueryBuilder
@@ -119,7 +121,10 @@ public class GuildAudioData
         );
 
         if (retrieved is null)
-            throw new Exception("unreachable");
+            throw new Exception("Unreachable");
+
+        var s = DatabaseContext.TableToString(GuildAudioTable.TABLE_NAME, GuildAudioTable.COLUMNS);
+        Console.WriteLine(s);
 
         var qu_channel_id = (ulong?)retrieved[0][1];
         var qu_message_id = (ulong?)retrieved[0][3];
