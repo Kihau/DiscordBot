@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using Microsoft.Data.Sqlite;
-using Microsoft.VisualBasic;
 using Shitcord.Database;
 using Shitcord.Database.Queries;
 using Shitcord.Services;
@@ -95,15 +93,23 @@ public class DatabaseTests
         
         //to investigate - ExistsInTable causes table lock
         //targeting Y
-        for (int i = 0; i < 10; i++)
-        {
-            bool existsLast = service.ExistsInTable(TABLE,
-                Condition.New(MarkovTable.FREQUENCY.name).IsLessThan(333)
-                    .And(MarkovTable.FREQUENCY.name).IsMoreThan(10));
-            Console.WriteLine("[Exists] last: " + existsLast);
-        }
+        var CONDITION = Condition.New(MarkovTable.FREQUENCY.name).IsLessThan(333)
+                                 .And(MarkovTable.FREQUENCY.name).IsMoreThan(10);
+
+        bool existsInTable = service.ExistsInTable(TABLE, CONDITION);
+        Console.WriteLine("[Exists] Y scuffed: " + existsInTable);
         
-        /*bool existsY = service.ExistsInTable(TABLE, 
+        string q = QueryBuilder.New().Retrieve("*")
+            .From(TABLE).Where(CONDITION).Build();
+        bool exists;
+        if (service.GatherData(q) == null) 
+            exists = false;
+        else
+            exists = true;
+        
+        Console.WriteLine($"[Exists Y (not scuffed)] {exists}");
+
+        bool existsY = service.ExistsInTable(TABLE, 
             Condition.New(MarkovTable.CHAIN.name).IsDiffFrom("B")
                 .And(MarkovTable.CHAIN.name).IsDiffFrom("C")
                 .And(MarkovTable.CHAIN.name).IsDiffFrom("U"));
@@ -112,24 +118,8 @@ public class DatabaseTests
         bool existsFreq = service.ExistsInTable(TABLE,
             Condition.New(MarkovTable.FREQUENCY.name).IsLessThan(999)
                 .And(MarkovTable.FREQUENCY.name).IsMoreThan(40));
-        Console.WriteLine("[Exists] frequency 40<f<999: " + existsFreq);*/
-        
-        for (int i = 0; i < 10; i++)
-        {
-            string q = QueryBuilder.New().Retrieve("*").From(TABLE)
-                .Where(Condition.New(MarkovTable.FREQUENCY.name).IsLessThan(333)
-                    .And(MarkovTable.FREQUENCY.name).IsMoreThan(40)).Build();
-            List<List<object>> list = service.GatherData(q);
-            if (list == null) {
-                Console.WriteLine("RESULT is null");
-            }
-            else {
-                Console.WriteLine($"RESULT columns {list.Count}, rows: {list[0].Count}");
-            }
-        }
-        
-        
-        
+        Console.WriteLine("[Exists] frequency 40<f<999: " + existsFreq);
+            
         string table = service.TableToString(TABLE, MarkovTable.COLUMNS);
         Console.WriteLine(table);
     }
@@ -165,8 +155,8 @@ public class DatabaseTests
         String res1 = service.QueryResultToString(data, MarkovTable.CHAIN, MarkovTable.STRING);
         String res2 = service.QueryResultToString(allData, MarkovTable.COLUMNS.ToArray());
         String table = service.TableToString(TABLE, MarkovTable.COLUMNS);
-        Console.Write(res1);
-        Console.Write(res2);
+        Console.WriteLine(res1);
+        Console.WriteLine(res2);
         //Console.Write(table);
         
     }

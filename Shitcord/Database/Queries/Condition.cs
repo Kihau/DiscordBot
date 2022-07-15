@@ -18,8 +18,7 @@ public class Condition
     }
     public Condition And(string columnName)
     {
-        if (operatorExpected)
-        {
+        if (operatorExpected) {
             throw new QueryException("Syntax error");
         }
         operatorExpected = true;
@@ -28,8 +27,7 @@ public class Condition
     }
     public Condition Or(string columnName)
     {
-        if (operatorExpected)
-        {
+        if (operatorExpected) {
             throw new QueryException("Syntax error");
         }
         operatorExpected = true;
@@ -39,8 +37,7 @@ public class Condition
     //hides the method from the object class
     public new Condition Equals(object value)
     {
-        if (!operatorExpected)
-        {
+        if (!operatorExpected) {
             throw new QueryException("Syntax error");
         }
         operatorExpected = false;
@@ -51,8 +48,7 @@ public class Condition
     }
     public Condition IsDiffFrom(object value)
     {
-        if (!operatorExpected)
-        {
+        if (!operatorExpected) {
             throw new QueryException("Syntax error");
         }
         operatorExpected = false;
@@ -64,8 +60,7 @@ public class Condition
     
     public Condition IsLike(string pattern)
     {
-        if (!operatorExpected)
-        {
+        if (!operatorExpected) {
             throw new QueryException("Syntax error");
         }
         operatorExpected = false;
@@ -77,8 +72,7 @@ public class Condition
 
     public Condition IsLessThan(object value)
     {
-        if (!operatorExpected)
-        {
+        if (!operatorExpected) {
             throw new QueryException("Syntax error");
         }
         operatorExpected = false;
@@ -89,8 +83,7 @@ public class Condition
     }
     public Condition IsMoreThan(object value)
     {
-        if (!operatorExpected)
-        {
+        if (!operatorExpected) {
             throw new QueryException("Syntax error");
         }
         operatorExpected = false;
@@ -101,19 +94,16 @@ public class Condition
     }
     private void AppendValue(object value)
     {
-        if (value is string)
-        {
+        if (value is string) {
             condition.Append($"\"{value}\"");
         }
-        else
-        {
+        else {
             condition.Append(value);
         }
     }
     public String Get()
     {
-        if (operatorExpected)
-        {
+        if (operatorExpected) {
             throw new QueryException("Condition is incomplete");
         }
         return condition.ToString();

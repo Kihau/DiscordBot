@@ -19,12 +19,10 @@ public class DeleteQuery
 
     public string Build()
     {
-        if (table == null)
-        {
+        if (table == null) {
             throw new QueryException("A required field is null");
         }
-        if (condition == null)
-        {
+        if (condition == null) {
             //deletes all rows from table
             return $"DELETE FROM {table}";
         }

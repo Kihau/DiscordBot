@@ -95,7 +95,6 @@ public class DatabaseServiceNew
     }
     public String TableToString(string tableName, List<Column> columns)
     {
-        
         string statement = $"SELECT * FROM {tableName}";
         var reader = executeRead(statement);
         List<List<object>> data = GatherData(reader);
@@ -106,11 +105,10 @@ public class DatabaseServiceNew
     public bool ExistsInTable(string tableName, Condition condition)
     {
         string existsStatement = QueryBuilder.New().Retrieve("*").From(tableName).Where(condition).Build();
-        Console.WriteLine(existsStatement);
-        Console.WriteLine("length: " + existsStatement.Length);
         var reader = executeRead(existsStatement);
-        bool rowsExist = reader.HasRows;
-        return rowsExist;
+        bool exists = reader.HasRows;
+        reader.Close();
+        return exists;
     }
     
     public List<List<object>>? GatherData(string selectStatement)
@@ -171,7 +169,7 @@ public class DatabaseServiceNew
                 column.Add(val);
             }
         }
-
+        reader.Close();
         return dataList;
     }
 
@@ -190,12 +188,10 @@ public class DatabaseServiceNew
         for (int i = 0; ; i++){
             Column column = columns[i];
             string identifiers = "";
-            if (!column.nullable)
-            {
+            if (!column.nullable) {
                 identifiers = " not null";
             }
-            if (column.primaryKey)
-            {
+            if (column.primaryKey) {
                 identifiers = " not null PRIMARY KEY";
             }
             query.Append($"{column.name} {column.type}{identifiers}");
