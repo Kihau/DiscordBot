@@ -166,6 +166,32 @@ public class GuildAudioData
     }
     */
 
+    void DatabaseUpdateQU() 
+    {
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New().Update(GuildAudioTable.TABLE_NAME)
+            .Where(Condition
+                .New(GuildAudioTable.GUILD_ID.name)
+                .Equals(Guild.Id)
+            ).Set(GuildAudioTable.QU_CHANNEL.name, QueueUpdateChannel?.Id)
+            .Set(GuildAudioTable.QU_MSG.name, QueueUpdateMessage?.Id)
+            .Build()
+        );
+    }
+
+    void DatabaseUpdateSU() 
+    {
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New().Update(GuildAudioTable.TABLE_NAME)
+            .Where(Condition
+                .New(GuildAudioTable.GUILD_ID.name)
+                .Equals(Guild.Id)
+            ).Set(GuildAudioTable.SU_CHANNEL.name, SongUpdateChannel?.Id)
+            .Set(GuildAudioTable.SU_MSG.name, SongUpdateMessage?.Id)
+            .Build()
+        );
+    }
+
     public async Task SetSongUpdate(DiscordChannel channel)
     {
         this.SongUpdateChannel = channel;
@@ -178,15 +204,7 @@ public class GuildAudioData
 
         var mess = GenerateSongMessage();
         this.SongUpdateMessage = await this.SongUpdateChannel.SendMessageAsync(mess);
-
-        DatabaseContext.executeUpdate(QueryBuilder
-            .New().Update(GuildAudioTable.TABLE_NAME)
-            .Columns(GuildAudioTable.SU_CHANNEL.name, GuildAudioTable.SU_MSG.name)
-            .Values(
-                SongUpdateChannel?.Id,
-                SongUpdateMessage?.Id
-            ).Build()
-        );
+        DatabaseUpdateSU();
     }
 
     public async Task SetQueueUpdate(DiscordChannel channel)
@@ -201,16 +219,7 @@ public class GuildAudioData
 
         var mess = GenerateQueueMessage();
         this.QueueUpdateMessage = await this.QueueUpdateChannel.SendMessageAsync(mess);
-
-        DatabaseContext.executeUpdate(QueryBuilder
-            .New().Insert()
-            .Into(GuildAudioTable.TABLE_NAME)
-            .Columns(GuildAudioTable.SU_CHANNEL.name, GuildAudioTable.SU_MSG.name)
-            .Values(
-                SongUpdateChannel?.Id,
-                SongUpdateMessage?.Id
-            ).Build()
-        );
+        DatabaseUpdateQU();
     }
 
     public async Task DestroyQueueUpdate()
@@ -224,7 +233,7 @@ public class GuildAudioData
         } catch { /* ignored */ }
 
         this.QueueUpdateMessage = null;
-        SaveToDatabase();
+        DatabaseUpdateQU();
     }
 
     public async Task DestroySongUpdate()
@@ -238,7 +247,7 @@ public class GuildAudioData
         } catch { /* ignored */ }
 
         this.SongUpdateMessage = null;
-        SaveToDatabase();
+        DatabaseUpdateSU();
     }
 
     public DiscordMessageBuilder GenerateQueueMessage()
@@ -256,7 +265,8 @@ public class GuildAudioData
         else if (this.page > page_count)
             this.page = page_count;
 
-        for (var i = this.page * page_size; i < tracks.Length && i < (this.page + 1) * page_size; i++)
+        for (var i = this.page * page_size; 
+                i < tracks.Length && i < (this.page + 1) * page_size; i++)
             description += $"{i + 1}. [{tracks[i].Title}]({tracks[i].Uri})\n";
 
         // if (tracks.Length - this.page * page_size > page_size)
@@ -312,7 +322,7 @@ public class GuildAudioData
             {
                 await this.QueueUpdateMessage.DeleteAsync();
                 this.QueueUpdateMessage = await this.QueueUpdateChannel.SendMessageAsync(message);
-                SaveToDatabase();
+                DatabaseUpdateQU();
             }
         });
 
@@ -390,7 +400,7 @@ public class GuildAudioData
             {
                 await this.SongUpdateMessage.DeleteAsync();
                 this.SongUpdateMessage = await this.SongUpdateChannel.SendMessageAsync(message);
-                SaveToDatabase();
+                DatabaseUpdateSU();
             }
         });
 
@@ -437,7 +447,15 @@ public class GuildAudioData
 
         await this.Player.SetVolumeAsync(volume);
         this.Volume = volume;
-        SaveToDatabase();
+
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New().Update(GuildAudioTable.TABLE_NAME)
+            .Where(Condition
+                .New(GuildAudioTable.GUILD_ID.name)
+                .Equals(Guild.Id)
+            ).Set(GuildAudioTable.VOLUME.name, Volume)
+            .Build()
+        );
     }
 
     public async Task DestroyConnectionAsync()
@@ -533,7 +551,16 @@ public class GuildAudioData
     public bool ChangeLoopingState()
     {
         this.IsLooping = !this.IsLooping;
-        SaveToDatabase();
+
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New().Update(GuildAudioTable.TABLE_NAME)
+            .Where(Condition
+                .New(GuildAudioTable.GUILD_ID.name)
+                .Equals(Guild.Id)
+            ).Set(GuildAudioTable.LOOPING.name, IsLooping)
+            .Build()
+        );
+
         return IsLooping;
     }
 
