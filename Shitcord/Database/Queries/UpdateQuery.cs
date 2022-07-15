@@ -7,8 +7,7 @@ public class UpdateQuery
     //UPDATE t SET c1 = x1 WHERE c2 = x2
     
     private readonly string table;
-    private string c1;
-    private object val1;
+    private List<(string, object)> pairs = new();
     private Condition condition;
 
     public UpdateQuery(string tableName)
@@ -18,8 +17,7 @@ public class UpdateQuery
     
     public UpdateQuery Set(string columnName, object value)
     {
-        c1 = columnName;
-        val1 = value;
+        pairs.Add((columnName, value));
         return this;
     }
     public UpdateQuery Where(Condition condition)
@@ -29,12 +27,19 @@ public class UpdateQuery
     }
     public string Build()
     {
-        if (table==null || c1==null || val1==null) {
+        int len = pairs.Count;
+        if (table==null || len<1) {
             throw new QueryException("A required field is null");
         }
 
-        StringBuilder queryBuilder = new StringBuilder($"UPDATE {table} SET {c1} = ");
-        AttachValue(queryBuilder);
+        StringBuilder queryBuilder = new StringBuilder($"UPDATE {table} SET ");
+        for (int i = 0; i < len; i++){
+            AttachPair(queryBuilder, pairs[i]);
+            if (i != len - 1){
+                queryBuilder.Append(", ");
+            }
+        }
+        //UPDATE does not require a condition
         if (condition == null) {
             return queryBuilder.ToString();
         }
@@ -43,14 +48,16 @@ public class UpdateQuery
 
         return queryBuilder.ToString();
     }
-
-    private void AttachValue(StringBuilder queryBuilder)
+    //Item1 - columnName, Item2 - value
+    private void AttachPair(StringBuilder queryBuilder, (string, object) p)
     {
-        if (val1 is string) {
-            queryBuilder.Append($"\"{val1}\"");
+        queryBuilder.Append(p.Item1).Append(" = ");
+        
+        if (p.Item2 is string) {
+            queryBuilder.Append($"\"{p.Item2}\"");
         }
         else {
-            queryBuilder.Append($"{val1}");
+            queryBuilder.Append($"{p.Item2}");
         }
     }
 }

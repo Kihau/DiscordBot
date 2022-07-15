@@ -96,14 +96,22 @@ class QueryTests
 
     static void updateTests()
     {
-        const string expected = "UPDATE random_table SET name = \"bis\" WHERE id < 234";
-        string insert1 = QueryBuilder.New().Update("random_table")
+        const string expected1 = "UPDATE random_table SET name = \"bis\" WHERE id < 234";
+        string update1 = QueryBuilder.New().Update("random_table")
             .Set("name", "bis")
             .Where(Condition.New("id").IsLessThan(234))
             .Build();
-        
+
+        const string expected2 = "UPDATE any_table SET number = 23, info = \"warning\" WHERE smth > 444";
+        string update2 = QueryBuilder.New().Update("any_table")
+            .Set("number", 23)
+            .Set("info", "warning")
+            .Where(Condition.New("smth").IsMoreThan(444))
+            .Build();
+
         Console.WriteLine("Updates:");
-        compareStartsWith(insert1, expected);
+        compareStartsWith(update1, expected1);
+        compareStartsWith(update2, expected2);
     }
     private static void compareStartsWith(string given, string expected)
     {
