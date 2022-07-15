@@ -93,7 +93,7 @@ public class GuildAudioData
 
         // 0        1           2           3       4       5       6
         //GUILD_ID, QU_CHANNEL, SU_CHANNEL, QU_MSG, SU_MSG, VOLUME, LOOPING 
-        if (exists_in_table) {
+        if (!exists_in_table) {
             DatabaseContext.executeUpdate(QueryBuilder
                 .New().Insert()
                 .Into(GuildAudioTable.TABLE_NAME)
