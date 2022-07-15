@@ -155,7 +155,7 @@ public class GuildAudioData
             } catch { /* Ignored */ }
         } 
 
-        Volume = (int)retrieved[5][0];
+        Volume = (int)(long)retrieved[5][0];
         IsLooping = (bool)retrieved[6][0];
     }
 
