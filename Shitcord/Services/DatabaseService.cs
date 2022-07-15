@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.Data.Sqlite;
 using Shitcord.Database;
+using Shitcord.Database.Queries;
 
 namespace Shitcord.Services;
 
@@ -8,9 +9,6 @@ public class DatabaseService
 {
     private const string DATABASE_NAME = "Resources/BotDatabase.sqlite";
     private readonly SqliteConnection connection;
-    private const int ID_LENGTH = 18;
-    private const int BASE_WIDTH = 10;
-    private readonly short[] columnLengths = {8,13,13,9,9,6,7};
 
     public DatabaseService()
     {
@@ -21,210 +19,160 @@ public class DatabaseService
         connection = new SqliteConnection("Data Source=" + DATABASE_NAME);
 
         connection.Open();
-        CreateTableIfNotExists();
+        CreateTableIfNotExists(MarkovTable.TABLE_NAME, MarkovTable.COLUMNS);
+        CreateTableIfNotExists(GuildAudioTable.TABLE_NAME, GuildAudioTable.COLUMNS);
     }
 
     ~DatabaseService() => connection.Close();
 
-    private void CreateTableIfNotExists()
+    private void CreateTableIfNotExists(string tableName, List<Column> tableColumns)
     {
-        const string createGuildData = 
-            @"CREATE TABLE IF NOT EXISTS GuildAudioData(
-                guild_id       bigint not null PRIMARY KEY,
-                qu_channel_id  bigint,
-                su_channel_id  bigint,
-                qu_msg_id      bigint,
-                su_msg_id      bigint,
-                volume         int not null,
-                looping        boolean not null
-            );";
-
-        var createCommand = new SqliteCommand(createGuildData, connection);
+        var createCommand = new SqliteCommand(
+            ProduceCreateTableQuery(tableName, tableColumns), connection
+        );
         createCommand.ExecuteNonQuery();
     }
 
-    public bool InsertRow(
-        ulong guild_id, ulong? qu_channel, ulong? su_channel,
-        ulong? qu_msg, ulong? su_msg, int? volume, bool? loop
-    ) {
-        if (IsGuildInTable(guild_id))
-            return false;
+    public static string ProduceCreateTableQuery(string tableName, List<Column> columns)
+    {
+        StringBuilder query = new StringBuilder($"CREATE TABLE IF NOT EXISTS {tableName} (");
+        for (int i = 0; ; i++){
+            Column column = columns[i];
+            string identifiers = "";
+            if (!column.nullable)
+                identifiers = " not null";
 
-        string qu_channel_map = qu_channel?.ToString() ?? "null";
-        string su_channel_map = su_channel?.ToString() ?? "null";
-        string qu_msg_map = qu_msg?.ToString() ?? "null";
-        string su_msg_map = su_msg?.ToString() ?? "null";
-        string statement = 
-            $@"INSERT INTO GuildAudioData VALUES (
-                {guild_id}, {qu_channel_map}, {su_channel_map}, 
-                {qu_msg_map}, {su_msg_map}, {volume}, {loop}
-            );";
+            if (column.primaryKey)
+                identifiers = " not null PRIMARY KEY";
 
-        var insertCommand = new SqliteCommand(statement, connection);
-        int rowsInserted = insertCommand.ExecuteNonQuery();
-        return rowsInserted == 1;
+            query.Append($"{column.name} {column.type}{identifiers}");
+            if (i == columns.Count - 1)
+                break;
+
+            query.Append(',');
+        }
+        
+        query.Append(");");
+        return query.ToString();
     }
 
-    public override String ToString()
-    {
-        StringBuilder builder = new StringBuilder(64);
-        const string statement = "SELECT * FROM GuildAudioData";
-        var command = new SqliteCommand(statement, connection);
-        var reader = command.ExecuteReader();
-        builder.Append(Spaces(ID_LENGTH - columnLengths[0])).Append("guild_id").Append(' ');
-        builder.Append(Spaces(ID_LENGTH - columnLengths[1])).Append("qu_channel_id").Append(' ');
-        builder.Append(Spaces(ID_LENGTH - columnLengths[2])).Append("su_channel_id").Append(' ');
-        builder.Append(Spaces(ID_LENGTH - columnLengths[3])).Append("qu_msg_id").Append(' ');
-        builder.Append(Spaces(ID_LENGTH - columnLengths[4])).Append("su_msg_id").Append(' ');
-        builder.Append(Spaces(BASE_WIDTH - columnLengths[5])).Append("volume").Append(' ');
-        builder.Append(Spaces(BASE_WIDTH - columnLengths[6])).Append("looping").Append('\n');
+    public String QueryResultToString(List<List<object>> data, params Column[] columns) {
+        if (columns.Length < 1)
+            return "";
         
-        while (reader.Read())
-        {
-            for (int i = 0; i < columnLengths.Length; i++)
-            {
-                string column = reader.IsDBNull(i) ? "null" : reader.GetString(i);
-                int spaces = BASE_WIDTH - column.Length;
-
-                if (spaces > 0)
-                    builder.Append(Spaces(spaces));
-
-                builder.Append(column).Append(' ');
+        StringBuilder builder = new StringBuilder(64);
+        int cols = data.Count;
+        if (cols != columns.Length) {
+            //throw Exception?
+            Console.WriteLine(
+                $@"Warning: the number of retrieved columns differs from target table column count: 
+                data.Count {cols}, columns.Length {columns.Length} "
+            );
+        }
+        int rows = data[0].Count;
+        
+        //look for max offsets in values
+        int[] maxOffsets = new int[cols];
+        for (int c = 0; c < cols; c++) {
+            List<object> columnData = data[c];
+            for (int r = 0; r < rows; r++) {
+                object val = columnData[r];
+                if (val is null) {
+                    maxOffsets[c] = Math.Max(maxOffsets[c], 4);
+                    continue;
+                }
+                maxOffsets[c] = Math.Max(maxOffsets[c], val.ToString().Length);
             }
-            builder.Append('\n');
         }
 
+        //look for max offsets in column names
+        for (int c = 0; c < cols; c++) {
+            maxOffsets[c] = Math.Max(maxOffsets[c], columns[c].name.Length);
+        }
+        
+        //begin by building column names
+        for (int c = 0; c < cols; c++) {
+            string columnName = columns[c].name;
+            builder.Append(Spaces(maxOffsets[c] - columnName.Length))
+                .Append(columnName)
+                .Append(' ');
+        }
+        builder.Append('\n');
+        
+        //append values
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                object val = data[c][r];
+                if (val is null) {
+                    val = "null";
+                    builder.Append(Spaces(maxOffsets[c] - 4)).Append(val).Append(' ');
+                    if (c == cols - 1) {
+                        builder.Append('\n');
+                        break;
+                    }
+                    continue;
+                }
+                builder.Append(Spaces(maxOffsets[c] - val.ToString().Length))
+                    .Append(val).Append(' ');
+                if (c == cols - 1) {
+                    builder.Append('\n');
+                    break;
+                }
+            }
+        }
         return builder.ToString();
     }
 
-    public bool IsGuildInTable(ulong guild_id)
+    public String TableToString(string tableName, List<Column> columns)
     {
-        long mapped = (long)guild_id;
-        string existsStatement = "SELECT guild_id FROM GuildAudioData WHERE guild_id = " + mapped;
-        var cmd = new SqliteCommand(existsStatement, connection);
-        SqliteDataReader reader = cmd.ExecuteReader();
-        bool rows = reader.HasRows;
-        return rows;
+        string statement = $"SELECT * FROM {tableName}";
+        var reader = executeRead(statement);
+        List<List<object>> data = GatherData(reader);
+        return data == null ? "Empty set" : QueryResultToString(data, columns.ToArray());
     }
 
-    public void UpdateTable(
-        ulong guild_id, ulong? qu_channel, ulong? su_channel,
-        ulong? qu_msg, ulong? su_msg, int? volume, bool? loop
-    ) {
-        UpdateValue(guild_id, "qu_channel_id", qu_channel);
-        UpdateValue(guild_id, "su_channel_id", su_channel);
-        UpdateValue(guild_id, "qu_msg_id", qu_msg);
-        UpdateValue(guild_id, "su_msg_id", su_msg);
-        UpdateValue(guild_id, "volume", volume);
-        UpdateValue(guild_id, "looping", loop);
-    }
-
-    public bool UpdateQUChannel(ulong guild_id, ulong? qu_channel)
-        => UpdateValue(guild_id, "qu_channel_id", qu_channel);
-    public bool UpdateSUChannel(ulong guild_id, ulong? su_channel)
-        => UpdateValue(guild_id, "su_channel_id", su_channel);
-    public bool UpdateQUMessage(ulong guild_id, ulong? qu_msg)
-        => UpdateValue(guild_id, "qu_msg_id", qu_msg);
-    public bool UpdateSUMessage(ulong guild_id, ulong? su_msg)
-        => UpdateValue(guild_id, "su_msg_id", su_msg);
-    public bool UpdateVolume (ulong guild_id, int volume)
-        => UpdateValue(guild_id, "volume", volume);
-    public bool UpdateLooping(ulong guild_id, bool looping)
-        => UpdateValue(guild_id, "looping", looping);
-
-    private bool UpdateValue<T>(ulong guild_id, string valueName, T? value)
+    //tests if a record exists in the specified table which satisfies given condition
+    public bool ExistsInTable(string tableName, Condition condition)
     {
-        string val_map = value?.ToString() ?? "null";
-        string statement = 
-            $"UPDATE GuildAudioData SET {valueName} = {val_map} WHERE guild_id = {guild_id}";
-        return executeUpdate(statement);
+        string existsStatement = QueryBuilder.New()
+            .Retrieve("*").From(tableName).Where(condition).Build();
+        var reader = executeRead(existsStatement);
+        bool exists = reader.HasRows;
+        reader.Close();
+        return exists;
     }
-
-    public bool executeUpdate(string statement)
+    
+    public List<List<object>>? GatherData(string selectStatement)
     {
-        var updateCommand = new SqliteCommand(statement, connection);
-        int rowsUpdated = updateCommand.ExecuteNonQuery();
-        return rowsUpdated == 1;
-    }
-
-    public void DeleteAllRows()
-    {
-        const string delStatement = "DELETE FROM GuildAudioData";
-        var delCommand = new SqliteCommand(delStatement, connection);
-        delCommand.ExecuteNonQuery();
-    }
-
-    public bool DeleteRow(ulong guild_id)
-    {
-        string delStatement = "DELETE FROM GuildAudioData WHERE guild_id = " + guild_id;
-        var delCommand = new SqliteCommand(delStatement, connection);
-        int rowsAffected = delCommand.ExecuteNonQuery();
-        return rowsAffected > 0;
-    }
-
-    public ulong? ReadQUChannel(ulong guild_id)
-        => ReadBigInt(guild_id, "qu_channel_id");
-    public ulong? ReadSUChannel(ulong guild_id)
-        => ReadBigInt(guild_id, "su_channel_id");
-    public ulong? ReadQUMessage(ulong guild_id)
-        => ReadBigInt(guild_id, "qu_msg_id");
-    public ulong? ReadSUMessage(ulong guild_id)
-        => ReadBigInt(guild_id, "su_msg_id");
-    public int? ReadVolume(ulong guild_id)
-        => ReadInt(guild_id, "volume");
-    public bool? ReadLooping(ulong guild_id)
-        => ReadBool(guild_id, "looping");
-
-    public ulong? ReadBigInt (ulong guild_id, string valueName)
-    {
-        string selectStatement = "SELECT " + valueName + 
-            " FROM GuildAudioData WHERE guild_id = " + guild_id;
-        var readCommand = new SqliteCommand(selectStatement, connection);
-        SqliteDataReader reader = readCommand.ExecuteReader();
-        
-        if (!reader.HasRows || !reader.Read())
-            return null;
-        
-        long val2 = reader.GetInt64(0);
-        return (ulong)val2;
-    }
-    public int? ReadInt (ulong guild_id, string valueName)
-    {
-        string selectStatement = "SELECT " + valueName + 
-            " FROM GuildAudioData WHERE guild_id = " + guild_id;
+        Console.WriteLine(selectStatement);
+        Console.WriteLine("length: " + selectStatement.Length);
         var reader = executeRead(selectStatement);
-        
-        if (!reader.HasRows || !reader.Read())
-            return null;
-        
-        int val2 = reader.GetInt32(0);
-        return val2;
+        return GatherData(reader);
     }
-    public bool? ReadBool(ulong guild_id, string valueName)
-    {
-        string selectStatement = "SELECT " + valueName + 
-            " FROM GuildAudioData WHERE guild_id = " + guild_id;
-        var reader = executeRead(selectStatement);
-        
-        if (!reader.HasRows || !reader.Read())
-            return null;
-        
-        bool val2 = reader.GetBoolean(0);
-        return val2;
-    }
-
-    public SqliteDataReader executeRead(string selectStatement)
+    
+    private SqliteDataReader executeRead(string selectStatement)
     {
         var readCommand = new SqliteCommand(selectStatement, connection);
         return readCommand.ExecuteReader();
     }
     
+    //returns the number of affected rows
+    public int executeUpdate(string statement)
+    {
+        var updateCommand = new SqliteCommand(statement, connection);
+        return updateCommand.ExecuteNonQuery();
+    }
+    
+    //returns the number of affected rows
+    public int DeleteAllRows(string tableName)
+    {
+        const string delStatement = "DELETE FROM tableName";
+        var delCommand = new SqliteCommand(delStatement, connection);
+        return delCommand.ExecuteNonQuery();
+    }
+
     //TODO return tuple for results consisting of two columns
     //TODO return single list for singular columns
-    public List<List<object>>? GatherData(string selectQuery)
-    {
-        return GatherData(executeRead(selectQuery));
-    }
     public List<List<object>>? GatherData(SqliteDataReader reader)
     {
         int columns = reader.FieldCount;
@@ -252,41 +200,16 @@ public class DatabaseService
                 column.Add(val);
             }
         }
-
+        reader.Close();
         return dataList;
     }
 
     private static StringBuilder Spaces(int len)
     {
-        StringBuilder spaces = new StringBuilder(len, len);
+        StringBuilder spaces = new StringBuilder(len);
         for (int i = 0; i < len; i++)
             spaces.Append(' ');
 
         return spaces;
-    }
-
-    public static string ProduceCreateTableQuery(string tableName, List<Column> columns)
-    {
-        StringBuilder query = new StringBuilder($"CREATE TABLE IF NOT EXISTS {tableName} (");
-        for (int i = 0; ; i++){
-            Column column = columns[i];
-            string identifiers = "";
-            if (!column.nullable)
-            {
-                identifiers = " not null";
-            }
-            if (column.primaryKey)
-            {
-                identifiers = " not null PRIMARY KEY";
-            }
-            query.Append($"{column.name} {column.type}{identifiers}");
-            if (i == columns.Count - 1){
-                break;
-            }
-            query.Append(',');
-        }
-        
-        query.Append(");");
-        return query.ToString();
     }
 }

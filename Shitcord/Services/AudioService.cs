@@ -3,6 +3,8 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Lavalink;
 using Shitcord.Data;
+using Shitcord.Database;
+using Shitcord.Database.Queries;
 
 namespace Shitcord.Services;
 
@@ -31,8 +33,12 @@ public class AudioService
     public void LoadAllDataFromDatabase()
     {
         foreach (var (id, guild) in Client.Guilds) {
-            if (DatabaseContext.IsGuildInTable(id))
-                GetOrAddData(guild);
+            bool exists_in_table = DatabaseContext.ExistsInTable(
+                GuildAudioTable.TABLE_NAME, 
+                Condition.New(GuildAudioTable.GUILD_ID.name).Equals(id)
+            );
+
+            if (exists_in_table) GetOrAddData(guild);
         }
     }
 

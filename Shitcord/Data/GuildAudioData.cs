@@ -5,6 +5,8 @@ using DSharpPlus.Lavalink.Entities;
 using DSharpPlus.Lavalink.EventArgs;
 using System.Collections.Concurrent;
 using Shitcord.Services;
+using Shitcord.Database;
+using Shitcord.Database.Queries;
 
 namespace Shitcord.Data;
 
@@ -55,13 +57,11 @@ public class GuildAudioData
         this.DatabaseContext = database;
 
         // Try to load UpdateMessages here
-        LoadFromDatabase();
+        InitializeDatabase();
 
         this.Queue = new ConcurrentQueue<LavalinkTrack>();
         this.Filters = new AudioFilters();
     }
-
-    ~GuildAudioData() => SaveToDatabase();
 
     public async Task CreateConnectionAsync(DiscordChannel vchannel)
     {
@@ -78,11 +78,51 @@ public class GuildAudioData
         this.Player.PlaybackFinished += PlaybackFinished;
     }
 
-    private void LoadFromDatabase() 
+    private void InitializeDatabase() 
     {
-        var db = DatabaseContext;
-        var qu_channel_id = db.ReadQUChannel(Guild.Id);
-        var qu_message_id = db.ReadQUMessage(Guild.Id);
+        //var str = DatabaseContext.TableToString(
+        //    GuildAudioTable.TABLE_NAME, GuildAudioTable.COLUMNS
+        //);
+        //
+        //Console.WriteLine(str);
+
+        bool exists_in_table = DatabaseContext.ExistsInTable(
+            GuildAudioTable.TABLE_NAME, 
+            Condition.New(GuildAudioTable.GUILD_ID.name).Equals(Guild.Id)
+        );
+
+        // 0        1           2           3       4       5       6
+        //GUILD_ID, QU_CHANNEL, SU_CHANNEL, QU_MSG, SU_MSG, VOLUME, LOOPING 
+        if (exists_in_table) {
+            DatabaseContext.executeUpdate(QueryBuilder
+                .New().Insert()
+                .Into(GuildAudioTable.TABLE_NAME)
+                .Values(
+                    Guild.Id,
+                    QueueUpdateChannel?.Id,
+                    SongUpdateChannel?.Id,
+                    QueueUpdateMessage?.Id,
+                    SongUpdateMessage?.Id,
+                    Volume,
+                    IsLooping
+                ).Build()
+            );
+        }
+
+        var retrieved = DatabaseContext.GatherData(QueryBuilder
+            .New().Retrieve("*")
+            .From(GuildAudioTable.TABLE_NAME)
+            .Where(Condition
+                .New(GuildAudioTable.GUILD_ID.name)
+                .Equals(Guild.Id.ToString())
+            ).Build()
+        );
+
+        if (retrieved is null)
+            throw new Exception("unreachable");
+
+        var qu_channel_id = (ulong?)retrieved[0][1];
+        var qu_message_id = (ulong?)retrieved[0][3];
 
         if (qu_channel_id != null && qu_message_id != null) {
             try { 
@@ -95,8 +135,8 @@ public class GuildAudioData
             } catch { /* Ignored */ }
         } 
 
-        var su_channel_id = db.ReadSUChannel(Guild.Id);
-        var su_message_id = db.ReadSUMessage(Guild.Id);
+        var su_channel_id = (ulong?)retrieved[0][2];
+        var su_message_id = (ulong?)retrieved[0][4];
 
         if (su_channel_id != null && su_message_id != null) {
             try { 
@@ -109,10 +149,11 @@ public class GuildAudioData
             } catch { /* Ignored */ }
         } 
 
-        IsLooping = db.ReadLooping(Guild.Id) ?? false;
-        Volume = db.ReadVolume(Guild.Id) ?? 100;
+        Volume = (int)retrieved[0][5];
+        IsLooping = (bool)retrieved[0][6];
     }
 
+    /*
     private void SaveToDatabase() 
     {
         var db = DatabaseContext;
@@ -123,6 +164,7 @@ public class GuildAudioData
         } else db.InsertRow(Guild.Id, QueueUpdateChannel?.Id, SongUpdateChannel?.Id, 
             QueueUpdateMessage?.Id, SongUpdateMessage?.Id, Volume, IsLooping);
     }
+    */
 
     public async Task SetSongUpdate(DiscordChannel channel)
     {
@@ -136,7 +178,15 @@ public class GuildAudioData
 
         var mess = GenerateSongMessage();
         this.SongUpdateMessage = await this.SongUpdateChannel.SendMessageAsync(mess);
-        SaveToDatabase();
+
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New().Update(GuildAudioTable.TABLE_NAME)
+            .Columns(GuildAudioTable.SU_CHANNEL.name, GuildAudioTable.SU_MSG.name)
+            .Values(
+                SongUpdateChannel?.Id,
+                SongUpdateMessage?.Id
+            ).Build()
+        );
     }
 
     public async Task SetQueueUpdate(DiscordChannel channel)
@@ -151,7 +201,16 @@ public class GuildAudioData
 
         var mess = GenerateQueueMessage();
         this.QueueUpdateMessage = await this.QueueUpdateChannel.SendMessageAsync(mess);
-        SaveToDatabase();
+
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New().Insert()
+            .Into(GuildAudioTable.TABLE_NAME)
+            .Columns(GuildAudioTable.SU_CHANNEL.name, GuildAudioTable.SU_MSG.name)
+            .Values(
+                SongUpdateChannel?.Id,
+                SongUpdateMessage?.Id
+            ).Build()
+        );
     }
 
     public async Task DestroyQueueUpdate()
