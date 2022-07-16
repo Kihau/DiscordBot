@@ -16,6 +16,10 @@ public class Condition
     {
         return new Condition(columnName);
     }
+    public static Condition New(Column column)
+    {
+        return New(column.name);
+    }
     public Condition And(string columnName)
     {
         if (operatorExpected) {
@@ -25,6 +29,10 @@ public class Condition
         condition.Append("AND").Append(' ').Append(columnName).Append(' ');
         return this;
     }
+    public Condition And(Column column)
+    {
+        return And(column.name);
+    }
     public Condition Or(string columnName)
     {
         if (operatorExpected) {
@@ -33,6 +41,10 @@ public class Condition
         operatorExpected = true;
         condition.Append("OR").Append(' ').Append(columnName).Append(' ');
         return this;
+    }
+    public Condition Or(Column column)
+    {
+        return Or(column.name);
     }
     //hides the method from the object class
     public new Condition Equals(object value)

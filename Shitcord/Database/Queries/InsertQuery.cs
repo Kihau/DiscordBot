@@ -19,12 +19,20 @@ public class InsertQuery
     //not necessary to call columns as long as the order of values is known
     public InsertQuery Columns(params string[] columnNames)
     {
-        if (columnNames.Length == 0)
-        {
+        if (columnNames.Length == 0) {
             return this;
         }
         cols = columnNames;
         return this;
+    }
+    public InsertQuery Columns(params Column[] columns)
+    {
+        string[] names = new string[columns.Length];
+        Column[] colsArr = columns.ToArray();
+        for (int i = 0; i < columns.Length; i++) {
+            names[i] = colsArr[i].name;
+        }
+        return Columns(names);
     }
     
     public InsertQuery Values(params object[] values)

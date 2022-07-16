@@ -6,12 +6,20 @@ namespace Shitcord.Tests;
 class QueryTests
 {
     private static int tests = 0;
+    private static int passed;
+
     public static void runTests()
     {
         selectTests();
         insertTests();
         updateTests();
         conditionTests();
+        displayResultRatio();
+    }
+
+    private static void displayResultRatio()
+    {
+        Console.WriteLine($"Ratio (Passed/ALL): {passed}/{tests}");
     }
 
     private static void selectTests()
@@ -41,11 +49,53 @@ class QueryTests
             .OrderBy("chain_str", false)
             .Build();
         
+        const string expectedDistinct1 = "SELECT DISTINCT field FROM table";
+        string selectDistinct1 = QueryBuilder.New()
+            .Retrieve("field").Distinct()
+            .From("table")
+            .Build();
+        
+        const string expectedDistinct2 = "SELECT DISTINCT f1,f2,f3 FROM table";
+        string selectDistinct2 = QueryBuilder.New()
+            .Retrieve("f1","f2","f3" ).Distinct()
+            .From("table")
+            .Build();
+        
+        const string expectedDistinct3Column = "SELECT DISTINCT base_str,chain_str,frequency FROM table";
+        string selectDistinct3Column = QueryBuilder.New()
+            .Retrieve(MarkovTable.BASE, MarkovTable.CHAIN, MarkovTable.FREQUENCY).Distinct()
+            .From("table")
+            .Build();
+        
+        const string expectedOneParam = "SELECT chain_str FROM table";
+        string givenOneParam = QueryBuilder.New()
+            .Retrieve(MarkovTable.CHAIN)
+            .From("table")
+            .Build();
+        
+        const string expectedWhereEquals = "SELECT base_str FROM table WHERE frequency = 3";
+        string whereEqualsCol1 = QueryBuilder.New()
+            .Retrieve(MarkovTable.BASE)
+            .From("table")
+            .WhereEquals(MarkovTable.FREQUENCY, 3)
+            .Build();
+        string whereEqualsCol2 = QueryBuilder.New()
+            .Retrieve(MarkovTable.BASE)
+            .From("table")
+            .WhereEquals(MarkovTable.FREQUENCY.name, 3)
+            .Build();
+
         Console.WriteLine("Selects:");
         compareStartsWith(select1, expected1);
         compareStartsWith(select2, expected2);
         compareStartsWith(select3, expected3);
         compareStartsWith(selectOrderBy, expectedOrderBy);
+        compareStartsWith(selectDistinct1, expectedDistinct1);
+        compareStartsWith(selectDistinct2, expectedDistinct2);
+        compareStartsWith(selectDistinct3Column, expectedDistinct3Column);
+        compareStartsWith(givenOneParam, expectedOneParam);
+        compareStartsWith(whereEqualsCol1, expectedWhereEquals);
+        compareStartsWith(whereEqualsCol1, whereEqualsCol2);
     }
 
     static void conditionTests()
@@ -86,12 +136,20 @@ class QueryTests
         string insert3 = QueryBuilder.New().Insert().Into(MarkovTable.TABLE_NAME).Values("on", null, 2).Build();
         const string expected4 = "INSERT INTO markov_data VALUES (\"on\",\"zzz\",null)";
         string insert4 = QueryBuilder.New().Insert().Into(MarkovTable.TABLE_NAME).Values("on", "zzz", null).Build();
+        
+        const string expected5Cols = 
+            "INSERT INTO markov_data (base_str,chain_str,frequency) VALUES (\"one\",\"two\",\"3\")";
+        string insert5Cols = QueryBuilder.New()
+            .Insert().Into(MarkovTable.TABLE_NAME)
+            .Columns(MarkovTable.COLUMNS.ToArray())
+            .Values("one", "two", "3").Build();
 
         Console.WriteLine("Inserts:");
         compareStartsWith(insert1, expected1);
         compareStartsWith(insert2, expected2);
         compareStartsWith(insert3, expected3);
         compareStartsWith(insert4, expected4);
+        compareStartsWith(insert5Cols, expected5Cols);
     }
 
     static void updateTests()
@@ -116,8 +174,10 @@ class QueryTests
     private static void compareStartsWith(string given, string expected)
     {
         bool compare = given.StartsWith(expected);
-        if (compare)
+        if (compare) {
+            passed++;
             Console.WriteLine($"#{tests++} Passed");
+        }
         else
         {
             Console.WriteLine($"#{tests++} Failed");

@@ -10,7 +10,8 @@ public class SelectQuery
     //SELECT (c1, c2, c3) FROM t WHERE c2 = val;
     //select every column:
     //SELECT * FROM t WHERE c2 = val;
-    
+
+    private bool distinct;
     private readonly string[] cols;
     private string table;
     private Condition condition;
@@ -24,6 +25,20 @@ public class SelectQuery
         
         cols = columnNames;
     }
+    public SelectQuery (params Column[] columns)
+    {
+        string[] names = new string[columns.Length];
+        Column[] colsArr = columns.ToArray();
+        for (int i = 0; i < columns.Length; i++) {
+            names[i] = colsArr[i].name;
+        }
+        cols = names;
+    }
+    public SelectQuery Distinct()
+    {
+        distinct = true;
+        return this;
+    }
     public SelectQuery From(string tableName)
     {
         table = tableName;
@@ -34,11 +49,24 @@ public class SelectQuery
         this.condition = condition;
         return this;
     }
+    public SelectQuery WhereEquals(string columnName, object value)
+    {
+        condition = Condition.New(columnName).Equals(value);
+        return this;
+    }
+    public SelectQuery WhereEquals(Column column, object value)
+    {
+        return WhereEquals(column.name, value);
+    }
     public SelectQuery OrderBy(string columnName, bool isAscending = true)
     {
         orderBy = columnName;
         this.isAscending = isAscending;
         return this;
+    }
+    public SelectQuery OrderBy(Column column, bool isAscending = true)
+    {
+        return OrderBy(column.name, isAscending);
     }
 
     private void AppendColumns(StringBuilder sb)
@@ -58,6 +86,9 @@ public class SelectQuery
         
 
         StringBuilder selectQuery = new StringBuilder("SELECT ");
+
+        if (distinct)
+            selectQuery.Append("DISTINCT ");
         
         if(cols.Length==1 && cols[0]=="*")
             selectQuery.Append('*').Append(' ');

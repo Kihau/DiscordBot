@@ -20,10 +20,23 @@ public class UpdateQuery
         pairs.Add((columnName, value));
         return this;
     }
+    public UpdateQuery Set(Column column, object value)
+    {
+        return Set(column.name, value);
+    }
     public UpdateQuery Where(Condition condition)
     {
         this.condition = condition;
         return this;
+    }
+    public UpdateQuery WhereEquals(string columnName, object value)
+    {
+        condition = Condition.New(columnName).Equals(value);
+        return this;
+    }
+    public UpdateQuery WhereEquals(Column column, object value)
+    {
+        return WhereEquals(column.name, value);
     }
     public string Build()
     {
