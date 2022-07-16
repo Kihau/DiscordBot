@@ -34,6 +34,11 @@ public class SelectQuery
         this.condition = condition;
         return this;
     }
+    public SelectQuery WhereEquals(string columnName, object value)
+    {
+        condition = Condition.New(columnName).Equals(value);
+        return this;
+    }
     public SelectQuery OrderBy(string columnName, bool isAscending = true)
     {
         orderBy = columnName;

@@ -25,6 +25,11 @@ public class UpdateQuery
         this.condition = condition;
         return this;
     }
+    public UpdateQuery WhereEquals(string columnName, object value)
+    {
+        condition = Condition.New(columnName).Equals(value);
+        return this;
+    }
     public string Build()
     {
         int len = pairs.Count;
