@@ -164,7 +164,7 @@ public class DatabaseTests
     {
         service.executeUpdate($"DROP TABLE IF EXISTS {TABLE}");
         //create table
-        string createTableQuery = DatabaseServiceNew.ProduceCreateTableQuery(TABLE, MarkovTable.COLUMNS);
+        string createTableQuery = DatabaseService.ProduceCreateTableQuery(TABLE, MarkovTable.COLUMNS);
         service.executeUpdate(createTableQuery);
     }
 
