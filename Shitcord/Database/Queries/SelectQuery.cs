@@ -17,7 +17,8 @@ public class SelectQuery
     private Condition condition;
     private string orderBy;
     private bool isAscending = true;
-    private int random = -1;
+    private bool isRandom = false;
+    private int limit = -1;
 
     public SelectQuery(params string[] columnNames)
     {
@@ -70,12 +71,18 @@ public class SelectQuery
         return OrderBy(column.name, isAscending);
     }
     //limit the number of rows returned by the query (upper constraint)
-    public SelectQuery Random(int limit = 1)
+    public SelectQuery Random()
+    {
+        isRandom = true;
+        return this;
+    }
+    //limit the number of rows returned by the query (upper constraint)
+    public SelectQuery Limit(int limit = 1)
     {
         if (limit < 0) {
             throw new QueryException($"Specified limit {limit} is less than zero");
         }
-        random = limit;
+        this.limit = limit;
         return this;
     }
     private void AppendColumns(StringBuilder sb)
@@ -117,8 +124,11 @@ public class SelectQuery
                 selectQuery.Append("DESC");
             }
         }
-        else if (random != -1) {
-            selectQuery.Append($"ORDER BY RAND() LIMIT {random}");
+        else if (isRandom) {
+            selectQuery.Append($"ORDER BY RAND() ");
+        }
+        if (limit != -1) {
+            selectQuery.Append($"LIMIT {limit}");
         }
         return selectQuery.ToString();
     }
