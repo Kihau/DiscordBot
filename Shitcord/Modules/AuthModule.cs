@@ -135,9 +135,7 @@ public class AuthModule : BaseCommandModule
 	public async Task PrintDatabaseCommand(CommandContext ctx, bool console = true)
 	{
         string tables = Db.Tables();
-	 	if (console)
-			Console.WriteLine($"{tables}");
-		else await ctx.RespondAsync($"```\n{tables}```\n");
+        await ctx.RespondAsync($"```\n{tables}```\n");
 	}
 
 	[Command("printtable"), Aliases("printt"), Description("Prints table contained inside db")]
@@ -146,15 +144,15 @@ public class AuthModule : BaseCommandModule
 		bool exists = Db.DoesTableExist(table);
 		if (!exists) {
 			await ctx.RespondAsync($"\nTable doesn't exist\n");
+			return;
 		}
 		var cols = Db.RetrieveColumns("SELECT * FROM " + table);
 		if (cols == null) {
-			await ctx.RespondAsync($"\nTable is empty\n");
+			await ctx.RespondAsync("\nTable is empty\n");
+			return;
 		}
 		string tables = Db.QueryResultToString(cols, table);
-	 	if (console)
-			Console.WriteLine($"{tables}");
-		else await ctx.RespondAsync($"```\n{tables}```\n");
+		await ctx.RespondAsync($"```\n{tables}```\n");
 	}
 
 	[Command("eval")]
