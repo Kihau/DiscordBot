@@ -28,21 +28,24 @@ public class MarkovModule : BaseCommandModule
     [Command("disable"), Description("Disables markov service")]
     public async Task DisableCommand(CommandContext ctx) { 
         Data.IsEnabled = false;
+        Data.UpdateEnabledFlag();
         await ctx.RespondAsync($"Markov service is now disabled");
     }
 
     [Command("enable"), Description("Enables markov service")]
     public async Task EnableCommand(CommandContext ctx) {
         Data.IsEnabled = true; 
+        Data.UpdateEnabledFlag();
         await ctx.RespondAsync($"Markov service is now enabled");
     }
 
     [Command("autoresponse"), Description("Sets markov autoresponse (input nothing to switch it)")]
-    public async Task ResponseSetCommand(CommandContext ctx, bool? input) 
+    public async Task ResponseSetCommand(CommandContext ctx, bool? enabled = null) 
     {
-        if (input is null)
+        if (enabled is null)
             Data.ResponseEnabled = !Data.ResponseEnabled;
-        else Data.ResponseEnabled = input.Value;
+        else Data.ResponseEnabled = enabled.Value;
+        Data.UpdateAutoResponse();
 
         await ctx.RespondAsync($"Markov auto reposonse is not set to: `{Data.ResponseEnabled}`");
     }
@@ -56,6 +59,7 @@ public class MarkovModule : BaseCommandModule
             );
 
         Data.ResponseChance = chance;
+        Data.UpdateAutoResponse();
         await ctx.RespondAsync($"Markov chance is now set to: `{Data.ResponseChance}`");
     }
 
@@ -63,6 +67,7 @@ public class MarkovModule : BaseCommandModule
     public async Task ResponseTimeoutCommand(CommandContext ctx, TimeSpan timeout) 
     {
         Data.ResponseTimeout = timeout;
+        Data.UpdateAutoResponse();
         await ctx.RespondAsync($"Markov timeout is now set to: `{Data.ResponseTimeout}`");
     }
 
@@ -76,6 +81,8 @@ public class MarkovModule : BaseCommandModule
 
         Data.MaxChainLength = max is null || max.Value <= 0 
             ? GuildMarkovData.DEFAULT_MAX : max.Value;
+
+        Data.UpdateChainLength();
 
         await ctx.RespondAsync(String.Format(
             $"Markov chain min is now set to: `{0}`, and max to: `{1}`",
@@ -91,6 +98,7 @@ public class MarkovModule : BaseCommandModule
             $"Markov enabled: `{Data.IsEnabled}`\n" +
             $"Min chain length: `{Data.MinChainLength}`\n" +
             $"Max chain length: `{Data.MaxChainLength}`\n" +  
+            $"Auto response enabled: `{Data.ResponseEnabled}`\n" +
             $"Auto response timeout: `{Data.ResponseTimeout}`\n" + 
             $"Last response time: `{Data.LastResponse}`\n" + 
             $"Number of excluded channels: `{Data.ExcludedChannelIDs.Count}`\n" + 
@@ -109,12 +117,12 @@ public class MarkovModule : BaseCommandModule
     public async Task ExcludeChannelCommand(CommandContext ctx, DiscordChannel channel)
     {
         if (Data.ExcludedChannelIDs.Contains(channel.Id)) {
-            Data.ExcludedChannelIDs.Remove(channel.Id);
+            Data.DeleteExcludeChannel(channel.Id);
             await ctx.RespondAsync(
                 $"Channel `{channel.Name}` is now excluded from data gathering"
             );
         } else {
-            Data.ExcludedChannelIDs.Add(channel.Id);
+            Data.InsertNewExcludeChannel(channel.Id);
             await ctx.RespondAsync(
                 $"Channel `{channel.Name}` is no longer excluded from data gathering"
             );
@@ -129,8 +137,8 @@ public class MarkovModule : BaseCommandModule
             .Select(x => x.Key)
             .ToArray();
 
-        foreach (var channel in channels_to_add)
-            Data.ExcludedChannelIDs.Add(channel);
+        foreach (var channel_id in channels_to_add)
+            Data.InsertNewExcludeChannel(channel_id);
 
         await ctx.RespondAsync("All channels in the guild are now excluded");
     }
@@ -138,10 +146,11 @@ public class MarkovModule : BaseCommandModule
     [Command("excludeclear"), Description("Removes all channels from exclusion list")]
     public async Task ExcludeClearChannelsCommand(CommandContext ctx)
     {
-        Data.ExcludedChannelIDs.Clear();
-        await ctx.RespondAsync("Removed all channels from the *excluded* list");
+        Data.DeleteAllExcludeChannel();
+        await ctx.RespondAsync("Removed all channels from the *exclude* list");
     }
 
+    /*
     [Command("migrate")]
     public async Task MigrateCommand(CommandContext ctx)
         => Markov.MigrateDataToDatabase();
@@ -153,4 +162,5 @@ public class MarkovModule : BaseCommandModule
     [Command("load")]
     public async Task LoadCommand(CommandContext ctx)
         => Markov.LoadMarkovBinaryData();
+    */
 }

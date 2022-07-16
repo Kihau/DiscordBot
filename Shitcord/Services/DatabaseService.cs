@@ -19,8 +19,12 @@ public class DatabaseService
         connection = new SqliteConnection("Data Source=" + DATABASE_NAME);
 
         connection.Open();
-        CreateTableIfNotExists(MarkovTable.TABLE_NAME, MarkovTable.COLUMNS);
         CreateTableIfNotExists(GuildAudioTable.TABLE_NAME, GuildAudioTable.COLUMNS);
+        CreateTableIfNotExists(MarkovTable.TABLE_NAME, MarkovTable.COLUMNS);
+        CreateTableIfNotExists(GuildMarkovTable.TABLE_NAME, GuildMarkovTable.COLUMNS);
+        CreateTableIfNotExists(
+            MarkovExcludedChannelsTable.TABLE_NAME, MarkovExcludedChannelsTable.COLUMNS
+        );
     }
 
     ~DatabaseService() => connection.Close();
