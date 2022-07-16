@@ -81,6 +81,20 @@ class QueryTests
             .From("table")
             .WhereEquals(MarkovTable.FREQUENCY.name, 3)
             .Build();
+        
+        const string expectedRandom1 = "SELECT * FROM table ORDER BY RAND() LIMIT 1";
+        string random1 = QueryBuilder.New()
+            .Retrieve("*")
+            .From("table")
+            .Random(1)
+            .Build();
+        
+        const string expectedRandom2 = "SELECT * FROM table ORDER BY RAND() LIMIT 3";
+        string random2 = QueryBuilder.New()
+            .Retrieve("*")
+            .From("table")
+            .Random(3)
+            .Build();
 
         Console.WriteLine("Selects:");
         compareStartsWith(select1, expected1);
@@ -93,6 +107,8 @@ class QueryTests
         compareStartsWith(givenOneParam, expectedOneParam);
         compareStartsWith(whereEqualsCol1, expectedWhereEquals);
         compareStartsWith(whereEqualsCol1, whereEqualsCol2);
+        compareStartsWith(random1, expectedRandom1);
+        compareStartsWith(random2, expectedRandom2);
     }
 
     static void conditionTests()
