@@ -41,10 +41,11 @@ public class MarkovService
         Client.MessageCreated += MarkovMessageHandler;
     }
 
+    // NOTE: We can simplify this to a simple DISTINCT query if that is needed
     public string[] GetAllBaseStrings() 
     {
         var all_values = DatabaseContext.GatherData(
-            QueryBuilder.New().Retrieve(MarkovTable.BASE.name).From(MarkovTable.TABLE_NAME).Build()
+            QueryBuilder.New().Retrieve(MarkovTable.BASE).From(MarkovTable.TABLE_NAME).Build()
         );
 
         if (all_values is null)
@@ -58,12 +59,11 @@ public class MarkovService
     {
         var all_values = DatabaseContext.GatherData(QueryBuilder
             .New()
-            .Retrieve(MarkovTable.CHAIN.name, MarkovTable.FREQUENCY.name)
+            .Retrieve(MarkovTable.CHAIN, MarkovTable.FREQUENCY)
             .From(MarkovTable.TABLE_NAME)
-            .Where(Condition
-                .New(MarkovTable.BASE.name)
-                .Equals(base_string)
-            ).Build()
+            .WhereEquals(MarkovTable.BASE, base_string)
+            .OrderBy(MarkovTable.FREQUENCY)
+            .Build()
         );
 
         if (all_values is null)
@@ -80,7 +80,7 @@ public class MarkovService
     {
         return DatabaseContext.ExistsInTable(
             MarkovTable.TABLE_NAME, Condition
-                .New(MarkovTable.BASE.name)
+                .New(MarkovTable.BASE)
                 .Equals(base_string)
         );
     }
@@ -89,35 +89,39 @@ public class MarkovService
     {
         return DatabaseContext.ExistsInTable(
             MarkovTable.TABLE_NAME, Condition
-                .New(MarkovTable.BASE.name)
+                .New(MarkovTable.BASE)
                 .Equals(base_string)
-                .And(MarkovTable.CHAIN.name)
+                .And(MarkovTable.CHAIN)
                 .Equals(chain_string)
         );
     }
 
     public void InsertChainString(string base_string, string chain_string) 
     {
-        // Remove old base_string
         DatabaseContext.executeUpdate(QueryBuilder
             .New()
-            .Delete()
-            .From(MarkovTable.TABLE_NAME)
+            .Update(MarkovTable.TABLE_NAME)
             .Where(Condition
-                .New(MarkovTable.BASE.name)
+                .New(MarkovTable.BASE)
                 .Equals(base_string)
-                .And(MarkovTable.FREQUENCY.name)
+                .And(MarkovTable.FREQUENCY)
                 .Equals(0)
-            ).Build()
+            ).Set(MarkovTable.BASE, base_string)
+            .Set(MarkovTable.CHAIN, chain_string)
+            .Set(MarkovTable.FREQUENCY, 1)
+            .Build()
         );
+    }
 
-        // Old base_string is now replaced with one that is
-        // associated to chain_string and frequency
+    public void InsertAllStrings(string base_string, string chain_string, int frequency) 
+    {
+        // Add default base string to remove it later
+        // (this is not that good)
         DatabaseContext.executeUpdate(QueryBuilder
             .New()
             .Insert()
             .Into(MarkovTable.TABLE_NAME)
-            .Values(base_string, chain_string, 1)
+            .Values(base_string, chain_string, frequency)
             .Build()
         );
     }
@@ -135,16 +139,17 @@ public class MarkovService
         );
     }
 
+    // TODO: increment query (increment by 1 in this case)
     public void UpdateChainFrequency(string base_string, string chain_string)
     {
         var data = DatabaseContext.GatherData(QueryBuilder
             .New()
-            .Retrieve(MarkovTable.FREQUENCY.name)
+            .Retrieve(MarkovTable.FREQUENCY)
             .From(MarkovTable.TABLE_NAME)
             .Where(Condition
-                .New(MarkovTable.BASE.name)
+                .New(MarkovTable.BASE)
                 .Equals(base_string)
-                .And(MarkovTable.CHAIN.name)
+                .And(MarkovTable.CHAIN)
                 .Equals(chain_string)
             ).Build()
         );
@@ -157,11 +162,11 @@ public class MarkovService
             .New()
             .Update(MarkovTable.TABLE_NAME)
             .Where(Condition
-                .New(MarkovTable.BASE.name)
+                .New(MarkovTable.BASE)
                 .Equals(base_string)
-                .And(MarkovTable.CHAIN.name)
+                .And(MarkovTable.CHAIN)
                 .Equals(chain_string)
-            ).Set(MarkovTable.FREQUENCY.name, freq + 1)
+            ).Set(MarkovTable.FREQUENCY, freq + 1)
             .Build()
         );
     }
@@ -216,7 +221,6 @@ public class MarkovService
             if (ContainsBaseString(rand_base)) {
                 var chain_freq = GetAllChainFrequency(rand_base);
                 if (chain_freq.Length != 0) {
-                    Array.Sort(chain_freq, (a, b) => a.Item2.CompareTo(b.Item2));
                     int index = CalculateRandomIndex(chain_freq);
                     rand_base = chain_freq[index].Item1;
                 } else if (current_len < min_len) {
@@ -321,6 +325,14 @@ public class MarkovService
                 await e.Message.RespondAsync(markov_text);
             else await e.Channel.SendMessageAsync(markov_text);
         }
+    }
+
+    public void MigrateDataToDatabase() 
+    {
+        var data = markovStrings.ToList();
+        foreach (var base_string in markovStrings)
+            foreach (var chain_string in base_string.Value)
+                InsertAllStrings(base_string.Key, chain_string.Key, chain_string.Value);
     }
 
     [Obsolete]

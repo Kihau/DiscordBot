@@ -88,7 +88,7 @@ public class GuildAudioData
 
         bool exists_in_table = DatabaseContext.ExistsInTable(
             GuildAudioTable.TABLE_NAME, 
-            Condition.New(GuildAudioTable.GUILD_ID.name).Equals(Guild.Id)
+            Condition.New(GuildAudioTable.GUILD_ID).Equals(Guild.Id)
         );
 
         //  0        1           2           3       4       5       6
@@ -114,10 +114,8 @@ public class GuildAudioData
         var retrieved = DatabaseContext.GatherData(QueryBuilder
             .New().Retrieve("*")
             .From(GuildAudioTable.TABLE_NAME)
-            .Where(Condition
-                .New(GuildAudioTable.GUILD_ID.name)
-                .Equals(Guild.Id.ToString())
-            ).Build()
+            .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id.ToString())
+            .Build()
         );
 
         if (retrieved is null)
@@ -176,11 +174,9 @@ public class GuildAudioData
     {
         DatabaseContext.executeUpdate(QueryBuilder
             .New().Update(GuildAudioTable.TABLE_NAME)
-            .Where(Condition
-                .New(GuildAudioTable.GUILD_ID.name)
-                .Equals(Guild.Id)
-            ).Set(GuildAudioTable.QU_CHANNEL.name, QueueUpdateChannel?.Id)
-            .Set(GuildAudioTable.QU_MSG.name, QueueUpdateMessage?.Id)
+            .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
+            .Set(GuildAudioTable.QU_CHANNEL, QueueUpdateChannel?.Id)
+            .Set(GuildAudioTable.QU_MSG, QueueUpdateMessage?.Id)
             .Build()
         );
     }
@@ -189,11 +185,9 @@ public class GuildAudioData
     {
         DatabaseContext.executeUpdate(QueryBuilder
             .New().Update(GuildAudioTable.TABLE_NAME)
-            .Where(Condition
-                .New(GuildAudioTable.GUILD_ID.name)
-                .Equals(Guild.Id)
-            ).Set(GuildAudioTable.SU_CHANNEL.name, SongUpdateChannel?.Id)
-            .Set(GuildAudioTable.SU_MSG.name, SongUpdateMessage?.Id)
+            .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
+            .Set(GuildAudioTable.SU_CHANNEL, SongUpdateChannel?.Id)
+            .Set(GuildAudioTable.SU_MSG, SongUpdateMessage?.Id)
             .Build()
         );
     }
@@ -456,10 +450,8 @@ public class GuildAudioData
 
         DatabaseContext.executeUpdate(QueryBuilder
             .New().Update(GuildAudioTable.TABLE_NAME)
-            .Where(Condition
-                .New(GuildAudioTable.GUILD_ID.name)
-                .Equals(Guild.Id)
-            ).Set(GuildAudioTable.VOLUME.name, Volume)
+            .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
+            .Set(GuildAudioTable.VOLUME, Volume)
             .Build()
         );
     }
@@ -560,10 +552,8 @@ public class GuildAudioData
 
         DatabaseContext.executeUpdate(QueryBuilder
             .New().Update(GuildAudioTable.TABLE_NAME)
-            .Where(Condition
-                .New(GuildAudioTable.GUILD_ID.name)
-                .Equals(Guild.Id)
-            ).Set(GuildAudioTable.LOOPING.name, IsLooping)
+            .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
+            .Set(GuildAudioTable.LOOPING, IsLooping)
             .Build()
         );
 
