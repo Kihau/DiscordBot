@@ -51,7 +51,11 @@ public class DatabaseTests
             QueryBuilder.New()
                 .Insert().Into(TABLE)
                 .Values("*\f robust design", "Bobby');DROP TABLES", 1337).Build());
+        string statement = QueryBuilder.New()
+            .Insert().Into(TABLE)
+            .Values("Sheep", "\"getBytes()\"", "3").Build();
 
+        Console.WriteLine($"Insert statement: {statement}");
         service.executeUpdate(QueryBuilder.New().Insert()
             .Into(TABLE)
             .Values("D", "E", 2).Build());
@@ -190,7 +194,9 @@ public class DatabaseTests
         Console.WriteLine(res1);
         Console.WriteLine(res2);
         //Console.Write(table);
-        
+
+        int rows = service.RetrieveNumberOfRows(TABLE);
+        Console.WriteLine($"Rows in {TABLE}: {rows}");
     }
 
     private static void createTableQueries()

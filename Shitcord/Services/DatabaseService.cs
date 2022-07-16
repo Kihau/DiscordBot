@@ -149,6 +149,21 @@ public class DatabaseService
         var reader = executeRead(selectStatement);
         return RetrieveColumns(reader);
     }
+    public int RetrieveNumberOfRows(string tableName)
+    {
+        var reader = executeRead(QueryBuilder.New()
+            .Retrieve("COUNT(*)").From(tableName)
+            .Build());
+        
+        if (!reader.Read()) {
+            reader.Close();
+            return 0;
+        }
+        
+        int res = reader.GetInt32(0);
+        reader.Close();
+        return res;
+    }
     
     private SqliteDataReader executeRead(string selectStatement)
     {
