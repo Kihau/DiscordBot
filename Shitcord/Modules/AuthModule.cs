@@ -134,10 +134,25 @@ public class AuthModule : BaseCommandModule
 	[Command("printdatabase"), Aliases("printdb"), Description("Prints database used by the bot")]
 	public async Task PrintDatabaseCommand(CommandContext ctx, bool console = true)
 	{
-        var db = Db.ToString();
-	 	if (console)
-			Console.WriteLine($"{db}");
-		else await ctx.RespondAsync($"```\n{db}```\n");
+        string tables = Db.Tables();
+        await ctx.RespondAsync($"```\n{tables}```\n");
+	}
+
+	[Command("printtable"), Aliases("printt"), Description("Prints table contained inside db")]
+	public async Task PrintTableCommand(CommandContext ctx, string table, bool console = true)
+	{
+		bool exists = Db.DoesTableExist(table);
+		if (!exists) {
+			await ctx.RespondAsync($"\nTable doesn't exist\n");
+			return;
+		}
+		var cols = Db.RetrieveColumns("SELECT * FROM " + table);
+		if (cols == null) {
+			await ctx.RespondAsync("\nTable is empty\n");
+			return;
+		}
+		string tables = Db.QueryResultToString(cols, table);
+		await ctx.RespondAsync($"```\n{tables}```\n");
 	}
 
 	[Command("eval")]

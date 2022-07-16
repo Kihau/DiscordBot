@@ -23,11 +23,20 @@ public class DatabaseTests
         testMultipleOperations_3();
 
         testEscapeValues();
+
+        SQLiteTests();
+        
         Console.WriteLine("[Completed] Time elapsed: " + testTimer.ElapsedMilliseconds);
         testTimer.Stop();
         //createTableQueries();
     }
-
+    private static void SQLiteTests()
+    {
+        var cols = service.RetrieveColumns("SELECT * FROM " + TABLE);
+        string tableBasedOnSQL = service.QueryResultToString(cols, TABLE);
+        Console.WriteLine("TABLE retrieved:");
+        Console.WriteLine(tableBasedOnSQL);
+    }
     private static void testEscapeValues()
     {
         deleteIfExistsCreateNew();
@@ -109,6 +118,9 @@ public class DatabaseTests
         bool exists2 = service.DoesTableExist("ttt");
         Console.WriteLine($"Does {TABLE} exist {exists1}");
         Console.WriteLine($"Does ttt exist {exists2}");
+
+        Console.WriteLine("Tables in DB:");
+        Console.WriteLine($"{service.Tables()}");
 
     }
 

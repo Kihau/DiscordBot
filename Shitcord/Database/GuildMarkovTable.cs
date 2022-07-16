@@ -6,7 +6,7 @@ public static class GuildMarkovTable
     
     public static readonly Column GUILD_ID          = new("guild_id", "bigint", false, true);
     public static readonly Column ENABLED           = new("enabled", "boolean");
-    public static readonly Column RESPONSE_ENABLED  = new("respone_enabled", "boolean");
+    public static readonly Column RESPONSE_ENABLED  = new("response_enabled", "boolean");
     public static readonly Column RESPONSE_CHANCE   = new("response_chance", "int");
     public static readonly Column RESPONSE_TIMEOUT  = new("response_timeout", "bigint");
     public static readonly Column MIN_CHAIN_LEN     = new("min_chain_len", "int");
