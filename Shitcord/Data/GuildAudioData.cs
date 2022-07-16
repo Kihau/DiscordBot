@@ -91,8 +91,8 @@ public class GuildAudioData
             Condition.New(GuildAudioTable.GUILD_ID.name).Equals(Guild.Id)
         );
 
-        // 0        1           2           3       4       5       6
-        //GUILD_ID, QU_CHANNEL, SU_CHANNEL, QU_MSG, SU_MSG, VOLUME, LOOPING 
+        //  0        1           2           3       4       5       6
+        //  GUILD_ID, QU_CHANNEL, SU_CHANNEL, QU_MSG, SU_MSG, VOLUME, LOOPING 
         if (!exists_in_table) {
             DatabaseContext.executeUpdate(QueryBuilder
                 .New().Insert()
@@ -123,39 +123,40 @@ public class GuildAudioData
         if (retrieved is null)
             throw new Exception("Unreachable");
 
-        var s = DatabaseContext.TableToString(GuildAudioTable.TABLE_NAME, GuildAudioTable.COLUMNS);
-        Console.WriteLine(s);
+        var debug_string = DatabaseContext.TableToString(
+            GuildAudioTable.TABLE_NAME, GuildAudioTable.COLUMNS);
+        Console.WriteLine(debug_string);
 
-        var qu_channel_id = (ulong?)retrieved[0][1];
-        var qu_message_id = (ulong?)retrieved[0][3];
+        var qu_channel_id = retrieved[1][0];
+        var qu_message_id = retrieved[3][0];
 
         if (qu_channel_id != null && qu_message_id != null) {
             try { 
-                var channel = Guild.GetChannel(qu_channel_id.Value);
+                var channel = Guild.GetChannel((ulong)(long)qu_channel_id);
                 QueueUpdateChannel = channel;
-                var message = channel.GetMessageAsync(qu_message_id.Value)
+                var message = channel.GetMessageAsync((ulong)(long)qu_message_id)
                     .GetAwaiter().GetResult();
                 QueueUpdateMessage = message; 
                 UpdateQueueMessage();
             } catch { /* Ignored */ }
         } 
 
-        var su_channel_id = (ulong?)retrieved[0][2];
-        var su_message_id = (ulong?)retrieved[0][4];
+        var su_channel_id = retrieved[2][0];
+        var su_message_id = retrieved[4][0];
 
         if (su_channel_id != null && su_message_id != null) {
             try { 
-                var channel = Guild.GetChannel(su_channel_id.Value);
+                var channel = Guild.GetChannel((ulong)(long)su_channel_id);
                 SongUpdateChannel = channel;
-                var message = channel.GetMessageAsync(su_message_id.Value)
+                var message = channel.GetMessageAsync((ulong)(long)su_message_id)
                     .GetAwaiter().GetResult();
                 SongUpdateMessage = message; 
                 UpdateSongMessage();
             } catch { /* Ignored */ }
         } 
 
-        Volume = (int)retrieved[0][5];
-        IsLooping = (bool)retrieved[0][6];
+        Volume = (int)(long)retrieved[5][0];
+        IsLooping = (long)retrieved[6][0] >= 1;
     }
 
     /*
