@@ -44,20 +44,21 @@ public class MarkovService
     // NOTE: We can simplify this to a simple DISTINCT query if that is needed
     public string[] GetAllBaseStrings() 
     {
-        var all_values = DatabaseContext.RetrieveColumns(
-            QueryBuilder.New().Retrieve(MarkovTable.BASE).From(MarkovTable.TABLE_NAME).Build()
+        var all_columns = DatabaseContext.RetrieveColumns(
+            QueryBuilder.New().Retrieve(MarkovTable.BASE).Distinct()
+            .From(MarkovTable.TABLE_NAME).Build()
         );
 
-        if (all_values is null)
+        if (all_columns is null)
             throw new UnreachableException();
-        
-        var base_strings = all_values.Select(x => (string)x[0]).ToArray();
+
+        var base_strings = all_columns[0].Select(row => (string) row).ToArray();
         return base_strings;
     }
 
     public (string, int)[] GetAllChainFrequency(string base_string) 
     {
-        var all_values = DatabaseContext.RetrieveColumns(QueryBuilder
+        var all_columns = DatabaseContext.RetrieveColumns(QueryBuilder
             .New()
             .Retrieve(MarkovTable.CHAIN, MarkovTable.FREQUENCY)
             .From(MarkovTable.TABLE_NAME)
@@ -66,12 +67,12 @@ public class MarkovService
             .Build()
         );
 
-        if (all_values is null)
+        if (all_columns is null)
             throw new UnreachableException();
 
         List <(string, int)> chain_freq_list = new();
-        for (int i = 0; i < all_values[0].Count; i++)
-            chain_freq_list.Add(((string, int))(all_values[0][i], (long)all_values[1][i]));
+        for (int i = 0; i < all_columns[0].Count; i++)
+            chain_freq_list.Add(((string, int))(all_columns[0][i], (long)all_columns[1][i]));
 
         return chain_freq_list.ToArray();
     }
