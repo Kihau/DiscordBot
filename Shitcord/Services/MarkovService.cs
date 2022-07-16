@@ -4,6 +4,8 @@ using DSharpPlus.EventArgs;
 using System.Runtime.Serialization.Formatters.Binary;
 using Shitcord.Extensions;
 using Shitcord.Data;
+using Shitcord.Database;
+using Shitcord.Database.Queries;
 
 namespace Shitcord.Services;
 
@@ -39,16 +41,141 @@ public class MarkovService
         Client.MessageCreated += MarkovMessageHandler;
     }
 
-    // NOTE: The prob_array must be sorted - otherwise the algorithm won't work!
-    private int CalculateRandomIndex(KeyValuePair<string, int>[] prob_array) 
+    public string[] GetAllBaseStrings() 
     {
-        int fitness_sum = prob_array.Select(x => x.Value).Sum();
+        var all_values = DatabaseContext.GatherData(
+            QueryBuilder.New().Retrieve(MarkovTable.BASE.name).From(MarkovTable.TABLE_NAME).Build()
+        );
+
+        if (all_values is null)
+            return new string[] {};
+        
+        var base_strings = all_values.Select(x => (string)x[0]).ToArray();
+        return base_strings;
+    }
+
+    public (string, int)[] GetAllChainFrequency(string base_string) 
+    {
+        var all_values = DatabaseContext.GatherData(QueryBuilder
+            .New()
+            .Retrieve(MarkovTable.CHAIN.name, MarkovTable.FREQUENCY.name)
+            .From(MarkovTable.TABLE_NAME)
+            .Where(Condition
+                .New(MarkovTable.BASE.name)
+                .Equals(base_string)
+            ).Build()
+        );
+
+        if (all_values is null)
+            return new (string, int)[] {};
+
+        List <(string, int)> chain_freq_list = new();
+        for (int i = 0; i < all_values[0].Count; i++)
+            chain_freq_list.Add(((string, int))(all_values[0][i], (long)all_values[1][i]));
+
+        return chain_freq_list.ToArray();
+    }
+
+    public bool ContainsBaseString(string base_string) 
+    {
+        return DatabaseContext.ExistsInTable(
+            MarkovTable.TABLE_NAME, Condition
+                .New(MarkovTable.BASE.name)
+                .Equals(base_string)
+        );
+    }
+
+    public bool ContainsChainString(string base_string, string chain_string) 
+    {
+        return DatabaseContext.ExistsInTable(
+            MarkovTable.TABLE_NAME, Condition
+                .New(MarkovTable.BASE.name)
+                .Equals(base_string)
+                .And(MarkovTable.CHAIN.name)
+                .Equals(chain_string)
+        );
+    }
+
+    public void InsertChainString(string base_string, string chain_string) 
+    {
+        // Remove old base_string
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New()
+            .Delete()
+            .From(MarkovTable.TABLE_NAME)
+            .Where(Condition
+                .New(MarkovTable.BASE.name)
+                .Equals(base_string)
+                .And(MarkovTable.FREQUENCY.name)
+                .Equals(0)
+            ).Build()
+        );
+
+        // Old base_string is now replaced with one that is
+        // associated to chain_string and frequency
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New()
+            .Insert()
+            .Into(MarkovTable.TABLE_NAME)
+            .Values(base_string, chain_string, 1)
+            .Build()
+        );
+    }
+
+    public void InsertNewBaseString(string base_string) 
+    {
+        // Add default base string to remove it later
+        // (this is not that good)
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New()
+            .Insert()
+            .Into(MarkovTable.TABLE_NAME)
+            .Values(base_string, "", 0)
+            .Build()
+        );
+    }
+
+    public void UpdateChainFrequency(string base_string, string chain_string)
+    {
+        var data = DatabaseContext.GatherData(QueryBuilder
+            .New()
+            .Retrieve(MarkovTable.FREQUENCY.name)
+            .From(MarkovTable.TABLE_NAME)
+            .Where(Condition
+                .New(MarkovTable.BASE.name)
+                .Equals(base_string)
+                .And(MarkovTable.CHAIN.name)
+                .Equals(chain_string)
+            ).Build()
+        );
+
+        if (data is null) throw new Exception("Unreachable code");
+
+        int freq = (int)(long)data[0][0];
+
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New()
+            .Update(MarkovTable.TABLE_NAME)
+            .Where(Condition
+                .New(MarkovTable.BASE.name)
+                .Equals(base_string)
+                .And(MarkovTable.CHAIN.name)
+                .Equals(chain_string)
+            ).Set(MarkovTable.FREQUENCY.name, freq + 1)
+            .Build()
+        );
+    }
+
+    // NOTE: The prob_array must be sorted - otherwise the algorithm won't work!
+    private int CalculateRandomIndex((string, int)[] prob_array) 
+    {
+        int fitness_sum = prob_array.Select(x => x.Item2).Sum();
         double calc_probability = 0.0;
         
         var gen_probability = Rng.NextDouble();
         int index = 0;
         for (index = 0; index < prob_array.Length; index++) {
-            calc_probability += (double)prob_array[index].Value / fitness_sum;
+            calc_probability += (double)prob_array[index].Item2 / fitness_sum;
             if (gen_probability < calc_probability)
                 break;
         }
@@ -60,40 +187,48 @@ public class MarkovService
         return index;
     }
 
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: SQL DISTINCT IN QUERIES
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // also rename base strings to key strings (maybe)
+    // also query to get items already sorted
+    
     // TODO: Detect if markov is repeating same strings - 3 chains at least
     public string GenerateMarkovString(int min_len, int max_len)
     {
-        if (markovStrings.Count == 0)
+        var base_strings = GetAllBaseStrings();
+
+        if (base_strings.Length == 0)
             throw new CommandException("Markov is speechless. It needs to learn more");
 
         string generated_string = "";
         int current_len = 0;
 
-        var startStrings = markovStrings.Keys.ToArray();
-        var index = Rng.Next(startStrings.Length);
-        
-        var rand_key = startStrings[index];
+        var next = Rng.Next(base_strings.Length);
+        var rand_base = base_strings[next];
+
         do {
-            if (generated_string.Length + rand_key.Length + 1 >= 2000)
+            if (generated_string.Length + rand_base.Length + 1 >= 2000)
                 break;
 
-            generated_string += rand_key + " ";
+            generated_string += rand_base + " ";
 
-            if (markovStrings.TryGetValue(rand_key, out var nextDict)) {
-                if (nextDict.Count != 0) {
-                    // TODO: Check: Is this sorting correct? Can I optimalize it?
-                    var alignedDict = nextDict.OrderBy(x => x.Value).ToArray();
-                    int found = CalculateRandomIndex(alignedDict);
-                    rand_key = alignedDict[found].Key;
+            if (ContainsBaseString(rand_base)) {
+                var chain_freq = GetAllChainFrequency(rand_base);
+                if (chain_freq.Length != 0) {
+                    Array.Sort(chain_freq, (a, b) => a.Item2.CompareTo(b.Item2));
+                    int index = CalculateRandomIndex(chain_freq);
+                    rand_base = chain_freq[index].Item1;
                 } else if (current_len < min_len) {
-                    index = Rng.Next(startStrings.Length);
-                    rand_key = startStrings[index];
+                    next = Rng.Next(base_strings.Length);
+                    rand_base = base_strings[next];
                 } else break;
                 
             } else if (current_len < min_len) {
-                index = Rng.Next(startStrings.Length);
-                rand_key = startStrings[index];
+                next = Rng.Next(base_strings.Length);
+                rand_base = base_strings[next];
             } else break;
+            
         } while (current_len++ < max_len);
 
         //return $"{generated_string[0]}{generated_string.Remove(0, 1)}";
@@ -102,15 +237,18 @@ public class MarkovService
 
     public void FeedStringsToMarkov(List<string> data) 
     {
+        // TODO: Last potential base string is discarded - fix it
         for (int i = 0; i < data.Count - 1; i++) {
             // TODO(?): Do not store chain string if the next value is the same as the previous one 
-            if (markovStrings.TryGetValue(data[i], out var nextDict)) {
-                if (nextDict.ContainsKey(data[i + 1]))
-                    nextDict[data[i + 1]]++;
-                else nextDict.Add(data[i + 1], 1);
-            } else markovStrings.Add(data[i--], new());
+            if (ContainsBaseString(data[i])) {
+                if (ContainsChainString(data[i], data[i + 1]))
+                    UpdateChainFrequency(data[i], data[i + 1]);
+                else InsertChainString(data[i], data[i + 1]);
+            } else InsertNewBaseString(data[i--]); 
         }
-        markovStrings.TryAdd(data[data.Count - 1], new());
+
+        if (!ContainsBaseString(data[data.Count - 1]))
+            InsertNewBaseString(data[data.Count - 1]); 
     }
 
     public GuildMarkovData GetOrAddData(DiscordGuild guild)
@@ -147,10 +285,10 @@ public class MarkovService
         if (data.ExcludedChannelIDs.Contains(e.Channel.Id))
             return;
 
-        // NOTE: Max word length is set to 64 chars
+        // NOTE: Max word length is set to 255 chars
         List<string> parsed_input = input.Split(
             new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries
-        ).Where(x => x.Length <= 64).ToList();
+        ).Where(x => x.Length <= 255).ToList();
 
         // TODO (?): Some logic to remove unnesessary characters
         /*
@@ -185,6 +323,7 @@ public class MarkovService
         }
     }
 
+    [Obsolete]
     public void LoadMarkovBinaryData()
     {
         if (!File.Exists(_markovBinaryPath))
@@ -197,6 +336,7 @@ public class MarkovService
         }
     }
 
+    [Obsolete]
     public void SaveMarkovBinaryData()
     {
         using (var fs = new FileStream(_markovBinaryPath, FileMode.OpenOrCreate)) {

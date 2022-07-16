@@ -201,34 +201,42 @@ public class Discordbot
         var activity = new DiscordActivity(this.Config.Discord.Status, ActivityType.ListeningTo);
         await Client.ConnectAsync(activity, UserStatus.DoNotDisturb);
 
-        // Execute this after clinet.ready event
-        ulong debug_channel = 928054033741152307;
-        try
+        Client.Ready += (sender, args) =>
         {
-            this.LastChannel = await this.Client.GetChannelAsync(debug_channel);
-            await Task.Delay(3000);
-            this.LastGuild = this.LastChannel.Guild;
-        }
-        catch
-        {
-            this.LastGuild = this.Client.Guilds.First().Value;
-            this.LastChannel = this.LastGuild.Channels
-                .First(x => x.Value.Type == ChannelType.Text).Value;
-        }
+            Task.Run(async () =>
+            {
+                ulong debug_channel = 928054033741152307;
+                
+                try
+                {
+                    LastChannel = await Client.GetChannelAsync(debug_channel);
+                    LastGuild = LastChannel.Guild;
+                }
+                catch
+                {
+                    LastGuild = Client.Guilds.First().Value;
+                    LastChannel = LastGuild.Channels
+                        .First(x => x.Value.Type == ChannelType.Text).Value;
+                }
+                
+                Console.WriteLine($"Current guild set to: {this.LastGuild.Name}");
+                Console.WriteLine($"Current channel set to: {this.LastChannel.Name}");
 
-        Console.WriteLine($"Current guild set to: {this.LastGuild.Name}");
-        Console.WriteLine($"Current channel set to: {this.LastChannel.Name}");
+                while (true)
+                {
+                    string? message = Console.ReadLine()?.Trim();
 
-        while (true)
-        {
-            string? message = Console.ReadLine()?.Trim();
+                    if (message is null)
+                        continue;
 
-            if (message is null)
-                continue;
-
-            var success = this.ConsoleCommandHandler(message);
-            if (!success && this.DebugEnabled)
-                await this.LastChannel.SendMessageAsync(message);
-        }
+                    var success = this.ConsoleCommandHandler(message);
+                    if (!success && this.DebugEnabled)
+                        await this.LastChannel.SendMessageAsync(message);
+                }
+            });
+            
+            return Task.CompletedTask;
+        };
+        Thread.Sleep(Timeout.Infinite);
     }
 }
