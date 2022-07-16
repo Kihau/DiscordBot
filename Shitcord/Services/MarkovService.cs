@@ -41,6 +41,7 @@ public class MarkovService
         Client.MessageCreated += MarkovMessageHandler;
     }
 
+    // NOTE: We can simplify this to a simple DISTINCT query if that is needed
     public string[] GetAllBaseStrings() 
     {
         var all_values = DatabaseContext.GatherData(
@@ -63,7 +64,8 @@ public class MarkovService
             .Where(Condition
                 .New(MarkovTable.BASE.name)
                 .Equals(base_string)
-            ).Build()
+            ).OrderBy(MarkovTable.FREQUENCY.name)
+            .Build()
         );
 
         if (all_values is null)
@@ -98,26 +100,30 @@ public class MarkovService
 
     public void InsertChainString(string base_string, string chain_string) 
     {
-        // Remove old base_string
         DatabaseContext.executeUpdate(QueryBuilder
             .New()
-            .Delete()
-            .From(MarkovTable.TABLE_NAME)
+            .Update(MarkovTable.TABLE_NAME)
             .Where(Condition
                 .New(MarkovTable.BASE.name)
                 .Equals(base_string)
                 .And(MarkovTable.FREQUENCY.name)
                 .Equals(0)
-            ).Build()
+            ).Set(MarkovTable.BASE.name, base_string)
+            .Set(MarkovTable.CHAIN.name, chain_string)
+            .Set(MarkovTable.FREQUENCY.name, 1)
+            .Build()
         );
+    }
 
-        // Old base_string is now replaced with one that is
-        // associated to chain_string and frequency
+    public void InsertAllString(string base_string, string chain_string, int frequency) 
+    {
+        // Add default base string to remove it later
+        // (this is not that good)
         DatabaseContext.executeUpdate(QueryBuilder
             .New()
             .Insert()
             .Into(MarkovTable.TABLE_NAME)
-            .Values(base_string, chain_string, 1)
+            .Values(base_string, chain_string, frequency)
             .Build()
         );
     }
@@ -135,6 +141,7 @@ public class MarkovService
         );
     }
 
+    // TODO: increment query (increment by 1 in this case)
     public void UpdateChainFrequency(string base_string, string chain_string)
     {
         var data = DatabaseContext.GatherData(QueryBuilder
@@ -216,7 +223,6 @@ public class MarkovService
             if (ContainsBaseString(rand_base)) {
                 var chain_freq = GetAllChainFrequency(rand_base);
                 if (chain_freq.Length != 0) {
-                    Array.Sort(chain_freq, (a, b) => a.Item2.CompareTo(b.Item2));
                     int index = CalculateRandomIndex(chain_freq);
                     rand_base = chain_freq[index].Item1;
                 } else if (current_len < min_len) {
@@ -321,6 +327,14 @@ public class MarkovService
                 await e.Message.RespondAsync(markov_text);
             else await e.Channel.SendMessageAsync(markov_text);
         }
+    }
+
+    public void MigrateDataToDatabase() 
+    {
+        var data = markovStrings.ToList();
+        foreach (var base_string in markovStrings)
+            foreach (var chain_string in base_string.Value)
+                InsertAllString(base_string.Key, chain_string.Key, chain_string.Value);
     }
 
     [Obsolete]

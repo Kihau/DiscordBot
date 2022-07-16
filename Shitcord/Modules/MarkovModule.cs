@@ -142,6 +142,10 @@ public class MarkovModule : BaseCommandModule
         await ctx.RespondAsync("Removed all channels from the *excluded* list");
     }
 
+    [Command("migrate")]
+    public async Task MigrateCommand(CommandContext ctx)
+        => Markov.MigrateDataToDatabase();
+
     [Command("save")]
     public async Task SaveCommand(CommandContext ctx)
         => Markov.SaveMarkovBinaryData();
