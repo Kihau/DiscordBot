@@ -25,6 +25,15 @@ public class SelectQuery
         
         cols = columnNames;
     }
+    public SelectQuery (params Column[] columns)
+    {
+        string[] names = new string[columns.Length];
+        Column[] colsArr = columns.ToArray();
+        for (int i = 0; i < columns.Length; i++) {
+            names[i] = colsArr[i].name;
+        }
+        cols = names;
+    }
     public SelectQuery Distinct()
     {
         distinct = true;
@@ -45,11 +54,19 @@ public class SelectQuery
         condition = Condition.New(columnName).Equals(value);
         return this;
     }
+    public SelectQuery WhereEquals(Column column, object value)
+    {
+        return WhereEquals(column.name, value);
+    }
     public SelectQuery OrderBy(string columnName, bool isAscending = true)
     {
         orderBy = columnName;
         this.isAscending = isAscending;
         return this;
+    }
+    public SelectQuery OrderBy(Column column, bool isAscending = true)
+    {
+        return OrderBy(column.name, isAscending);
     }
 
     private void AppendColumns(StringBuilder sb)

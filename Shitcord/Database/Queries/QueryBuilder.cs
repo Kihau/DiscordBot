@@ -6,6 +6,10 @@ public class QueryBuilder
     {
         return new SelectQuery(colName);
     }
+    public SelectQuery Retrieve(params Column[] columns)
+    {
+        return new SelectQuery(columns);
+    }
     public DeleteQuery Delete()
     {
         return new DeleteQuery();

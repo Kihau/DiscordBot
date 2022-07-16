@@ -12,18 +12,12 @@ public class Column
         this.name = name;
         this.type = type;
     }
-    public Column(string name, string type, bool nullable = true)
+    public Column(string name, string type, bool nullable = true) : this (name, type)
     {
-        //TODO this(name, type);
-        this.name = name;
-        this.type = type;
         this.nullable = nullable;
     }
-    public Column(string name, string type, bool nullable = true, bool primaryKey = false)
+    public Column(string name, string type, bool nullable = true, bool primaryKey = false) : this (name, type, nullable)
     {
-        this.name = name;
-        this.type = type;
-        this.nullable = nullable;
         this.primaryKey = primaryKey;
     }
 }

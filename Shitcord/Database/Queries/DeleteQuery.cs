@@ -21,6 +21,10 @@ public class DeleteQuery
         condition = Condition.New(columnName).Equals(value);
         return this;
     }
+    public DeleteQuery WhereEquals(Column column, object value)
+    {
+        return WhereEquals(column.name, value);
+    }
     public string Build()
     {
         if (table == null) {
