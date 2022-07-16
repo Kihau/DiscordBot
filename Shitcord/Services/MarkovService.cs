@@ -4,6 +4,8 @@ using DSharpPlus.EventArgs;
 using System.Runtime.Serialization.Formatters.Binary;
 using Shitcord.Extensions;
 using Shitcord.Data;
+using Shitcord.Database;
+using Shitcord.Database.Queries;
 
 namespace Shitcord.Services;
 
@@ -98,6 +100,92 @@ public class MarkovService
 
         //return $"{generated_string[0]}{generated_string.Remove(0, 1)}";
         return generated_string;
+    }
+
+
+    public bool ContainsBaseString(string base_string) 
+    {
+        return DatabaseContext.ExistsInTable(
+            MarkovTable.TABLE_NAME, Condition
+                .New(MarkovTable.BASE.name)
+                .Equals(base_string)
+        );
+    }
+
+    public bool ContainsChainString(string base_string, string chain_string) 
+    {
+        return DatabaseContext.ExistsInTable(
+            MarkovTable.TABLE_NAME, Condition
+                .New(MarkovTable.BASE.name)
+                .Equals(base_string)
+                .And(MarkovTable.CHAIN.name)
+                .Equals(chain_string)
+        );
+    }
+
+    public void InsertChainString(string base_string, string chain_string) 
+    {
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New()
+            .Insert()
+            .Into(MarkovTable.TABLE_NAME)
+            .Values(base_string, chain_string, 1)
+            .Build()
+        );
+    }
+
+    public void UpdateChainFrequency(string base_string, string chain_string)
+    {
+        var data = DatabaseContext.GatherData(QueryBuilder
+            .New()
+            .Retrieve(MarkovTable.FREQUENCY.name)
+            .From(MarkovTable.TABLE_NAME)
+            .Where(Condition
+                .New(MarkovTable.BASE.name)
+                .Equals(base_string)
+                .And(MarkovTable.CHAIN.name)
+                .Equals(chain_string)
+            ).Build()
+        );
+
+        if (data is null) throw new Exception("Unreachable code");
+
+        int freq = (int)data[0][0];
+
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New()
+            .Update(MarkovTable.FREQUENCY.name)
+            .Where(Condition
+                .New(MarkovTable.BASE.name)
+                .Equals(base_string)
+                .And(MarkovTable.CHAIN.name)
+                .Equals(chain_string)
+            ).Set(MarkovTable.FREQUENCY.name, freq + 1)
+            .Build()
+        );
+    }
+
+    //var retrieved = DatabaseContext.GatherData(QueryBuilder
+    //    .New()
+    //    .Retrieve(MarkovTable.FREQUENCY.name)
+    //    .Where(Condition
+    //        .New(MarkovTable.BASE.name)
+    //        .Equals(data[i])
+    //        .And(MarkovTable.CHAIN.name)
+    //        .Equals(data[i +1])
+    //    ).Build()
+    //);
+    public void FeedStringsToMarkovNew(List<string> data) 
+    {
+        for (int i = 0; i < data.Count - 1; i++) {
+            if (ContainsBaseString(data[i])) {
+                if (ContainsChainString(data[i], data[i + 1]))
+                    InsertChainString(data[i], data[i + 1]);
+                else UpdateChainFrequency(data[i], data[i + 1]);
+            } // And here is the problem - when inserting new base string, there are no chain 
+              // string associated with it and we cannot create only the base string (since one 
+              // row has 3 columns associated with it)
+        }
     }
 
     public void FeedStringsToMarkov(List<string> data) 

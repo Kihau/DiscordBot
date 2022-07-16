@@ -18,16 +18,19 @@ public class AudioService
     
     public AudioService(Discordbot bot, LavalinkService lavalink, DatabaseService dbctx)
     {
-        this.Lavalink = lavalink;
-        this.AudioData = new Dictionary<ulong, GuildAudioData>();
-        this.Client = bot.Client;
-        this.Rng = new Random();
-        this.DatabaseContext = dbctx;
+        Lavalink = lavalink;
+        AudioData = new Dictionary<ulong, GuildAudioData>();
+        Client = bot.Client;
+        Rng = new Random();
+        DatabaseContext = dbctx;
 
-        this.Client.VoiceStateUpdated += BotVoiceTimeout;
-        this.Client.ComponentInteractionCreated += AudioUpdateButtons;
+        Client.VoiceStateUpdated += BotVoiceTimeout;
+        Client.ComponentInteractionCreated += AudioUpdateButtons;
 
-        LoadAllDataFromDatabase();
+        Client.Ready += (_, _) => {
+            LoadAllDataFromDatabase();
+            return Task.CompletedTask;
+        };
     }
 
     public void LoadAllDataFromDatabase()

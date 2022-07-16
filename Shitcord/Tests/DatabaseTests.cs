@@ -48,7 +48,7 @@ public class DatabaseTests
             .Into(TABLE)
             .Values("E").Build());
         service.executeUpdate(QueryBuilder.New().Insert()
-            .Columns(MarkovTable.STRING.name, MarkovTable.CHAIN.name)
+            .Columns(MarkovTable.BASE.name, MarkovTable.CHAIN.name)
             .Into(TABLE)
             .Values("G", "H").Build());
         service.executeUpdate(QueryBuilder.New().Insert()
@@ -80,11 +80,11 @@ public class DatabaseTests
             .Into(TABLE)
             .Values("B").Build());
         service.executeUpdate(QueryBuilder.New().Insert()
-            .Columns(MarkovTable.STRING.name, MarkovTable.CHAIN.name)
+            .Columns(MarkovTable.BASE.name, MarkovTable.CHAIN.name)
             .Into(TABLE)
             .Values("B", "C").Build());
         service.executeUpdate(QueryBuilder.New().Insert()
-            .Columns(MarkovTable.STRING.name, MarkovTable.CHAIN.name, MarkovTable.FREQUENCY.name)
+            .Columns(MarkovTable.BASE.name, MarkovTable.CHAIN.name, MarkovTable.FREQUENCY.name)
             .Into(TABLE)
             .Values("X", "Y", 32).Build());
         service.executeUpdate(QueryBuilder.New().Insert()
@@ -144,7 +144,7 @@ public class DatabaseTests
         service.executeUpdate(QueryBuilder.New().Insert().Into(TABLE).Values("else", "if", 1).Build());
         
         //retrieve two cols
-        string query = QueryBuilder.New().Retrieve(MarkovTable.CHAIN.name, MarkovTable.STRING.name).From(TABLE).Build();
+        string query = QueryBuilder.New().Retrieve(MarkovTable.CHAIN.name, MarkovTable.BASE.name).From(TABLE).Build();
         //retrieve all cols
         string allColQuery = QueryBuilder.New().Retrieve("*").From(TABLE).Build();
         Console.WriteLine("query: " + query);
@@ -152,7 +152,7 @@ public class DatabaseTests
         List<List<object>> data = service.GatherData(query);
         List<List<object>> allData = service.GatherData(allColQuery);
         
-        String res1 = service.QueryResultToString(data, MarkovTable.CHAIN, MarkovTable.STRING);
+        String res1 = service.QueryResultToString(data, MarkovTable.CHAIN, MarkovTable.BASE);
         String res2 = service.QueryResultToString(allData, MarkovTable.COLUMNS.ToArray());
         String table = service.TableToString(TABLE, MarkovTable.COLUMNS);
         Console.WriteLine(res1);
