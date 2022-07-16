@@ -7,7 +7,7 @@ namespace Shitcord.Tests;
 
 public class DatabaseTests
 {
-    static DatabaseServiceNew service;
+    static DatabaseService service;
     //custom table name to avoid accidental table drop
     static string TABLE = "markov";
     public static void runDBTests()
@@ -21,17 +21,49 @@ public class DatabaseTests
         variousInserts_2();
         //low:25ms
         testMultipleOperations_3();
-        //testDB();
+
+        testEscapeValues();
         Console.WriteLine("[Completed] Time elapsed: " + testTimer.ElapsedMilliseconds);
         testTimer.Stop();
         //createTableQueries();
     }
 
+    private static void testEscapeValues()
+    {
+        deleteIfExistsCreateNew();
+        service.executeUpdate(QueryBuilder.New().Insert()
+            .Into(TABLE)
+            .Values("A", "B", 9).Build());
+        
+        service.executeUpdate(
+            QueryBuilder.New()
+                .Insert().Into(TABLE)
+                .Values("A", "B'", "3").Build());
+        service.executeUpdate(
+            QueryBuilder.New()
+                .Insert().Into(TABLE)
+                .Values("Sheep", "\"getBytes()\"", "3").Build());
+        service.executeUpdate(
+            QueryBuilder.New()
+                .Insert().Into(TABLE)
+                .Values("Random crap", "\"' 'd'wd''()\\''\"", 23).Build());
+        service.executeUpdate(
+            QueryBuilder.New()
+                .Insert().Into(TABLE)
+                .Values("*\f robust design", "Bobby');DROP TABLES", 1337).Build());
+
+        service.executeUpdate(QueryBuilder.New().Insert()
+            .Into(TABLE)
+            .Values("D", "E", 2).Build());
+        var dbStringed = service.TableToString(TABLE, MarkovTable.COLUMNS);
+        Console.WriteLine("STRINGED DB: ");
+        Console.WriteLine(dbStringed);
+    }
+
     private static void testDB()
     {
         string query = "SHOW TABLES";
-        service.QueryResultToString(service.GatherData(query));
-
+        service.QueryResultToString(service.RetrieveColumns(query));
     }
 
     private static void testMultipleOperations_3()
@@ -102,7 +134,7 @@ public class DatabaseTests
         string q = QueryBuilder.New().Retrieve("*")
             .From(TABLE).Where(CONDITION).Build();
         bool exists;
-        if (service.GatherData(q) == null) 
+        if (service.RetrieveColumns(q) == null) 
             exists = false;
         else
             exists = true;
@@ -149,8 +181,8 @@ public class DatabaseTests
         string allColQuery = QueryBuilder.New().Retrieve("*").From(TABLE).Build();
         Console.WriteLine("query: " + query);
         Console.WriteLine("allColQuery: " + allColQuery);
-        List<List<object>> data = service.GatherData(query);
-        List<List<object>> allData = service.GatherData(allColQuery);
+        List<List<object>> data = service.RetrieveColumns(query);
+        List<List<object>> allData = service.RetrieveColumns(allColQuery);
         
         String res1 = service.QueryResultToString(data, MarkovTable.CHAIN, MarkovTable.BASE);
         String res2 = service.QueryResultToString(allData, MarkovTable.COLUMNS.ToArray());

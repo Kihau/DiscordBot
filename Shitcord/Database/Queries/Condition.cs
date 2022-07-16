@@ -106,13 +106,28 @@ public class Condition
     }
     private void AppendValue(object value)
     {
-        if (value is string) {
-            condition.Append($"\"{value}\"");
+        if (value is string str) {
+            //check if contains single quote, if it does - modify the string
+            StringBuilder modified = ModifyStringForSQL(str);
+            condition.Append('\'').Append(modified).Append('\'');
         }
         else {
             condition.Append(value);
         }
     }
+
+    private static StringBuilder ModifyStringForSQL(string strToScan)
+    {
+        StringBuilder sb = new StringBuilder(strToScan);
+        for (int i = 0; i < sb.Length; i++) {
+            if (sb[i] != '\'')
+                continue;
+            sb.Insert(i, '\'');
+            i++;
+        }
+        return sb;
+    }
+
     public String Get()
     {
         if (operatorExpected) {

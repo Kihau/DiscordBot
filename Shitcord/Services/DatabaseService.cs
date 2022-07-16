@@ -127,7 +127,7 @@ public class DatabaseService
     {
         string statement = $"SELECT * FROM {tableName}";
         var reader = executeRead(statement);
-        List<List<object>> data = GatherData(reader);
+        List<List<object>> data = RetrieveColumns(reader);
         return data == null ? "Empty set" : QueryResultToString(data, columns.ToArray());
     }
 
@@ -142,12 +142,12 @@ public class DatabaseService
         return exists;
     }
     
-    public List<List<object>>? GatherData(string selectStatement)
+    public List<List<object>>? RetrieveColumns(string selectStatement)
     {
         Console.WriteLine(selectStatement);
         Console.WriteLine("length: " + selectStatement.Length);
         var reader = executeRead(selectStatement);
-        return GatherData(reader);
+        return RetrieveColumns(reader);
     }
     
     private SqliteDataReader executeRead(string selectStatement)
@@ -173,7 +173,7 @@ public class DatabaseService
 
     //TODO return tuple for results consisting of two columns
     //TODO return single list for singular columns
-    public List<List<object>>? GatherData(SqliteDataReader reader)
+    public List<List<object>>? RetrieveColumns(SqliteDataReader reader)
     {
         int columns = reader.FieldCount;
         //empty result set?
