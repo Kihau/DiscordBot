@@ -190,18 +190,22 @@ public class DatabaseService
         return delCommand.ExecuteNonQuery();
     }
     //TODO unfinished
-    public int DoesTableExist(string tableName)
+    public bool DoesTableExist(string tableName)
     {
-        throw new NotImplementedException("todo");
         string retrieve = QueryBuilder.New()
-            .Retrieve("COUNT(*)").From("information_schema.tables")
+            .Retrieve("name").From("sqlite_master")
             .Where(
-                Condition.New("table_schema").Equals(DATABASE_NAME)
-                    .And("table_name").Equals(tableName))
+                Condition.New("type").Equals("table")
+                .And("name").Equals($"{tableName}"))
             .Build();
         
-        var delCommand = new SqliteCommand(retrieve, connection);
-        return -1;
+        var reader = executeRead(retrieve);
+        if (!reader.Read()) {
+            reader.Close();
+            return false;
+        }
+        reader.Close();
+        return true;
     }
 
     //TODO return tuple for results consisting of two columns
