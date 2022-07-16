@@ -41,11 +41,25 @@ class QueryTests
             .OrderBy("chain_str", false)
             .Build();
         
+        const string expectedDistinct1 = "SELECT DISTINCT field FROM table";
+        string selectDistinct1 = QueryBuilder.New()
+            .Retrieve("field").Distinct()
+            .From("table")
+            .Build();
+        
+        const string expectedDistinct2 = "SELECT DISTINCT f1,f2,f3 FROM table";
+        string selectDistinct2 = QueryBuilder.New()
+            .Retrieve("f1","f2","f3" ).Distinct()
+            .From("table")
+            .Build();
+
         Console.WriteLine("Selects:");
         compareStartsWith(select1, expected1);
         compareStartsWith(select2, expected2);
         compareStartsWith(select3, expected3);
         compareStartsWith(selectOrderBy, expectedOrderBy);
+        compareStartsWith(selectDistinct1, expectedDistinct1);
+        compareStartsWith(selectDistinct2, expectedDistinct2);
     }
 
     static void conditionTests()

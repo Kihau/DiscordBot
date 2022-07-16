@@ -10,7 +10,8 @@ public class SelectQuery
     //SELECT (c1, c2, c3) FROM t WHERE c2 = val;
     //select every column:
     //SELECT * FROM t WHERE c2 = val;
-    
+
+    private bool distinct;
     private readonly string[] cols;
     private string table;
     private Condition condition;
@@ -23,6 +24,11 @@ public class SelectQuery
             throw new QueryException("No column parameters were given");
         
         cols = columnNames;
+    }
+    public SelectQuery Distinct()
+    {
+        distinct = true;
+        return this;
     }
     public SelectQuery From(string tableName)
     {
@@ -63,6 +69,9 @@ public class SelectQuery
         
 
         StringBuilder selectQuery = new StringBuilder("SELECT ");
+
+        if (distinct)
+            selectQuery.Append("DISTINCT ");
         
         if(cols.Length==1 && cols[0]=="*")
             selectQuery.Append('*').Append(' ');
