@@ -19,4 +19,6 @@ public class FunModule : BaseCommandModule
     [Command("hlep")]
     public async Task HlepCommand(CommandContext ctx) 
         => await ctx.RespondAsync("https://tenor.com/view/falling-bread-bread-gif-19081960");
+    
+    // TODO: Shake command (that randoming throws user across all voice channels)
 }

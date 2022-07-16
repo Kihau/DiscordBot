@@ -47,7 +47,7 @@ public class MarkovModule : BaseCommandModule
         else Data.ResponseEnabled = enabled.Value;
         Data.UpdateAutoResponse();
 
-        await ctx.RespondAsync($"Markov auto reposonse is not set to: `{Data.ResponseEnabled}`");
+        await ctx.RespondAsync($"Markov auto reposonse is now set to: `{Data.ResponseEnabled}`");
     }
 
     [Command("chance"), Description("Sets markov autoresponse chance")] 
@@ -149,18 +149,4 @@ public class MarkovModule : BaseCommandModule
         Data.DeleteAllExcludeChannel();
         await ctx.RespondAsync("Removed all channels from the *exclude* list");
     }
-
-    /*
-    [Command("migrate")]
-    public async Task MigrateCommand(CommandContext ctx)
-        => Markov.MigrateDataToDatabase();
-
-    [Command("save")]
-    public async Task SaveCommand(CommandContext ctx)
-        => Markov.SaveMarkovBinaryData();
-
-    [Command("load")]
-    public async Task LoadCommand(CommandContext ctx)
-        => Markov.LoadMarkovBinaryData();
-    */
 }

@@ -14,17 +14,7 @@ public class MarkovService
     private Dictionary<ulong, GuildMarkovData> MarkovData { get; } = new();
     private DatabaseService DatabaseContext { get; }
     private Random Rng { get; }
-    // TODO(?): Discard old data
-    //static Dictionary<string, Dictionary<string, int>> markovStrings = new();
     private char[] _excludeCharacters = { '.', ',', ':', ';', '?', '!' }; 
-
-    // TODO: Those will be stored for each guild (together with IsEnabled, GatherData, 
-    // AutoResponseTimeout, EnableAutoResponse, ExcludedChannel(?), IncludedChannels(?))
-    //private const int min_len = 12;
-    //private const int max_len = 20;
-    
-    // TODO: A very lazy solution - store it in database later on
-    private string _markovBinaryPath = "markov.bin";
 
     public MarkovService(Discordbot bot, DatabaseService database) 
     {
@@ -240,7 +230,7 @@ public class MarkovService
             } else InsertNewBaseString(data[i--]); 
         }
 
-        if (!ContainsBaseString(data[data.Count - 1]))
+        if (data.Count > 0 && !ContainsBaseString(data[data.Count - 1]))
             InsertNewBaseString(data[data.Count - 1]); 
     }
 
@@ -315,36 +305,4 @@ public class MarkovService
             else await e.Channel.SendMessageAsync(markov_text);
         }
     }
-
-    /*
-    public void MigrateDataToDatabase() 
-    {
-        var data = markovStrings.ToList();
-        foreach (var base_string in markovStrings)
-            foreach (var chain_string in base_string.Value)
-                InsertAllStrings(base_string.Key, chain_string.Key, chain_string.Value);
-    }
-
-    [Obsolete]
-    public void LoadMarkovBinaryData()
-    {
-        if (!File.Exists(_markovBinaryPath))
-            return;
-
-        using (var fs = new FileStream(_markovBinaryPath, FileMode.Open)) {
-            var fmt = new BinaryFormatter();
-            markovStrings = fmt.Deserialize(fs) 
-                as Dictionary<string, Dictionary<string, int>> ?? new();
-        }
-    }
-
-    [Obsolete]
-    public void SaveMarkovBinaryData()
-    {
-        using (var fs = new FileStream(_markovBinaryPath, FileMode.OpenOrCreate)) {
-            var fmt = new BinaryFormatter();
-            fmt.Serialize(fs, markovStrings);
-        }
-    }
-    */
 }
