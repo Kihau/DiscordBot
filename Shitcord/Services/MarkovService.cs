@@ -45,7 +45,7 @@ public class MarkovService
     public string[] GetAllBaseStrings() 
     {
         var all_values = DatabaseContext.GatherData(
-            QueryBuilder.New().Retrieve(MarkovTable.BASE.name).From(MarkovTable.TABLE_NAME).Build()
+            QueryBuilder.New().Retrieve(MarkovTable.BASE).From(MarkovTable.TABLE_NAME).Build()
         );
 
         if (all_values is null)
@@ -59,12 +59,10 @@ public class MarkovService
     {
         var all_values = DatabaseContext.GatherData(QueryBuilder
             .New()
-            .Retrieve(MarkovTable.CHAIN.name, MarkovTable.FREQUENCY.name)
+            .Retrieve(MarkovTable.CHAIN, MarkovTable.FREQUENCY)
             .From(MarkovTable.TABLE_NAME)
-            .Where(Condition
-                .New(MarkovTable.BASE.name)
-                .Equals(base_string)
-            ).OrderBy(MarkovTable.FREQUENCY.name)
+            .WhereEquals(MarkovTable.BASE, base_string)
+            .OrderBy(MarkovTable.FREQUENCY)
             .Build()
         );
 
@@ -82,7 +80,7 @@ public class MarkovService
     {
         return DatabaseContext.ExistsInTable(
             MarkovTable.TABLE_NAME, Condition
-                .New(MarkovTable.BASE.name)
+                .New(MarkovTable.BASE)
                 .Equals(base_string)
         );
     }
@@ -91,9 +89,9 @@ public class MarkovService
     {
         return DatabaseContext.ExistsInTable(
             MarkovTable.TABLE_NAME, Condition
-                .New(MarkovTable.BASE.name)
+                .New(MarkovTable.BASE)
                 .Equals(base_string)
-                .And(MarkovTable.CHAIN.name)
+                .And(MarkovTable.CHAIN)
                 .Equals(chain_string)
         );
     }
@@ -104,18 +102,18 @@ public class MarkovService
             .New()
             .Update(MarkovTable.TABLE_NAME)
             .Where(Condition
-                .New(MarkovTable.BASE.name)
+                .New(MarkovTable.BASE)
                 .Equals(base_string)
-                .And(MarkovTable.FREQUENCY.name)
+                .And(MarkovTable.FREQUENCY)
                 .Equals(0)
-            ).Set(MarkovTable.BASE.name, base_string)
-            .Set(MarkovTable.CHAIN.name, chain_string)
-            .Set(MarkovTable.FREQUENCY.name, 1)
+            ).Set(MarkovTable.BASE, base_string)
+            .Set(MarkovTable.CHAIN, chain_string)
+            .Set(MarkovTable.FREQUENCY, 1)
             .Build()
         );
     }
 
-    public void InsertAllString(string base_string, string chain_string, int frequency) 
+    public void InsertAllStrings(string base_string, string chain_string, int frequency) 
     {
         // Add default base string to remove it later
         // (this is not that good)
@@ -146,12 +144,12 @@ public class MarkovService
     {
         var data = DatabaseContext.GatherData(QueryBuilder
             .New()
-            .Retrieve(MarkovTable.FREQUENCY.name)
+            .Retrieve(MarkovTable.FREQUENCY)
             .From(MarkovTable.TABLE_NAME)
             .Where(Condition
-                .New(MarkovTable.BASE.name)
+                .New(MarkovTable.BASE)
                 .Equals(base_string)
-                .And(MarkovTable.CHAIN.name)
+                .And(MarkovTable.CHAIN)
                 .Equals(chain_string)
             ).Build()
         );
@@ -164,11 +162,11 @@ public class MarkovService
             .New()
             .Update(MarkovTable.TABLE_NAME)
             .Where(Condition
-                .New(MarkovTable.BASE.name)
+                .New(MarkovTable.BASE)
                 .Equals(base_string)
-                .And(MarkovTable.CHAIN.name)
+                .And(MarkovTable.CHAIN)
                 .Equals(chain_string)
-            ).Set(MarkovTable.FREQUENCY.name, freq + 1)
+            ).Set(MarkovTable.FREQUENCY, freq + 1)
             .Build()
         );
     }
@@ -334,7 +332,7 @@ public class MarkovService
         var data = markovStrings.ToList();
         foreach (var base_string in markovStrings)
             foreach (var chain_string in base_string.Value)
-                InsertAllString(base_string.Key, chain_string.Key, chain_string.Value);
+                InsertAllStrings(base_string.Key, chain_string.Key, chain_string.Value);
     }
 
     [Obsolete]
