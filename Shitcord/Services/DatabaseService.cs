@@ -181,9 +181,23 @@ public class DatabaseService
     //returns the number of affected rows
     public int DeleteAllRows(string tableName)
     {
-        const string delStatement = "DELETE FROM tableName";
+        string delStatement = $"DELETE FROM {tableName}";
         var delCommand = new SqliteCommand(delStatement, connection);
         return delCommand.ExecuteNonQuery();
+    }
+    //TODO unfinished
+    public int DoesTableExist(string tableName)
+    {
+        throw new NotImplementedException("todo");
+        string retrieve = QueryBuilder.New()
+            .Retrieve("COUNT(*)").From("information_schema.tables")
+            .Where(
+                Condition.New("table_schema").Equals(DATABASE_NAME)
+                    .And("table_name").Equals(tableName))
+            .Build();
+        
+        var delCommand = new SqliteCommand(retrieve, connection);
+        return -1;
     }
 
     //TODO return tuple for results consisting of two columns
