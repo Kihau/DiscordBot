@@ -104,6 +104,12 @@ public class DatabaseTests
         string table2 = service.TableToString(TABLE, MarkovTable.COLUMNS);
         Console.WriteLine($"affected {rowsAffected} rows as a result");
         Console.WriteLine(table2);
+        
+        bool exists1 = service.DoesTableExist(TABLE);
+        bool exists2 = service.DoesTableExist("ttt");
+        Console.WriteLine($"Does {TABLE} exist {exists1}");
+        Console.WriteLine($"Does ttt exist {exists2}");
+
     }
 
     private static void variousInserts_2()
