@@ -65,12 +65,28 @@ public class UpdateQuery
     private void AttachPair(StringBuilder queryBuilder, (string, object) p)
     {
         queryBuilder.Append(p.Item1).Append(" = ");
-        
-        if (p.Item2 is string) {
-            queryBuilder.Append($"\"{p.Item2}\"");
+        AppendValue(p.Item2, queryBuilder);
+    }
+    private void AppendValue(object value, StringBuilder queryBuilder)
+    {
+        if (value is string str) {
+            //check if contains single quote, if it does - modify the string
+            str = ModifyStringForSQL(str);
+            queryBuilder.Append($"'{str}'");
         }
         else {
-            queryBuilder.Append($"{p.Item2}");
+            queryBuilder.Append(value);
         }
+    }
+    private string ModifyStringForSQL(string strToScan)
+    {
+        StringBuilder sb = new StringBuilder(strToScan);
+        for (int i = 0; i < sb.Length; i++) {
+            if (sb[i] != '\'')
+                continue;
+            sb.Insert(i, '\'');
+            i++;
+        }
+        return sb.ToString();
     }
 }

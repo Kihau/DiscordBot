@@ -69,43 +69,62 @@ public class InsertQuery
         return queryBuilder.ToString();
     }
 
-    private void AppendValues(StringBuilder sb, object[] values)
+    private static void AppendValues(StringBuilder builder, object[] values)
     {
         for (int i = 0; ; i++) {
+            object val = values[i];
+            bool isNull = val == null;
+            //handle last element
             if (i == values.Length - 1) {
-                if (values[i] == null) {
-                    sb.Append("null");
+                if (isNull) {
+                    builder.Append("null");
                     break;
                 }
-                if (values[i] is string) {
-                    sb.Append('"');
-                    sb.Append(values[i]);
-                    sb.Append('"');
+                if (val is string lastStr) {
+                    builder.Append('\'');
+                    AppendString(lastStr, builder);
+                    builder.Append('\'');
                     break;
                 }
-                sb.Append(values[i]);
+                builder.Append(val);
                 break;
             }
-            if (values[i] == null)
-            {
-                sb.Append("null,");
+            //handle every other element
+            if (isNull) {
+                builder.Append("null,");
                 continue;
             }
-            if (values[i] is string) {
-                sb.Append('"');
-                sb.Append(values[i]);
-                sb.Append("\",");
+            if (val is string str) {
+                builder.Append('\'');
+                AppendString(str, builder);
+                builder.Append("',");
                 continue;
             }
-            sb.Append(values[i]).Append(',');
+            builder.Append(values[i]).Append(',');
         }
     }
-    private void AppendColumnNames(StringBuilder sb, string[] cols)
+    private static void AppendString(string str, StringBuilder queryBuilder) 
     {
-        for (int i = 0; ; i++)
-        {
-            if (i == cols.Length - 1)
-            {
+        //check if contains single quote/quotes, if it does - modify the string
+        StringBuilder modified = ModifyStringForSQL(str);
+        queryBuilder.Append(modified);
+    }
+
+    private static StringBuilder ModifyStringForSQL(string strToScan)
+    {
+        StringBuilder sb = new StringBuilder(strToScan);
+        for (int i = 0; i < sb.Length; i++) {
+            if (sb[i] != '\'')
+                continue;
+            sb.Insert(i, '\'');
+            i++;
+        }
+        return sb;
+    }
+    private static void AppendColumnNames(StringBuilder sb, string[] cols)
+    {
+        for (int i = 0; ; i++) {
+            if (i == cols.Length - 1) {
                 sb.Append(cols[i]);
                 break;
             }

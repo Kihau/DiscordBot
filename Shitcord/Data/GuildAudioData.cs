@@ -111,7 +111,7 @@ public class GuildAudioData
             return;
         }
 
-        var retrieved = DatabaseContext.GatherData(QueryBuilder
+        var retrieved = DatabaseContext.RetrieveColumns(QueryBuilder
             .New().Retrieve("*")
             .From(GuildAudioTable.TABLE_NAME)
             .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id.ToString())

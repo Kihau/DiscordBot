@@ -44,7 +44,7 @@ public class MarkovService
     // NOTE: We can simplify this to a simple DISTINCT query if that is needed
     public string[] GetAllBaseStrings() 
     {
-        var all_values = DatabaseContext.GatherData(
+        var all_values = DatabaseContext.RetrieveColumns(
             QueryBuilder.New().Retrieve(MarkovTable.BASE).From(MarkovTable.TABLE_NAME).Build()
         );
 
@@ -57,7 +57,7 @@ public class MarkovService
 
     public (string, int)[] GetAllChainFrequency(string base_string) 
     {
-        var all_values = DatabaseContext.GatherData(QueryBuilder
+        var all_values = DatabaseContext.RetrieveColumns(QueryBuilder
             .New()
             .Retrieve(MarkovTable.CHAIN, MarkovTable.FREQUENCY)
             .From(MarkovTable.TABLE_NAME)
@@ -142,7 +142,7 @@ public class MarkovService
     // TODO: increment query (increment by 1 in this case)
     public void UpdateChainFrequency(string base_string, string chain_string)
     {
-        var data = DatabaseContext.GatherData(QueryBuilder
+        var data = DatabaseContext.RetrieveColumns(QueryBuilder
             .New()
             .Retrieve(MarkovTable.FREQUENCY)
             .From(MarkovTable.TABLE_NAME)

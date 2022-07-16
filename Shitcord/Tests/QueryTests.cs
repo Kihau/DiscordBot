@@ -1,3 +1,4 @@
+using System.Text;
 using Shitcord.Database;
 using Shitcord.Database.Queries;
 
@@ -14,6 +15,7 @@ class QueryTests
         insertTests();
         updateTests();
         conditionTests();
+        escapeCharactersTests();
         Console.WriteLine($"Ratio (Passed/ALL): {passed}/{tests}");
     }
     
@@ -31,13 +33,13 @@ class QueryTests
             .Where(Condition.New("id").Equals(11))
             .Build();
         
-        const string expected3 = "SELECT field1,field2 FROM markov WHERE field3 LIKE \"N%\"";
+        const string expected3 = "SELECT field1,field2 FROM markov WHERE field3 LIKE 'N%'";
         string select3 = QueryBuilder.New()
             .Retrieve("field1", "field2").From("markov")
             .Where(Condition.New("field3").IsLike("N%"))
             .Build();
         
-        const string expectedOrderBy = "SELECT field1 FROM t WHERE c LIKE \"[d-f]%\" ORDER BY chain_str DESC";
+        const string expectedOrderBy = "SELECT field1 FROM t WHERE c LIKE '[d-f]%' ORDER BY chain_str DESC";
         string selectOrderBy = QueryBuilder.New()
             .Retrieve("field1").From("t")
             .Where(Condition.New("c").IsLike("[d-f]%"))
@@ -95,22 +97,22 @@ class QueryTests
 
     static void conditionTests()
     {
-        const string expected1 = "student_name = \"Jack\" AND age > 18";
+        const string expected1 = "student_name = 'Jack' AND age > 18";
         string condition1 = Condition.New("student_name").Equals("Jack").And("age").IsMoreThan(18).Get();
 
-        const string expected2 = "lastname LIKE \"%ierce\" AND age > 18 AND name = \"Bruh\" OR major LIKE \"Math%\"";
+        const string expected2 = "lastname LIKE '%ierce' AND age > 18 AND name = 'Bruh' OR major LIKE 'Math%'";
         string condition2 = Condition.New("lastname").IsLike("%ierce")
             .And("age").IsMoreThan(18)
             .And("name").Equals("Bruh")
             .Or("major").IsLike("Math%")
             .Get();
         
-        const string expected3 = "customer_name <> \"Alice\" AND customer_name LIKE \"%lice\"";
+        const string expected3 = "customer_name <> 'Alice' AND customer_name LIKE '%lice'";
         string condition3 = Condition.New("customer_name").IsDiffFrom("Alice")
             .And("customer_name").IsLike("%lice")
             .Get();
         
-        const string expected4 = "targetNumber <> 55 AND targetNumber > \"51\"";
+        const string expected4 = "targetNumber <> 55 AND targetNumber > '51'";
         string condition4 = Condition.New("targetNumber").IsDiffFrom(55)
             .And("targetNumber").IsMoreThan("51")
             .Get();
@@ -123,17 +125,17 @@ class QueryTests
     }
     static void insertTests()
     {
-        const string expected1 = "INSERT INTO MyTable (build,an,dwq) VALUES (2,\"bur\",True)";
+        const string expected1 = "INSERT INTO MyTable (build,an,dwq) VALUES (2,'bur',True)";
         string insert1 = QueryBuilder.New().Insert().Into("MyTable").Values(2, "bur", true).Columns("build", "an", "dwq").Build();
-        const string expected2 = "INSERT INTO markov_data VALUES (\"i\",\"dont\",7)";
+        const string expected2 = "INSERT INTO markov_data VALUES ('i','dont',7)";
         string insert2 = QueryBuilder.New().Insert().Into(MarkovTable.TABLE_NAME).Values("i", "dont", 7).Build();
-        const string expected3 = "INSERT INTO markov_data VALUES (\"on\",null,2)";
+        const string expected3 = "INSERT INTO markov_data VALUES ('on',null,2)";
         string insert3 = QueryBuilder.New().Insert().Into(MarkovTable.TABLE_NAME).Values("on", null, 2).Build();
-        const string expected4 = "INSERT INTO markov_data VALUES (\"on\",\"zzz\",null)";
+        const string expected4 = "INSERT INTO markov_data VALUES ('on','zzz',null)";
         string insert4 = QueryBuilder.New().Insert().Into(MarkovTable.TABLE_NAME).Values("on", "zzz", null).Build();
         
         const string expected5Cols = 
-            "INSERT INTO markov_data (base_str,chain_str,frequency) VALUES (\"one\",\"two\",\"3\")";
+            "INSERT INTO markov_data (base_str,chain_str,frequency) VALUES ('one','two','3')";
         string insert5Cols = QueryBuilder.New()
             .Insert().Into(MarkovTable.TABLE_NAME)
             .Columns(MarkovTable.COLUMNS.ToArray())
@@ -149,13 +151,13 @@ class QueryTests
 
     static void updateTests()
     {
-        const string expected1 = "UPDATE random_table SET name = \"bis\" WHERE id < 234";
+        const string expected1 = "UPDATE random_table SET name = 'bis' WHERE id < 234";
         string update1 = QueryBuilder.New().Update("random_table")
             .Set("name", "bis")
             .Where(Condition.New("id").IsLessThan(234))
             .Build();
 
-        const string expected2 = "UPDATE any_table SET number = 23, info = \"warning\" WHERE smth > 444";
+        const string expected2 = "UPDATE any_table SET number = 23, info = 'warning' WHERE smth > 444";
         string update2 = QueryBuilder.New().Update("any_table")
             .Set("number", 23)
             .Set("info", "warning")
@@ -165,6 +167,37 @@ class QueryTests
         Console.WriteLine("Updates:");
         compareStartsWith(update1, expected1);
         compareStartsWith(update2, expected2);
+    }
+    
+    private static void escapeCharactersTests()
+    {
+        const string expectedEscape1 = "SELECT any_col FROM any_table WHERE name = '\"escape_me\"'";
+        string escape1 = QueryBuilder.New().Retrieve("any_col")
+            .From("any_table")
+            .WhereEquals("name", "\"escape_me\"")
+            .Build();
+        compareStartsWith(escape1, expectedEscape1);
+    }
+    public static void stringBuilderTest()
+    {
+        const string input1 = "pos'tgre''d han' ''dle i''t bet''ter";
+        StringBuilder sb = new StringBuilder(input1);
+        for (int i = 0; i < sb.Length; i++) {
+            if (sb[i] != '\'')
+                continue;
+            
+            sb.Insert(i, '\'');
+            i++;
+        }
+
+        const string expectedResult = "pos''tgre''''d han'' ''''dle i''''t bet''''ter";
+        if (expectedResult.Equals(sb.ToString())) {
+            Console.WriteLine("Passed insert test");
+        }
+        else {
+            Console.WriteLine("Failed");
+            Console.WriteLine($"expected: {expectedResult}  result: {sb}");
+        }
     }
     private static void compareStartsWith(string given, string expected)
     {
