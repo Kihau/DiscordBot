@@ -1,7 +1,6 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
-using System.Runtime.Serialization.Formatters.Binary;
 using Shitcord.Extensions;
 using Shitcord.Data;
 using Shitcord.Database;
@@ -16,7 +15,7 @@ public class MarkovService
     private DatabaseService DatabaseContext { get; }
     private Random Rng { get; }
     // TODO(?): Discard old data
-    static Dictionary<string, Dictionary<string, int>> markovStrings = new();
+    //static Dictionary<string, Dictionary<string, int>> markovStrings = new();
     private char[] _excludeCharacters = { '.', ',', ':', ';', '?', '!' }; 
 
     // TODO: Those will be stored for each guild (together with IsEnabled, GatherData, 
@@ -32,11 +31,6 @@ public class MarkovService
         Client = bot.Client;
         DatabaseContext = database;
         Rng = new Random();
-
-        //Client.Ready += (sender, e) => {
-        //    sender.MessageCreated += MarkovMessageHandler;
-        //    return Task.CompletedTask;
-        //};
 
         Client.MessageCreated += MarkovMessageHandler;
     }
@@ -129,8 +123,6 @@ public class MarkovService
 
     public void InsertNewBaseString(string base_string) 
     {
-        // Add default base string to remove it later
-        // (this is not that good)
         DatabaseContext.executeUpdate(QueryBuilder
             .New()
             .Insert()
@@ -140,10 +132,10 @@ public class MarkovService
         );
     }
 
-    // TODO: increment query (increment by 1 in this case)
+    // TODO: Increment query (increment by 1 in this case)
     public void UpdateChainFrequency(string base_string, string chain_string)
     {
-        var data = DatabaseContext.RetrieveColumns(QueryBuilder
+        var columns = DatabaseContext.RetrieveColumns(QueryBuilder
             .New()
             .Retrieve(MarkovTable.FREQUENCY)
             .From(MarkovTable.TABLE_NAME)
@@ -155,9 +147,9 @@ public class MarkovService
             ).Build()
         );
 
-        if (data is null) throw new UnreachableException();
+        if (columns is null) throw new UnreachableException();
 
-        int freq = (int)(long)data[0][0];
+        int freq = (int)(long)columns[0][0];
 
         DatabaseContext.executeUpdate(QueryBuilder
             .New()
@@ -193,11 +185,7 @@ public class MarkovService
         return index;
     }
 
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // TODO: SQL DISTINCT IN QUERIES
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // also rename base strings to key strings (maybe)
-    // also query to get items already sorted
+    // TODO(?): Rename base strings to key strings (maybe).
     
     // TODO: Detect if markov is repeating same strings - 3 chains at least
     public string GenerateMarkovString(int min_len, int max_len)
@@ -261,7 +249,7 @@ public class MarkovService
         if (MarkovData.TryGetValue(guild.Id, out var data))
             return data;
 
-        data = new GuildMarkovData();
+        data = new GuildMarkovData(guild, DatabaseContext);
         MarkovData.Add(guild.Id, data);
 
         return data;
@@ -328,6 +316,7 @@ public class MarkovService
         }
     }
 
+    /*
     public void MigrateDataToDatabase() 
     {
         var data = markovStrings.ToList();
@@ -357,4 +346,5 @@ public class MarkovService
             fmt.Serialize(fs, markovStrings);
         }
     }
+    */
 }
