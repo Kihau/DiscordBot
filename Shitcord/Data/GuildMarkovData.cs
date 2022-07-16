@@ -37,16 +37,23 @@ public class GuildMarkovData
 
     public void LoadDataFromDatabase()
     {
-        var data = Database.GatherData(QueryBuilder
-            .New().Retrieve("*").From(GuildMarkovTable.TABLE_NAME)
-            .WhereEquals(GuildMarkovTable.GUILD_ID, Guild.Id).Build()
-        );
-
-        ExcludedChannelIDs = Database.GatherData(QueryBuilder
+        ExcludedChannelIDs = Database.RetrieveColumns(QueryBuilder
             .New().Retrieve(MarkovExcludedChannelsTable.EXCLUDED_ID)
             .From(MarkovExcludedChannelsTable.TABLE_NAME)
             .WhereEquals(MarkovExcludedChannelsTable.GUILD_ID, Guild.Id)
             .Build()
-        )?.Select(x => (ulong)(long)x[0]).ToList();
+        )?.Select(column => (ulong)(long)column[0]).ToList();
+
+        var data = Database.RetrieveColumns(QueryBuilder
+            .New().Retrieve("*").From(GuildMarkovTable.TABLE_NAME)
+            .WhereEquals(GuildMarkovTable.GUILD_ID, Guild.Id).Build()
+        );
+
+        if (data is not null) {
+            // Insert - create new row
+            return;
+        }
+
+        // Load from data the "data" list
     }
 }
