@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using Shitcord.Services;
 using Shitcord.Database;
 using Shitcord.Database.Queries;
+using Shitcord.Extensions;
 
 namespace Shitcord.Data;
 
@@ -119,7 +120,7 @@ public class GuildAudioData
         );
 
         if (retrieved is null)
-            throw new Exception("Unreachable");
+            throw new UnreachableException();
 
         var debug_string = DatabaseContext.TableToString(
             GuildAudioTable.TABLE_NAME, GuildAudioTable.COLUMNS);

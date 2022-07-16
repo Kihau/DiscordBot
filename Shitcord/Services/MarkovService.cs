@@ -49,7 +49,7 @@ public class MarkovService
         );
 
         if (all_values is null)
-            return new string[] {};
+            throw new UnreachableException();
         
         var base_strings = all_values.Select(x => (string)x[0]).ToArray();
         return base_strings;
@@ -67,7 +67,7 @@ public class MarkovService
         );
 
         if (all_values is null)
-            return new (string, int)[] {};
+            throw new UnreachableException();
 
         List <(string, int)> chain_freq_list = new();
         for (int i = 0; i < all_values[0].Count; i++)
@@ -115,15 +115,15 @@ public class MarkovService
 
     public void InsertAllStrings(string base_string, string chain_string, int frequency) 
     {
-        // Add default base string to remove it later
-        // (this is not that good)
-        DatabaseContext.executeUpdate(QueryBuilder
+        var query = QueryBuilder
             .New()
             .Insert()
             .Into(MarkovTable.TABLE_NAME)
             .Values(base_string, chain_string, frequency)
-            .Build()
-        );
+            .Build();
+
+        Console.WriteLine(query);
+        DatabaseContext.executeUpdate(query);
     }
 
     public void InsertNewBaseString(string base_string) 
@@ -154,7 +154,7 @@ public class MarkovService
             ).Build()
         );
 
-        if (data is null) throw new Exception("Unreachable code");
+        if (data is null) throw new UnreachableException();
 
         int freq = (int)(long)data[0][0];
 
