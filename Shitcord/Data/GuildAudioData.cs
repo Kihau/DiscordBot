@@ -127,28 +127,28 @@ public class GuildAudioData
             GuildAudioTable.TABLE_NAME, GuildAudioTable.COLUMNS);
         Console.WriteLine(debug_string);
 
-        var qu_channel_id = (ulong?)retrieved[1][0];
-        var qu_message_id = (ulong?)retrieved[3][0];
+        var qu_channel_id = retrieved[1][0];
+        var qu_message_id = retrieved[3][0];
 
         if (qu_channel_id != null && qu_message_id != null) {
             try { 
-                var channel = Guild.GetChannel(qu_channel_id.Value);
+                var channel = Guild.GetChannel((ulong)(long)qu_channel_id);
                 QueueUpdateChannel = channel;
-                var message = channel.GetMessageAsync(qu_message_id.Value)
+                var message = channel.GetMessageAsync((ulong)(long)qu_message_id)
                     .GetAwaiter().GetResult();
                 QueueUpdateMessage = message; 
                 UpdateQueueMessage();
             } catch { /* Ignored */ }
         } 
 
-        var su_channel_id = (ulong?)retrieved[2][0];
-        var su_message_id = (ulong?)retrieved[4][0];
+        var su_channel_id = retrieved[2][0];
+        var su_message_id = retrieved[4][0];
 
         if (su_channel_id != null && su_message_id != null) {
             try { 
-                var channel = Guild.GetChannel(su_channel_id.Value);
+                var channel = Guild.GetChannel((ulong)(long)su_channel_id);
                 SongUpdateChannel = channel;
-                var message = channel.GetMessageAsync(su_message_id.Value)
+                var message = channel.GetMessageAsync((ulong)(long)su_message_id)
                     .GetAwaiter().GetResult();
                 SongUpdateMessage = message; 
                 UpdateSongMessage();
