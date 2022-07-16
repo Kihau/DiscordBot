@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.Data.Sqlite;
 using Shitcord.Database;
 using Shitcord.Database.Queries;
+using Shitcord.Tests;
 
 namespace Shitcord.Services;
 
@@ -127,6 +128,24 @@ public class DatabaseService
         return builder.ToString();
     }
 
+    public String QueryResultToString(List<List<object>> data, string tableName)
+    {
+        //it is assumed that table exists here
+        string descQuery = $"PRAGMA table_info({tableName})";
+        List<List<object>> descColumns = RetrieveColumns(descQuery);
+        //merge into pattern
+        if (descColumns == null || descColumns.Count < 1) {
+            return "Unexpected result";
+        }
+        List<Column> targetTableCols = new();
+        for (int i = 0; i < descColumns[1].Count; i++) {
+            if (descColumns[1][i] is string colName) {
+                targetTableCols.Add(new Column(colName, "N/A"));
+            }
+        }
+        return QueryResultToString(data, targetTableCols.ToArray());
+    }
+
     public String TableToString(string tableName, List<Column> columns)
     {
         string statement = $"SELECT * FROM {tableName}";
@@ -134,7 +153,7 @@ public class DatabaseService
         List<List<object>> data = RetrieveColumns(reader);
         return data == null ? "Empty set" : QueryResultToString(data, columns.ToArray());
     }
-
+    
     //tests if a record exists in the specified table which satisfies given condition
     public bool ExistsInTable(string tableName, Condition condition)
     {
@@ -248,5 +267,16 @@ public class DatabaseService
             spaces.Append(' ');
 
         return spaces;
+    }
+
+    public string Tables()
+    {
+        string retrieveTables = QueryBuilder.New()
+            .Retrieve("name").From("sqlite_master")
+            .WhereEquals("type", "table")
+            .Build();
+        var reader = executeRead(retrieveTables);
+        string res = QueryResultToString(RetrieveColumns(reader), new Column("type", "text"));
+        return res;
     }
 }

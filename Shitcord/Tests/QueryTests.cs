@@ -18,7 +18,7 @@ class QueryTests
         escapeCharactersTests();
         Console.WriteLine($"Ratio (Passed/ALL): {passed}/{tests}");
     }
-    
+
     private static void selectTests()
     {
         const string expected1 = "SELECT name,lastname,another FROM markov WHERE chain_data_id = 23";
