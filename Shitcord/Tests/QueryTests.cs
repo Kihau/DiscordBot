@@ -81,6 +81,31 @@ class QueryTests
             .From("table")
             .WhereEquals(MarkovTable.FREQUENCY.name, 3)
             .Build();
+        
+        const string expectedRandom1 = "SELECT * FROM table ORDER BY RAND() LIMIT 1";
+        string random1 = QueryBuilder.New()
+            .Retrieve("*").From("table")
+            .Random().Limit()
+            .Build();
+        
+        const string expectedRandom2 = "SELECT * FROM table ORDER BY RAND() LIMIT 3";
+        string random2 = QueryBuilder.New()
+            .Retrieve("*").From("table")
+            .Random().Limit(3)
+            .Build();
+        
+        const string expectedLimit1 = "SELECT * FROM table LIMIT 55";
+        string limit1 = QueryBuilder.New()
+            .Retrieve("*").From("table")
+            .Limit(55)
+            .Build();
+        
+        const string expectedLimit2 = "SELECT base_str,chain_str,frequency FROM table WHERE chain_str = 'chunky' LIMIT 0";
+        string limit2 = QueryBuilder.New()
+            .Retrieve(MarkovTable.COLUMNS.ToArray()).From("table")
+            .WhereEquals(MarkovTable.CHAIN, "chunky")
+            .Limit(0)
+            .Build();
 
         Console.WriteLine("Selects:");
         compareStartsWith(select1, expected1);
@@ -93,6 +118,10 @@ class QueryTests
         compareStartsWith(givenOneParam, expectedOneParam);
         compareStartsWith(whereEqualsCol1, expectedWhereEquals);
         compareStartsWith(whereEqualsCol1, whereEqualsCol2);
+        compareStartsWith(random1, expectedRandom1);
+        compareStartsWith(random2, expectedRandom2);
+        compareStartsWith(limit1, expectedLimit1);
+        compareStartsWith(limit2, expectedLimit2);
     }
 
     static void conditionTests()
