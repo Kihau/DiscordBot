@@ -115,15 +115,15 @@ public class MarkovService
 
     public void InsertAllStrings(string base_string, string chain_string, int frequency) 
     {
-        // Add default base string to remove it later
-        // (this is not that good)
-        DatabaseContext.executeUpdate(QueryBuilder
+        var query = QueryBuilder
             .New()
             .Insert()
             .Into(MarkovTable.TABLE_NAME)
             .Values(base_string, chain_string, frequency)
-            .Build()
-        );
+            .Build();
+
+        Console.WriteLine(query);
+        DatabaseContext.executeUpdate(query);
     }
 
     public void InsertNewBaseString(string base_string) 
