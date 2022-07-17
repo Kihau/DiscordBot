@@ -308,9 +308,9 @@ public class AuthModule : BaseCommandModule
 		public DiscordMessage Message { get; }
 		public DiscordMessage Reply { get; }
 		public DiscordChannel Channel { get; }
-		public DiscordGuild Guild { get; }
+		public DiscordGuild? Guild { get; }
 		public DiscordUser User { get; }
-		public DiscordMember Member { get; }
+		public DiscordMember? Member { get; }
 		public CommandContext Context { get; }
 		public DiscordClient Client { get; }
 	}

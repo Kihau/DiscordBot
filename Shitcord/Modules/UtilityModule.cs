@@ -18,7 +18,7 @@ public class UtilityModule : BaseCommandModule
 {
     public Discordbot Bot { get; }
     public WeatherService Weather { get; }
-    public ModerationService Moderation { get; }
+    //public ModerationService Moderation { get; }
 
     //public UtilityModule(Discordbot bot, WeatherService weather, ModerationService moderation)
     //{
@@ -63,19 +63,28 @@ public class UtilityModule : BaseCommandModule
 
         [Command("add")]
         [Description("Adds auto respose for a certain string in a message")]
-        public async Task AddCommand(CommandContext ctx, string match, string response) 
-            => this.Reply.AddReplyData(ctx.Guild, new ReplyData(match.ToLower(), response)); 
+        public Task AddCommand(CommandContext ctx, string match, string response) 
+        { 
+            this.Reply.AddReplyData(ctx.Guild, new ReplyData(match.ToLower(), response)); 
+            return Task.CompletedTask;
+        }
 
         [Command("remove")]
         [Description("Removes auto respose for a certain string in a message")]
-        public async Task RemoveCommand(CommandContext ctx, string match) 
-            => this.Reply.RemoveReplyData(ctx.Guild, match.ToLower());
+        public Task RemoveCommand(CommandContext ctx, string match) 
+        {
+            this.Reply.RemoveReplyData(ctx.Guild, match.ToLower());
+            return Task.CompletedTask;
+        }
 
 
         [Command("removeat")]
         [Description("Removes auto respose for a certain reply index")]
-        public async Task RemoveAtCommand(CommandContext ctx, int index) 
-            => this.Reply.RemoveReplyDataAt(ctx.Guild, index);
+        public Task RemoveAtCommand(CommandContext ctx, int index) 
+        {
+            this.Reply.RemoveReplyDataAt(ctx.Guild, index);
+            return Task.CompletedTask;
+        }
 
         [Command("list")]
         [Description("List all matchreply queries")]
@@ -89,6 +98,8 @@ public class UtilityModule : BaseCommandModule
             var embed = new DiscordEmbedBuilder()
                 .WithTitle("Added reply strings:")
                 .WithColor(DiscordColor.Purple);
+
+            await ctx.Channel.SendMessageAsync(embed.Build());
         }
     }
 

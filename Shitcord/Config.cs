@@ -1,40 +1,31 @@
-using System;
-using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Shitcord.Data;
+namespace Shitcord;
 
 [Serializable]
 public class Config
 {
     [JsonPropertyName("discord")] 
-    public DiscordConfig Discord { get; set; }
+    public DiscordConfig Discord { get; set; } = new();
 
     [JsonPropertyName("ssh")] 
-    public SshConfig Ssh { get; set; }
+    public SshConfig Ssh { get; set; } = new();
 
     [JsonPropertyName("lavalink")] 
-    public LavalinkConfig Lava { get; set; }
-
-    private void Init(string path)
-    {
-        this.Discord = new DiscordConfig();
-        this.Ssh = new SshConfig();
-        this.Lava = new LavalinkConfig();
-
-        this.Save(path);
-    }
+    public LavalinkConfig Lava { get; set; } = new();
 
     public Config() { }
 
     public Config(string? path = null)
     {
         path ??= "Resources/config.json";
-        if (!File.Exists(path))
-        {
-            this.Init(path);
-            throw new Exception("Example config file was generated. Edit it in order to start the bot");
+        if (!File.Exists(path)) {
+            this.Save(path);
+
+            throw new Exception(
+                "Example config file was generated. Edit it in order to start the bot"
+            );
         }
         
         this.Load(path);
@@ -47,7 +38,9 @@ public class Config
 
         if (config == null)
             throw new Exception(
-                "Invalid configuration file. Remove it and run the program again to generate example config");
+                "Invalid configuration file. Remove it and run" +
+                " the program again to generate example config"
+            );
         
         this.Discord = config.Discord;
         this.Ssh = config.Ssh;
@@ -56,7 +49,7 @@ public class Config
 
     public void Save(string path)
     {
-        var options = new JsonSerializerOptions {WriteIndented = true};
+        var options = new JsonSerializerOptions { WriteIndented = true };
         string output = JsonSerializer.Serialize(this, options);
         File.WriteAllText(path, output);
     }

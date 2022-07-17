@@ -27,8 +27,9 @@ public class TestingModule : BaseCommandModule
 
     [Command("write")]
     [Description("Why did I add this command?")]
-    public async Task WriteCommand(CommandContext ctx, uint count = 1, DiscordChannel channel = null)
-    {
+    public async Task WriteCommand(
+        CommandContext ctx, uint count = 1, DiscordChannel? channel = null
+    ) {
         channel ??= ctx.Channel;
         for (var i = 0; i < count; i++)
             await channel.SendMessageAsync("hello");
@@ -44,7 +45,7 @@ public class TestingModule : BaseCommandModule
 
     [Command("throw")]
     [Description("YEEEEET")]
-    public async Task ThrowCommand(CommandContext ctx, [RemainingText] string message = "null")
+    public Task ThrowCommand(CommandContext ctx, [RemainingText] string message = "null")
     {
         throw new CommandException(message);
     }

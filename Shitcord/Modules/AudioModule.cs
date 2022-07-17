@@ -38,7 +38,7 @@ public class AudioModule : BaseCommandModule
     public async Task JoinCommand(CommandContext ctx, String? name = null)
     {
         var channel = name == null
-            ? ctx.Member.VoiceState?.Channel
+            ? ctx.Member?.VoiceState?.Channel
             : ctx.Guild.Channels.First(x =>
                 x.Value.Name.Contains(name, StringComparison.OrdinalIgnoreCase) &&
                 x.Value.Type == ChannelType.Voice).Value;
@@ -66,9 +66,9 @@ public class AudioModule : BaseCommandModule
     [Description("Stops current track, searches for a song and plays it.")]
     public async Task PlayCommand(CommandContext ctx,
         [RemainingText, Description("Name of the song, song uri or playlist uri")]
-        string message = null)
+        string? message = null)
     {
-        var channel = ctx.Member.VoiceState?.Channel;
+        var channel = ctx.Member?.VoiceState?.Channel;
 
         if (channel != null)
             await this.Data.CreateConnectionAsync(channel);
@@ -444,22 +444,24 @@ public class AudioModule : BaseCommandModule
         }
 
         [Command("reset")]
-        public async Task ResetFiltersCommand(CommandContext ctx)
-            => this.Data.Filters = new AudioFilters();
+        public Task ResetFiltersCommand(CommandContext ctx) 
+        {
+            this.Data.Filters = new AudioFilters();
+            return Task.CompletedTask;
+        }
 
         [Command("get")]
         public async Task GetFiltersCommand(CommandContext ctx)
             => await ctx.Channel.SendMessageAsync($"```json\n{this.Data.Filters.GetJson()}\n```");
 
         [Command("set")]
-        public async Task SetFiltersCommand(CommandContext ctx, [RemainingText] string json)
+        public Task SetFiltersCommand(CommandContext ctx, [RemainingText] string json)
         {
             int cs1 = json.IndexOf("```", StringComparison.Ordinal) + 5;
             cs1 = json.IndexOf('\n', cs1) + 1;
             int cs2 = json.LastIndexOf("```", StringComparison.Ordinal);
 
-            if (cs1 is -1 || cs2 is -1)
-            {
+            if (cs1 is -1 || cs2 is -1) {
                 cs1 = 0;
                 cs2 = json.Length;
             }
@@ -469,6 +471,8 @@ public class AudioModule : BaseCommandModule
             var output = filters_string.GetAudioFilters();
             if (output != null)
                 this.Data.Filters = output;
+
+            return Task.CompletedTask;
         }
 
         [Command("example")]
@@ -532,92 +536,119 @@ public class AudioModule : BaseCommandModule
         }
 
         [Command("karaoke"), Priority(0)]
-        public async Task KaraokeLavaCommand(CommandContext ctx) 
-            => this.Data.Filters.Karaoke = null;
+        public Task KaraokeLavaCommand(CommandContext ctx) 
+        {
+            this.Data.Filters.Karaoke = null;
+            return Task.CompletedTask;
+        }
+
         [Command("timescale"), Priority(0)]
-        public async Task TimescaleLavaCommand(CommandContext ctx) 
-            => this.Data.Filters.Timescale = null;
+        public Task TimescaleLavaCommand(CommandContext ctx) 
+        {
+            this.Data.Filters.Timescale = null;
+            return Task.CompletedTask;
+        }
+
         [Command("tremolo"), Priority(0)]
-        public async Task TremoloLavaCommand(CommandContext ctx) 
-            => this.Data.Filters.Tremolo = null;
+        public Task TremoloLavaCommand(CommandContext ctx) 
+        {
+            this.Data.Filters.Tremolo = null;
+            return Task.CompletedTask;
+        }
+
         [Command("vibrato"), Priority(0)]
-        public async Task VibratoLavaCommand(CommandContext ctx) 
-            => this.Data.Filters.Vibrato = null;
+        public Task VibratoLavaCommand(CommandContext ctx) 
+        {
+            this.Data.Filters.Vibrato = null;
+            return Task.CompletedTask;
+        }
+
         [Command("rotation"), Priority(0)]
-        public async Task RotationLavaCommand(CommandContext ctx) 
-            => this.Data.Filters.Rotation = null;
+        public Task RotationLavaCommand(CommandContext ctx) 
+        {
+            this.Data.Filters.Rotation = null;
+            return Task.CompletedTask;
+        }
+
         [Command("lowpass"), Priority(0)]
-        public async Task LowPassLavaCommand(CommandContext ctx) 
-            => this.Data.Filters.Lowpass = null;
+        public Task LowPassLavaCommand(CommandContext ctx) 
+        {
+            this.Data.Filters.Lowpass = null;
+            return Task.CompletedTask;
+        }
+
         [Command("channelmix"), Priority(0)]
-        public async Task ChannelMixLavaCommand(CommandContext ctx) 
-            => this.Data.Filters.Channelmix = null;
+        public Task ChannelMixLavaCommand(CommandContext ctx) 
+        {
+            this.Data.Filters.Channelmix = null;
+            return Task.CompletedTask;
+        }
 
         [Command("karaoke")]
-        public async Task KaraokeLavaCommand(
+        public Task KaraokeLavaCommand(
             CommandContext ctx, double level = 1, double monoLevel = 1,
             double filterBand = 220, double filterWidth = 100
         ) {
-            this.Data.Filters.Karaoke = new Karaoke
-            {
+            this.Data.Filters.Karaoke = new Karaoke {
                 Level = level,
                 MonoLevel = monoLevel,
                 FilterBand = filterBand,
                 FilterWidth = filterWidth
             };
+            return Task.CompletedTask;
         }
 
         [Command("timescale")]
         [Description("Applies audio effects such as speed, pitch, rate")]
-        public async Task TimescaleLavaCommand(CommandContext ctx,
+        public Task TimescaleLavaCommand(CommandContext ctx,
           [Description("speed")] double speed = 1.0,
           [Description("pitch")] double pitch = 1.0,
-          [Description("rate")]  double rate  = 1.0)
-        {
-            this.Data.Filters.Timescale = new TimeScale
-            {
+          [Description("rate")]  double rate  = 1.0
+        ) {
+            this.Data.Filters.Timescale = new TimeScale {
                 Pitch = pitch,
                 Rate = rate,
                 Speed = speed
             };
+            return Task.CompletedTask;
         }
 
         [Command("tremolo")]
-        public async Task TremoloLavaCommand(
-            CommandContext ctx, double frequency = 2.0, double depth = 0.5)
-        {
-            this.Data.Filters.Tremolo = new Tremolo
-            {
+        public Task TremoloLavaCommand(
+            CommandContext ctx, double frequency = 2.0, double depth = 0.5
+        ) {
+            this.Data.Filters.Tremolo = new Tremolo {
                 Frequency = frequency,
                 Depth = depth,
             };
+            return Task.CompletedTask;
         }
 
         [Command("vibrato")]
-        public async Task VibratoLavaCommand(
+        public Task VibratoLavaCommand(
             CommandContext ctx, double frequency = 2.0, double depth = 0.5
         ) {
-            this.Data.Filters.Vibrato = new Vibrato
-            {
+            this.Data.Filters.Vibrato = new Vibrato {
                 Frequency = frequency,
                 Depth = depth
             };
+            return Task.CompletedTask;
         }
 
         [Command("rotation")]
-        public async Task RotationLavaCommand(CommandContext ctx, double rotationFreq = 0.0)
+        public Task RotationLavaCommand(CommandContext ctx, double rotationFreq = 0.0)
         {
             this.Data.Filters.Rotation = new Rotation {RotationFreq = rotationFreq};
+            return Task.CompletedTask;
         }
 
         [Command("distortion")]
-        public async Task DistortionLavaCommand(
+        public Task DistortionLavaCommand(
             CommandContext ctx, double sinOffset = 0, double sinScale = 1,
             double cosOffset = 0, double cosScale = 1, double tanOffset = 0,
             double tanScale = 1, double offset = 0, double scale = 1
         ) {
-            this.Data.Filters.Distortion = new Distortion
-            {
+            this.Data.Filters.Distortion = new Distortion {
                 SinOffset = sinOffset,
                 SinScale = sinScale,
                 CosOffset = cosOffset,
@@ -627,26 +658,28 @@ public class AudioModule : BaseCommandModule
                 Offset = offset,
                 Scale = scale,
             };
+            return Task.CompletedTask;
         }
 
         [Command("lowpass")]
-        public async Task LowPassLavaCommand(CommandContext ctx, double smoothing = 2.0)
+        public Task LowPassLavaCommand(CommandContext ctx, double smoothing = 2.0)
         {
             this.Data.Filters.Lowpass = new LowPass {Smoothing = smoothing};
+            return Task.CompletedTask;
         }
 
         [Command("channelmix")]
-        public async Task ChannelMixLavaCommand(
+        public Task ChannelMixLavaCommand(
             CommandContext ctx, double leftToLeft = 1, double leftToRight = 0, 
             double rightToLeft = 0, double rightToRight = 1
         ) {
-            this.Data.Filters.Channelmix = new ChannelMix
-            {
+            this.Data.Filters.Channelmix = new ChannelMix {
                 LeftToLeft = leftToLeft,
                 LeftToRight = leftToRight,
                 RightToLeft = rightToLeft,
                 RightToRight = rightToRight
             };
+            return Task.CompletedTask;
         }
     }
 }
