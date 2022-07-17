@@ -1,0 +1,24 @@
+{
+  "discord": {
+    "token": "<your-bot-token>"
+    "prefix": "/",
+    "cache": 100,
+    "status": "bot discord status"
+    "startdelay": 0
+  },
+  "ssh": {
+    "hostname": "localhost",
+    "port": 1111,
+    "username": "derp",
+    "key": "/my/epic/keyfile",    
+    "enabled": false
+  },
+  "lavalink": {
+    "hostname": "127.0.0.1",
+    "port": 2333,
+    "password": "<lavlink-password>"
+    "enabled": false,
+    "autostart": false,
+    "javapath": "/path/to/java (or just java as env var)"
+  }
+}
