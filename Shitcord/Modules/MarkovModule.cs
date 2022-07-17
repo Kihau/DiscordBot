@@ -84,10 +84,10 @@ public class MarkovModule : BaseCommandModule
 
         Data.UpdateChainLength();
 
-        await ctx.RespondAsync(String.Format(
-            $"Markov chain min is now set to: `{0}`, and max to: `{1}`",
-            Data.MinChainLength, Data.MaxChainLength
-        ));
+        await ctx.RespondAsync(
+            $"Markov chain min is now set to: `{Data.MinChainLength}`," +
+            $"and max to: `{Data.MaxChainLength}`"
+        );
     }
 
     [Command("info"), Description("Displays markov data for the current guild")]
