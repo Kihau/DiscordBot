@@ -27,8 +27,9 @@ public class AudioModule : BaseCommandModule
 
     public override async Task AfterExecutionAsync(CommandContext ctx)
     {
-        await this.Data.UpdateSongMessage();
-        await this.Data.UpdateQueueMessage();
+        // TODO: DO not set those after every execution - create an attribute instead
+        Data.SongRequiresUpdate = true;
+        Data.QueueRequiresUpdate = true;
         await base.AfterExecutionAsync(ctx);
     }
 

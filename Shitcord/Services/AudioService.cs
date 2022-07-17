@@ -54,15 +54,18 @@ public class AudioService
             if (data == null) 
                 return;
 
-            bool defer = true;
+            bool deferred = true;
             switch (args.Id)
             {
                 // Song Info
                 case "skip_btn":
                     await data.SkipAsync(1);
+                    data.SongRequiresUpdate = true;
+                    data.QueueRequiresUpdate = true;
                     break;
                 case "loop_btn":
                     data.ChangeLoopingState();
+                    data.SongRequiresUpdate = true;
                     break;
                 case "state_btn":
                     if (data.IsStopped)
@@ -70,6 +73,8 @@ public class AudioService
                     else if (data.IsPaused)
                         await data.ResumeAsync();
                     else await data.PauseAsync();
+                    data.SongRequiresUpdate = true;
+                    data.QueueRequiresUpdate = true;
                     break;
                 case "join_btn":
                     var member = await args.Guild.GetMemberAsync(args.User.Id);
@@ -78,43 +83,48 @@ public class AudioService
                     break;
                 case "stop_btn":
                     await data.StopAsync();
+                    data.SongRequiresUpdate = true;
                     break;
                 case "leave_btn":
                     await data.DestroyConnectionAsync();
+                    data.SongRequiresUpdate = true;
                     break;
                 
                 // Queue Info
                 case "firstpage_btn":
                     data.page = 0;
+                    data.QueueRequiresUpdate = true;
                     break;
                 case "nextpage_btn":
                     data.page++;
+                    data.QueueRequiresUpdate = true;
                     break;
                 case "shuffle_btn":
                     data.Shuffle();
+                    data.QueueRequiresUpdate = true;
                     break;
                 case "clear_btn":
                     data.ClearQueue();
+                    data.QueueRequiresUpdate = true;
                     break;
                 case "prevpage_btn":
                     data.page--;
+                    data.QueueRequiresUpdate = true;
                     break;
                 case "lastpage_btn":
                     data.page = Int32.MaxValue;
+                    data.QueueRequiresUpdate = true;
                     break;
                 
                 default:
-                    defer = false;
+                    deferred = false;
                     break;
             }
             
-            if (defer)
+            if (deferred)
                 await args.Interaction.CreateResponseAsync(
                     InteractionResponseType.DeferredMessageUpdate
                 );
-
-            await data.UpdateSongMessage();
-            await data.UpdateQueueMessage();
         });
         return Task.CompletedTask;
     }

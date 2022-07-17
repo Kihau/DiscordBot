@@ -47,6 +47,9 @@ public class GuildAudioData
     public DiscordMessage? SongUpdateMessage { get; set; }
     public DiscordChannel? SongUpdateChannel { get; set; }
 
+    public bool QueueRequiresUpdate { get; set; } = true;
+    public bool SongRequiresUpdate { get; set; } = true;
+
     // Change it later (maybe not?)
     public int page = 0;
 
@@ -62,6 +65,25 @@ public class GuildAudioData
 
         this.Queue = new ConcurrentQueue<LavalinkTrack>();
         this.Filters = new AudioFilters();
+
+        Task.Run(AutoMessageUpdater);
+    }
+
+    public async Task AutoMessageUpdater() 
+    {
+        while (true) {
+            if (SongRequiresUpdate) {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                await UpdateSongMessage();
+                SongRequiresUpdate = false;
+            }
+
+            if (QueueRequiresUpdate) {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                await UpdateQueueMessage();
+                QueueRequiresUpdate = false;
+            }
+        }
     }
 
     public async Task CreateConnectionAsync(DiscordChannel vchannel)
@@ -136,7 +158,7 @@ public class GuildAudioData
                 var message = channel.GetMessageAsync((ulong)(long)qu_message_id)
                     .GetAwaiter().GetResult();
                 QueueUpdateMessage = message; 
-                UpdateQueueMessage();
+                QueueRequiresUpdate = true;
             } catch { /* Ignored */ }
         } 
 
@@ -150,7 +172,7 @@ public class GuildAudioData
                 var message = channel.GetMessageAsync((ulong)(long)su_message_id)
                     .GetAwaiter().GetResult();
                 SongUpdateMessage = message; 
-                UpdateSongMessage();
+                SongRequiresUpdate = true;
             } catch { /* Ignored */ }
         } 
 
@@ -309,7 +331,7 @@ public class GuildAudioData
         return builder;
     }
 
-    public Task UpdateQueueMessage()
+    private Task UpdateQueueMessage()
     {
         if (this.QueueUpdateMessage == null || this.QueueUpdateChannel == null)
             return Task.CompletedTask;
@@ -317,10 +339,9 @@ public class GuildAudioData
         Task.Run(async () =>
         {
             var message = this.GenerateQueueMessage();
-            if (DateTime.Now - this.QueueUpdateMessage.Timestamp < TimeSpan.FromHours(1))
+            if (DateTime.Now - this.QueueUpdateMessage.Timestamp < TimeSpan.FromHours(1)) {
                 await this.QueueUpdateMessage.ModifyAsync(message);
-            else
-            {
+            } else {
                 await this.QueueUpdateMessage.DeleteAsync();
                 this.QueueUpdateMessage = await this.QueueUpdateChannel.SendMessageAsync(message);
                 DatabaseUpdateQU();
@@ -387,7 +408,7 @@ public class GuildAudioData
         return builder;
     }
 
-    public Task UpdateSongMessage()
+    private Task UpdateSongMessage()
     {
         if (this.SongUpdateMessage == null || this.SongUpdateChannel == null)
             return Task.CompletedTask;
@@ -434,8 +455,7 @@ public class GuildAudioData
 
         await this.DestroyConnectionAsync();
 
-        await this.UpdateSongMessage();
-        await this.UpdateQueueMessage();
+        SongRequiresUpdate = true;
 
         if (this._leaveTimer != null) 
             await this._leaveTimer.DisposeAsync();
@@ -501,12 +521,8 @@ public class GuildAudioData
         await this.Player.SeekAsync(TimeSpan.Zero);
         this.IsPaused = false;
 
-        var _ = Task.Run(async () =>
-        {
-            await this.UpdateSongMessage();
-            await this.UpdateQueueMessage();
-        });
-
+        SongRequiresUpdate = true;
+        QueueRequiresUpdate = true;
     }
 
     public void Enqueue(LavalinkTrack track)
