@@ -246,63 +246,67 @@ public class MarkovService
     }
 
     // TODO(?): Ignore strings that start with the bot prefix
-    private async Task MarkovMessageHandler(DiscordClient client, MessageCreateEventArgs e)
+    private Task MarkovMessageHandler(DiscordClient client, MessageCreateEventArgs e)
     {
-        if (e.Author.IsBot)
-            return;
+        Task.Run(async () => {
+            if (e.Author.IsBot)
+                return;
 
-        var data = GetOrAddData(e.Guild);
+            var data = GetOrAddData(e.Guild);
 
-        if (!data.IsEnabled)
-            return;
+            if (!data.IsEnabled)
+                return;
 
-        string input = e.Message.Content;
-        // When the bot is tagged, respond with a markov message
-        if (input.StartsWith(Client.CurrentUser.Mention)) { 
-            var response = GenerateMarkovString(data.MinChainLength, data.MaxChainLength);
-            await e.Message.RespondAsync(response);
-            return;
-        }
+            string input = e.Message.Content;
+            // When the bot is tagged, respond with a markov message
+            if (input.StartsWith(Client.CurrentUser.Mention)) { 
+                var response = GenerateMarkovString(data.MinChainLength, data.MaxChainLength);
+                await e.Message.RespondAsync(response);
+                return;
+            }
 
-        // Do not gather data from channels excluded by the user
-        if (data.ExcludedChannelIDs.Contains(e.Channel.Id))
-            return;
+            // Do not gather data from channels excluded by the user
+            if (data.ExcludedChannelIDs.Contains(e.Channel.Id))
+                return;
 
-        // NOTE: Max word length is set to 255 chars
-        List<string> parsed_input = input.Split(
-            new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries
-        ).Where(x => x.Length <= 255).ToList();
+            // NOTE: Max word length is set to 255 chars
+            List<string> parsed_input = input.Split(
+                new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries
+            ).Where(x => x.Length <= 255).ToList();
 
-        // TODO (?): Some logic to remove unnesessary characters
-        /*
-        for (int i = 0; i < data.Count; i++) {
-            if (_excludeCharacters.Contains(data[i].Last()))
-                data[i] = data[i].Substring(0, data[i].Length - 2);
+            // TODO (?): Some logic to remove unnesessary characters
+            /*
+            for (int i = 0; i < data.Count; i++) {
+                if (_excludeCharacters.Contains(data[i].Last()))
+                    data[i] = data[i].Substring(0, data[i].Length - 2);
 
-            if (_excludeCharacters.Contains(data[i].First()))
-                data[i] = data[i].Substring(1);
-        }
-        */
+                if (_excludeCharacters.Contains(data[i].First()))
+                    data[i] = data[i].Substring(1);
+            }
+            */
 
-        FeedStringsToMarkov(parsed_input);
+            FeedStringsToMarkov(parsed_input);
 
-        // Logic to auto respond to user messages with markov strings
-        if (!data.ResponseEnabled)
-            return;
+            // Logic to auto respond to user messages with markov strings
+            if (!data.ResponseEnabled)
+                return;
 
-        var time = DateTime.Now - data.LastResponse;
-        if (time < data.ResponseTimeout)
-            return;
+            var time = DateTime.Now - data.LastResponse;
+            if (time < data.ResponseTimeout)
+                return;
 
-        var rolled_chance = Rng.Next(GuildMarkovData.MAX_CHANCE);
-        if (data.ResponseChance >= rolled_chance) {
-            data.LastResponse = DateTime.Now;
-            var markov_text = GenerateMarkovString(data.MinChainLength, data.MaxChainLength);
+            var rolled_chance = Rng.Next(GuildMarkovData.MAX_CHANCE);
+            if (data.ResponseChance >= rolled_chance) {
+                data.LastResponse = DateTime.Now;
+                var markov_text = GenerateMarkovString(data.MinChainLength, data.MaxChainLength);
 
-            var direct_respond = Rng.Next(2) == 1;
-            if (direct_respond) 
-                await e.Message.RespondAsync(markov_text);
-            else await e.Channel.SendMessageAsync(markov_text);
-        }
+                var direct_respond = Rng.Next(2) == 1;
+                if (direct_respond) 
+                    await e.Message.RespondAsync(markov_text);
+                else await e.Channel.SendMessageAsync(markov_text);
+            }
+        });
+
+        return Task.CompletedTask;
     }
 }

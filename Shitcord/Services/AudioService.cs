@@ -28,7 +28,7 @@ public class AudioService
         Client.ComponentInteractionCreated += AudioUpdateButtons;
 
         Client.GuildDownloadCompleted += (_, _) => {
-            LoadAllDataFromDatabase();
+            Task.Run(LoadAllDataFromDatabase);
             return Task.CompletedTask;
         };
     }
@@ -101,10 +101,12 @@ public class AudioService
                     break;
                 case "shuffle_btn":
                     data.Shuffle();
+                    data.SongRequiresUpdate = true;
                     data.QueueRequiresUpdate = true;
                     break;
                 case "clear_btn":
                     data.ClearQueue();
+                    data.SongRequiresUpdate = true;
                     data.QueueRequiresUpdate = true;
                     break;
                 case "prevpage_btn":

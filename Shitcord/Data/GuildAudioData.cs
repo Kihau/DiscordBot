@@ -11,6 +11,10 @@ using Shitcord.Extensions;
 
 namespace Shitcord.Data;
 
+// -----------------------------------------------------------------------------------------------
+// TODO: Major cleanup required
+// -----------------------------------------------------------------------------------------------
+
 /// This data is stored inside a hashmap (in AudioService) and mapped to each guild
 public class GuildAudioData
 {
@@ -73,14 +77,14 @@ public class GuildAudioData
     {
         while (true) {
             if (SongRequiresUpdate) {
-                await Task.Delay(TimeSpan.FromSeconds(1));
                 await UpdateSongMessage();
+                await Task.Delay(TimeSpan.FromSeconds(1));
                 SongRequiresUpdate = false;
             }
 
             if (QueueRequiresUpdate) {
-                await Task.Delay(TimeSpan.FromSeconds(1));
                 await UpdateQueueMessage();
+                await Task.Delay(TimeSpan.FromSeconds(1));
                 QueueRequiresUpdate = false;
             }
         }
