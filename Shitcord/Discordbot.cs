@@ -201,10 +201,8 @@ public class Discordbot
         var activity = new DiscordActivity(this.Config.Discord.Status, ActivityType.ListeningTo);
         await Client.ConnectAsync(activity, UserStatus.DoNotDisturb);
 
-        Client.Ready += (sender, args) =>
-        {
-            Task.Run(async () =>
-            {
+        Client.GuildDownloadCompleted += (_, _) => {
+            Task.Run(async () => {
                 ulong debug_channel = 928054033741152307;
                 
                 try

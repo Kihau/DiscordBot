@@ -9,7 +9,7 @@ class Program
     {
         var shitcord = new Discordbot();
         shitcord.RunAsync().GetAwaiter().GetResult();
-    }    
+    }
 }
 
 //var files = Directory.GetFiles("Resources");

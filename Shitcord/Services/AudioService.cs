@@ -27,7 +27,7 @@ public class AudioService
         Client.VoiceStateUpdated += BotVoiceTimeout;
         Client.ComponentInteractionCreated += AudioUpdateButtons;
 
-        Client.Ready += (_, _) => {
+        Client.GuildDownloadCompleted += (_, _) => {
             LoadAllDataFromDatabase();
             return Task.CompletedTask;
         };

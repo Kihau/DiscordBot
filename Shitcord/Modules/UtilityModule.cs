@@ -5,6 +5,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Extensions;
+using Shitcord.Extensions;
 using Shitcord.Services;
 
 namespace Shitcord.Modules;
@@ -16,12 +17,14 @@ namespace Shitcord.Modules;
 public class UtilityModule : BaseCommandModule
 {
     public Discordbot Bot { get; }
-    public WeatherService Weather { get; set; }
+    public WeatherService Weather { get; }
+    public ModerationService Moderation { get; }
 
-    public UtilityModule(Discordbot bot, WeatherService weather, ReplyService reply)
+    public UtilityModule(Discordbot bot, WeatherService weather, ModerationService moderation)
     {
-        this.Bot = bot;
-        this.Weather = weather;
+        Bot = bot;
+        Weather = weather;
+        Moderation = moderation;
     }
 
     public override async Task BeforeExecutionAsync(CommandContext ctx)
@@ -104,11 +107,12 @@ public class UtilityModule : BaseCommandModule
             // Embed bot image url (small top right icon)
             //.WithImageUrl(user.GetAvatarUrl(ImageFormat.Auto, size))
             .WithTimestamp(DateTime.UtcNow)
-            .WithFooter("Created by: Kihau")
+            .WithFooter("Created by: Kihau & Frisk")
             .WithColor(DiscordColor.Purple);
         await ctx.RespondAsync(embed);
     }
 
+    [RequireAuthorized]
     [Command("nuke"), Description("Complitely nukes a channel")]
     async Task NukeChannelAsync(CommandContext ctx,
         [Description("Channel name (ex. `#channel`)")] DiscordChannel? req_channel = null)
@@ -154,7 +158,6 @@ public class UtilityModule : BaseCommandModule
             }
         }
     }
-    
     
     [Command("uptime")]
     [Description("Displays bot uptime")]
@@ -215,11 +218,24 @@ public class UtilityModule : BaseCommandModule
         => await ctx.RespondAsync(reqEmoji.Url);
 
     [Command("clone"), Description("Clones specified channel")]
-    public async Task CloneChannelAsync(CommandContext ctx, [Description("New channel name")] string name,
-        [Description("Channel name (ex. `#channel`)")] DiscordChannel? reqChannel = null)
-    {
+    public async Task CloneChannelAsync(
+        CommandContext ctx, [Description("New channel name")] string name,
+        [Description("Channel name (ex. `#channel`)")] DiscordChannel? reqChannel = null
+    ) {
         var channel = reqChannel ?? ctx.Channel;
         var clone = await channel.CloneAsync();
         await clone.ModifyAsync(x => x.Name = name);
+    }
+
+    [Command("rmsnipe")]
+    public async Task RemoveSnipeCommand(CommandContext ctx) 
+    {
+        var data = Moderation.GetOrAddDeleteData(ctx.Guild);
+    }
+
+    [Command("editsnipe")]
+    public async Task EditSnipeCommand(CommandContext ctx) 
+    {
+        var data = Moderation.GetOrAddEditData(ctx.Guild);
     }
 }
