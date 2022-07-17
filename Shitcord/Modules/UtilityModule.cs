@@ -20,11 +20,18 @@ public class UtilityModule : BaseCommandModule
     public WeatherService Weather { get; }
     public ModerationService Moderation { get; }
 
-    public UtilityModule(Discordbot bot, WeatherService weather, ModerationService moderation)
+    //public UtilityModule(Discordbot bot, WeatherService weather, ModerationService moderation)
+    //{
+    //    Bot = bot;
+    //    Weather = weather;
+    //    Moderation = moderation;
+    //}
+
+
+    public UtilityModule(Discordbot bot, WeatherService weather)
     {
         Bot = bot;
         Weather = weather;
-        Moderation = moderation;
     }
 
     public override async Task BeforeExecutionAsync(CommandContext ctx)
@@ -227,15 +234,15 @@ public class UtilityModule : BaseCommandModule
         await clone.ModifyAsync(x => x.Name = name);
     }
 
-    [Command("rmsnipe")]
-    public async Task RemoveSnipeCommand(CommandContext ctx) 
-    {
-        var data = Moderation.GetOrAddDeleteData(ctx.Guild);
-    }
+    //[Command("rmsnipe")]
+    //public async Task RemoveSnipeCommand(CommandContext ctx) 
+    //{
+    //    var data = Moderation.GetOrAddDeleteData(ctx.Guild);
+    //}
 
-    [Command("editsnipe")]
-    public async Task EditSnipeCommand(CommandContext ctx) 
-    {
-        var data = Moderation.GetOrAddEditData(ctx.Guild);
-    }
+    //[Command("editsnipe")]
+    //public async Task EditSnipeCommand(CommandContext ctx) 
+    //{
+    //    var data = Moderation.GetOrAddEditData(ctx.Guild);
+    //}
 }
