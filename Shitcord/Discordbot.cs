@@ -1,18 +1,21 @@
 using System.Diagnostics;
+
 using DSharpPlus;
+using DSharpPlus.Entities;
+using DSharpPlus.Lavalink;
+using DSharpPlus.EventArgs;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Interactivity;
-using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
 using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
-using DSharpPlus.Lavalink;
-using Microsoft.Extensions.DependencyInjection;
+
 using Microsoft.Extensions.Logging;
-using Shitcord.Extensions;
+using Microsoft.Extensions.DependencyInjection;
+
 using Shitcord.Data;
 using Shitcord.Modules;
 using Shitcord.Services;
+using Shitcord.Extensions;
 
 namespace Shitcord;
 
@@ -32,45 +35,44 @@ public class Discordbot
     public bool DebugEnabled { get; set; } = false;
 #endif
 
-
+    #pragma warning disable CS8618
     public Discordbot()
+    #pragma warning restore CS8618
     {
-        this.StartTime = DateTime.Now;
-        //var exec_path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        StartTime = DateTime.Now;
         
-        this.Config = this.DebugEnabled
+        Config = DebugEnabled
             ? new Config("Resources/config-debug.json")
             : new Config("Resources/config.json");
 
-        this.ConfigureClient();
-        this.ConfigureCommands();
+        ConfigureClient();
+        ConfigureCommands();
     }
 
     private void ConfigureClient()
     {
-        var botConf = this.Config.Discord;
-        var clientConfig = new DiscordConfiguration()
-        {
+        var botConf = Config.Discord;
+        var clientConfig = new DiscordConfiguration {
             Token = botConf.Token,
             TokenType = TokenType.Bot,
             Intents = DiscordIntents.AllUnprivileged,
             MinimumLogLevel = LogLevel.Information,
             AutoReconnect = true,
             MessageCacheSize = botConf.CacheSize,
-
-            // TODO: Custom logger
-            //LoggerFactory = new SickAssCustomLogger();
         };
 
         Client = new DiscordClient(clientConfig);
 
         Client.MessageCreated += PrintMessage;
+        Client.GuildDownloadCompleted += (_, _) => {
+            Task.Run(StartBotConsoleInput);
+            return Task.CompletedTask;
+        };
 
-        if (this.Config.Lava.IsEnabled)
+        if (Config.Lava.IsEnabled)
             Client.UseLavalink();
 
-        Client.UseInteractivity(new InteractivityConfiguration 
-        { 
+        Client.UseInteractivity(new InteractivityConfiguration { 
             PollBehaviour = PollBehaviour.KeepEmojis,
             Timeout = TimeSpan.FromSeconds(30)
         });
@@ -78,27 +80,77 @@ public class Discordbot
 
     private Task PrintMessage(DiscordClient client, MessageCreateEventArgs e)
     {
-        if (this.DebugEnabled)
+        if (DebugEnabled)
             Console.WriteLine(
                 $"[{e.Guild.Name}] {e.Author.Username}@{e.Channel.Name}: {e.Message.Content}"
             );
 
-        // if (e.Author.Id != 278778540554715137)
-        //  return Task.CompletedTask;
-        //
-        // LastChannel = e.Channel;
-        // LastGuild = e.Guild;
-
         return Task.CompletedTask;
+    }
+
+    private async Task StartBotConsoleInput() 
+    {
+        ulong debug_channel = 928054033741152307;
+        
+        try {
+            LastChannel = await Client.GetChannelAsync(debug_channel);
+            LastGuild = LastChannel.Guild;
+        } catch {
+            LastGuild = Client.Guilds.First().Value;
+            LastChannel = LastGuild.Channels
+                .First(x => x.Value.Type == ChannelType.Text).Value;
+        }
+        
+        Console.WriteLine($"Current guild set to: {LastGuild.Name}");
+        Console.WriteLine($"Current channel set to: {LastChannel.Name}");
+
+        while (true) {
+            string? message = Console.ReadLine()?.Trim();
+
+            if (message is null)
+                continue;
+
+            var success = ConsoleCommandHandler(message);
+            if (!success && DebugEnabled)
+                await LastChannel.SendMessageAsync(message);
+        }
+    }
+
+    private bool ConsoleCommandHandler(string msg)
+    {
+        var cnext = Client.GetCommandsNext();
+
+        msg = msg.Trim();
+        if (!msg.StartsWith(Config.Discord.Prefix))
+            return false;
+
+        var cmd_name = msg.Remove(0, Config.Discord.Prefix.Length).Split(' ').First();
+        var command = cnext.FindCommand(cmd_name, out var args);
+
+        if (command is null)
+            return false;
+
+        args = msg.Substring(Config.Discord.Prefix.Length + cmd_name.Length).Trim();
+        var ctx = cnext.CreateFakeContext(
+            Client.CurrentUser,
+            LastChannel,
+            msg,
+            Config.Discord.Prefix,
+            command,
+            args
+        );
+
+        var _ = Task.Run(async () => await cnext.ExecuteCommandAsync(ctx));
+
+        return true;
     }
 
     private void ConfigureCommands()
     {
-        var services = this.CreateServices();
+        var services = CreateServices();
 
-        var cmdConfig = new CommandsNextConfiguration
-        {
-            StringPrefixes = new[] {this.Config.Discord.Prefix},
+        var cmdConfig = new CommandsNextConfiguration {
+            StringPrefixes = new[] { Config.Discord.Prefix },
             EnableDms = false,
             CaseSensitive = false,
             EnableMentionPrefix = false,
@@ -109,24 +161,20 @@ public class Discordbot
 
         var commands = Client.UseCommandsNext(cmdConfig);
 
-        //commands.RegisterCommands(Assembly.GetExecutingAssembly());
-
-        if (this.Config.Lava.IsEnabled)
+        if (Config.Lava.IsEnabled)
             commands.RegisterCommands<AudioModule>();
         commands.RegisterCommands<UtilityModule>();
         commands.RegisterCommands<AuthModule>();
         commands.RegisterCommands<FunModule>();
         commands.RegisterCommands<MarkovModule>();
 
-        if (this.DebugEnabled)
+        if (DebugEnabled)
             commands.RegisterCommands<TestingModule>();
 
-
-        commands.CommandErrored += async (sender, e) =>
-        {
+        commands.CommandErrored += async (sender, e) => {
             Console.WriteLine($"Exception thrown: {e.Exception}");
 
-            if (!this.DebugEnabled && e.Exception is not CommandException)
+            if (!DebugEnabled && e.Exception is not CommandException)
                 return;
 
             var embed = new DiscordEmbedBuilder();
@@ -153,43 +201,12 @@ public class Discordbot
         return services;
     }
 
-    private bool ConsoleCommandHandler(string msg)
-    {
-        var cnext = this.Client.GetCommandsNext();
-
-        msg = msg.Trim();
-        if (!msg.StartsWith(this.Config.Discord.Prefix))
-            return false;
-
-        var cmd_name = msg.Remove(0, this.Config.Discord.Prefix.Length).Split(' ').First();
-        var command = cnext.FindCommand(cmd_name, out var args);
-
-        if (command is null)
-            return false;
-
-        args = msg.Substring(this.Config.Discord.Prefix.Length + cmd_name.Length).Trim();
-        var ctx = cnext.CreateFakeContext(
-            this.Client.CurrentUser,
-            this.LastChannel,
-            msg,
-            this.Config.Discord.Prefix,
-            command,
-            args
-        );
-
-        var _ = Task.Run(async () => await cnext.ExecuteCommandAsync(ctx));
-
-        return true;
-    }
-
     public async Task RunAsync()
     {
-        if (this.Config.Lava.IsEnabled && this.Config.Lava.AutoStart)
-        {
-            var startInfo = new ProcessStartInfo()
-            {
+        if (Config.Lava.IsEnabled && Config.Lava.AutoStart) {
+            var startInfo = new ProcessStartInfo {
                 CreateNoWindow = true,
-                FileName = this.Config.Lava.JavaPath,
+                FileName = Config.Lava.JavaPath,
                 Arguments = "-jar -Djava.io.tmpdir=temp/ lavalink.jar"
             };
 
@@ -197,44 +214,9 @@ public class Discordbot
             Process.Start(startInfo);
         }
 
-        await Task.Delay(this.Config.Discord.StartDelay);
-        var activity = new DiscordActivity(this.Config.Discord.Status, ActivityType.ListeningTo);
+        await Task.Delay(Config.Discord.StartDelay);
+        var activity = new DiscordActivity(Config.Discord.Status, ActivityType.ListeningTo);
         await Client.ConnectAsync(activity, UserStatus.DoNotDisturb);
-
-        Client.GuildDownloadCompleted += (_, _) => {
-            Task.Run(async () => {
-                ulong debug_channel = 928054033741152307;
-                
-                try
-                {
-                    LastChannel = await Client.GetChannelAsync(debug_channel);
-                    LastGuild = LastChannel.Guild;
-                }
-                catch
-                {
-                    LastGuild = Client.Guilds.First().Value;
-                    LastChannel = LastGuild.Channels
-                        .First(x => x.Value.Type == ChannelType.Text).Value;
-                }
-                
-                Console.WriteLine($"Current guild set to: {this.LastGuild.Name}");
-                Console.WriteLine($"Current channel set to: {this.LastChannel.Name}");
-
-                while (true)
-                {
-                    string? message = Console.ReadLine()?.Trim();
-
-                    if (message is null)
-                        continue;
-
-                    var success = this.ConsoleCommandHandler(message);
-                    if (!success && this.DebugEnabled)
-                        await this.LastChannel.SendMessageAsync(message);
-                }
-            });
-            
-            return Task.CompletedTask;
-        };
         Thread.Sleep(Timeout.Infinite);
     }
 }
