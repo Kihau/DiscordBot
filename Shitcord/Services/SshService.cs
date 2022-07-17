@@ -15,7 +15,9 @@ public class SshService
 
     public bool IsEnabled => this.Config.IsEnabled;
     
+    #pragma warning disable CS8618
     public SshService(Discordbot bot)
+    #pragma warning restore CS8618
     {
         this.Client = bot.Client;
         this.Config = bot.Config.Ssh;
@@ -26,8 +28,13 @@ public class SshService
 
     private Task Client_Ready(DiscordClient sender, ReadyEventArgs e)
     {
-        var sshConf = new ConnectionInfo(Config.Hostname, Config.Port, Config.Username,
-            new PrivateKeyAuthenticationMethod(Config.Username, new PrivateKeyFile(Config.Keyfile)));
+        var sshConf = new ConnectionInfo(
+            Config.Hostname, Config.Port, Config.Username,
+            new PrivateKeyAuthenticationMethod(
+                Config.Username, new PrivateKeyFile(Config.Keyfile)
+            )
+        );
+
         this.Ssh = new SshClient(sshConf);
 
         // TODO: Add ssh handlers and other things in here

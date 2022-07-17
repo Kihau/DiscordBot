@@ -180,8 +180,8 @@ public class GuildAudioData
             } catch { /* Ignored */ }
         } 
 
-        Volume = (int)(long)retrieved[5][0];
-        IsLooping = (long)retrieved[6][0] >= 1;
+        Volume = (int)(long)(retrieved[5][0] ?? 100);
+        IsLooping = (long)(retrieved[6][0] ?? 0) == 1;
     }
 
     /*

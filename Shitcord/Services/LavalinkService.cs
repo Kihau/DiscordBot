@@ -11,30 +11,29 @@ namespace Shitcord.Services;
 public class LavalinkService
 {
     public LavalinkNodeConnection Node { get; set; }
-    public DiscordClient Client { get; init; }
-    private LavalinkConfig Config { get; init; }
+    public DiscordClient Client { get; }
+    private LavalinkConfig Config { get; }
     public bool IsEnabled => Config.IsEnabled;
 
+    #pragma warning disable CS8618
     public LavalinkService(Discordbot bot)
+    #pragma warning restore CS8618
     {
-        this.Config = bot.Config.Lava;
-        this.Client = bot.Client;
+        Config = bot.Config.Lava;
+        Client = bot.Client;
         
-        if (this.IsEnabled)
-            this.Client.Ready += Client_Ready;
+        if (IsEnabled)
+            Client.Ready += Client_Ready;
     }
     
     private Task Client_Ready(DiscordClient sender, ReadyEventArgs e)
     {
         var lava = sender.GetLavalink();
-        var config = this.ConfigureLavalink();
+        var config = ConfigureLavalink();
 
-        try
-        {
-            this.Node = lava.ConnectAsync(config).GetAwaiter().GetResult();
-        }
-        catch
-        {
+        try {
+            Node = lava.ConnectAsync(config).GetAwaiter().GetResult();
+        } catch {
             Environment.Exit(-1);
         }
 
@@ -43,18 +42,16 @@ public class LavalinkService
 
     private LavalinkConfiguration ConfigureLavalink()
     {
-        var endPoint = new ConnectionEndpoint()
-        {
-            Hostname = this.Config.Hostname,
-            Port = this.Config.Port,
+        var endPoint = new ConnectionEndpoint() {
+            Hostname = Config.Hostname,
+            Port = Config.Port
         };
 
-        var lavaConfig = new LavalinkConfiguration()
-        {
-            Password = this.Config.Password,
+        var lavaConfig = new LavalinkConfiguration() {
+            Password = Config.Password,
             SocketEndpoint = endPoint,
             RestEndpoint = endPoint,
-            SocketAutoReconnect = false,
+            SocketAutoReconnect = false
         };
 
         return lavaConfig;

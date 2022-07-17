@@ -7,7 +7,7 @@ namespace Shitcord.Tests;
 
 public class DatabaseTests
 {
-    static DatabaseService service;
+    static DatabaseService service = new();
     //custom table name to avoid accidental table drop
     static string TABLE = "markov";
     public static void runDBTests()
@@ -203,8 +203,8 @@ public class DatabaseTests
         string allColQuery = QueryBuilder.New().Retrieve("*").From(TABLE).Build();
         Console.WriteLine("query: " + query);
         Console.WriteLine("allColQuery: " + allColQuery);
-        List<List<object>> data = service.RetrieveColumns(query);
-        List<List<object>> allData = service.RetrieveColumns(allColQuery);
+        List<List<object?>>? data = service.RetrieveColumns(query);
+        List<List<object?>>? allData = service.RetrieveColumns(allColQuery);
         
         String res1 = service.QueryResultToString(data, MarkovTable.CHAIN, MarkovTable.BASE);
         String res2 = service.QueryResultToString(allData, MarkovTable.COLUMNS.ToArray());

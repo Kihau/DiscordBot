@@ -2,8 +2,8 @@ namespace Shitcord.Database.Queries;
 
 public class DeleteQuery
 {
-    private string table;
-    private Condition condition;
+    private string? table;
+    private Condition? condition;
     //DELETE FROM t WHERE c1 = val;
     
     public DeleteQuery From(string tableName)

@@ -1,6 +1,4 @@
-using DSharpPlus;
 using DSharpPlus.Entities;
-using System.Collections.Concurrent;
 using Shitcord.Services;
 using Shitcord.Database;
 using Shitcord.Database.Queries;
@@ -41,7 +39,10 @@ public class GuildMarkovData
             .From(MarkovExcludedChannelsTable.TABLE_NAME)
             .WhereEquals(MarkovExcludedChannelsTable.GUILD_ID, Guild.Id)
             .Build()
-        )?[0].Select(column => (ulong)(long)column).ToList();
+        )?[0].Select(
+            column => (ulong)(long)(column ?? 
+                throw new NullReferenceException("Column should never be null."))
+        ).ToList();
 
         if (excluded != null)
             ExcludedChannelIDs = excluded;
@@ -62,12 +63,12 @@ public class GuildMarkovData
             return;
         }
 
-        IsEnabled       = (long)data[1][0] == 1;
-        ResponseEnabled = (long)data[2][0] == 1;
-        ResponseChance  = (int)(long)data[3][0];
-        ResponseTimeout = TimeSpan.FromTicks((long)data[4][0]); 
-        MinChainLength  = (int)(long)data[5][0];
-        MaxChainLength  = (int)(long)data[6][0];
+        IsEnabled       = (long)(data[1][0] ?? 0) == 1;
+        ResponseEnabled = (long)(data[2][0] ?? 0) == 1;
+        ResponseChance  = (int)(long)(data[3][0] ?? 100);
+        ResponseTimeout = TimeSpan.FromTicks((long)(data[4][0] ?? TimeSpan.TicksPerHour / 2)); 
+        MinChainLength  = (int)(long)(data[5][0] ?? MinChainLength);
+        MaxChainLength  = (int)(long)(data[6][0] ?? MaxChainLength);
     }
 
     public void UpdateEnabledFlag() {

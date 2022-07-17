@@ -36,7 +36,7 @@ public class MarkovService
         if (all_columns is null)
             throw new UnreachableException();
 
-        var base_strings = all_columns[0].Select(row => (string) row).ToArray();
+        var base_strings = all_columns[0].Select(row => (string)(row ?? "")).ToArray();
         return base_strings;
     }
 
@@ -55,8 +55,11 @@ public class MarkovService
             throw new UnreachableException();
 
         List <(string, int)> chain_freq_list = new();
-        for (int i = 0; i < all_columns[0].Count; i++)
-            chain_freq_list.Add(((string, int))(all_columns[0][i], (long)all_columns[1][i]));
+        for (int i = 0; i < all_columns[0].Count; i++) {
+            chain_freq_list.Add(
+                ((string, int))(all_columns[0][i] ?? "", (long)(all_columns[1][i] ?? 0))
+            );
+        }
 
         return chain_freq_list.ToArray();
     }
@@ -139,7 +142,7 @@ public class MarkovService
 
         if (columns is null) throw new UnreachableException();
 
-        int freq = (int)(long)columns[0][0];
+        int freq = (int)(long)(columns[0][0] ?? 0);
 
         DatabaseContext.executeUpdate(QueryBuilder
             .New()

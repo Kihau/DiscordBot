@@ -62,8 +62,9 @@ public class DatabaseService
         return query.ToString();
     }
 
-    public String QueryResultToString(List<List<object>> data, params Column[] columns) {
-        if (columns.Length < 1)
+    public String QueryResultToString(List<List<object?>>? data, params Column[] columns) {
+        // TODO: Is this correct? vvvvvvvvvvvv
+        if (columns.Length < 1 || data is null)
             return "";
         
         StringBuilder builder = new StringBuilder(64);
@@ -80,14 +81,15 @@ public class DatabaseService
         //look for max offsets in values
         int[] maxOffsets = new int[cols];
         for (int c = 0; c < cols; c++) {
-            List<object> columnData = data[c];
+            List<object?> columnData = data[c];
             for (int r = 0; r < rows; r++) {
-                object val = columnData[r];
+                object? val = columnData[r];
                 if (val is null) {
                     maxOffsets[c] = Math.Max(maxOffsets[c], 4);
                     continue;
                 }
-                maxOffsets[c] = Math.Max(maxOffsets[c], val.ToString().Length);
+                
+                maxOffsets[c] = Math.Max(maxOffsets[c], ((int)val).ToString().Length); 
             }
         }
 
@@ -108,7 +110,7 @@ public class DatabaseService
         //append values
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
-                object val = data[c][r];
+                object? val = data[c][r];
                 if (val is null) {
                     val = "null";
                     builder.Append(Spaces(maxOffsets[c] - 4)).Append(val).Append(' ');
@@ -118,7 +120,7 @@ public class DatabaseService
                     }
                     continue;
                 }
-                builder.Append(Spaces(maxOffsets[c] - val.ToString().Length))
+                builder.Append(Spaces(maxOffsets[c] - ((int)val).ToString().Length))
                     .Append(val).Append(' ');
                 if (c == cols - 1) {
                     builder.Append('\n');
@@ -129,11 +131,11 @@ public class DatabaseService
         return builder.ToString();
     }
 
-    public String QueryResultToString(List<List<object>> data, string tableName)
+    public String QueryResultToString(List<List<object?>>? data, string tableName)
     {
         //it is assumed that table exists here
         string descQuery = $"PRAGMA table_info({tableName})";
-        List<List<object>> descColumns = RetrieveColumns(descQuery);
+        List<List<object?>>? descColumns = RetrieveColumns(descQuery);
         //merge into pattern
         if (descColumns == null || descColumns.Count < 1) {
             return "Unexpected result";
@@ -151,7 +153,7 @@ public class DatabaseService
     {
         string statement = $"SELECT * FROM {tableName}";
         var reader = executeRead(statement);
-        List<List<object>> data = RetrieveColumns(reader);
+        List<List<object?>>? data = RetrieveColumns(reader);
         return data == null ? "Empty set" : QueryResultToString(data, columns.ToArray());
     }
     
@@ -166,7 +168,7 @@ public class DatabaseService
         return exists;
     }
     
-    public List<List<object>>? RetrieveColumns(string selectStatement)
+    public List<List<object?>>? RetrieveColumns(string selectStatement)
     {
         Console.WriteLine(selectStatement);
         Console.WriteLine("length: " + selectStatement.Length);
@@ -230,24 +232,24 @@ public class DatabaseService
 
     //TODO return tuple for results consisting of two columns
     //TODO return single list for singular columns
-    public List<List<object>>? RetrieveColumns(SqliteDataReader reader)
+    public List<List<object?>>? RetrieveColumns(SqliteDataReader reader)
     {
         int columns = reader.FieldCount;
         //empty result set?
         if (!reader.HasRows || columns < 0)
             return null;
         
-        List<List<object>> dataList = new ();
+        List<List<object?>> dataList = new ();
         for (int i = 0; i < columns; i++)
         {
             //fill resulting list
-            List<object> column = new();
+            List<object?> column = new();
             dataList.Add(column);
         }
 
         while (reader.Read()) {
             for (int i = 0; i < columns; i++) {
-                List<object> column = dataList[i];
+                List<object?> column = dataList[i];
                 object val = reader.GetValue(i);
                 if (val is DBNull)
                 {
@@ -277,7 +279,8 @@ public class DatabaseService
             .WhereEquals("type", "table")
             .Build();
         var reader = executeRead(retrieveTables);
-        string res = QueryResultToString(RetrieveColumns(reader), new Column("type", "text"));
+        var columns = RetrieveColumns(reader);
+        string res = QueryResultToString(columns, new Column("type", "text"));
         return res;
     }
 }

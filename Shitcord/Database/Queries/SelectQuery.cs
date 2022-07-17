@@ -13,9 +13,9 @@ public class SelectQuery
 
     private bool distinct;
     private readonly string[] cols;
-    private string table;
-    private Condition condition;
-    private string orderBy;
+    private string? table;
+    private Condition? condition;
+    private string? orderBy;
     private bool isAscending = true;
     private bool isRandom = false;
     private int limit = -1;

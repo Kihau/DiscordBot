@@ -17,7 +17,9 @@ public class AudioModule : BaseCommandModule
     private GuildAudioData Data { get; set; }
     private AudioService Audio { get; init; }
 
+    #pragma warning disable CS8618
     public AudioModule(AudioService service) => this.Audio = service;
+    #pragma warning restore CS8618
 
     public override async Task BeforeExecutionAsync(CommandContext ctx)
     {
@@ -428,7 +430,9 @@ public class AudioModule : BaseCommandModule
         private GuildAudioData Data { get; set; }
         private AudioService Audio { get; init; }
 
+        #pragma warning disable CS8618
         public FilterModule(AudioService service) => this.Audio = service;
+        #pragma warning restore CS8618
 
         public override async Task BeforeExecutionAsync(CommandContext ctx)
         {

@@ -4,9 +4,9 @@ namespace Shitcord.Database.Queries;
 
 public class InsertQuery
 {
-    private string table;
-    private string[] cols;
-    private object[] vals;
+    private string? table;
+    private string[]? cols;
+    private object?[]? vals;
 
     //INSERT INTO t (c1, c2, c3, ...) VALUES (x1, x2, x3, ...);
     
@@ -35,7 +35,7 @@ public class InsertQuery
         return Columns(names);
     }
     
-    public InsertQuery Values(params object[] values)
+    public InsertQuery Values(params object?[] values)
     {
         if (values.Length == 0)
         {
@@ -69,10 +69,10 @@ public class InsertQuery
         return queryBuilder.ToString();
     }
 
-    private static void AppendValues(StringBuilder builder, object[] values)
+    private static void AppendValues(StringBuilder builder, object?[] values)
     {
         for (int i = 0; ; i++) {
-            object val = values[i];
+            object? val = values[i];
             bool isNull = val == null;
             //handle last element
             if (i == values.Length - 1) {

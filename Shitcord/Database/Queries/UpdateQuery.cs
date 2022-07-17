@@ -7,20 +7,20 @@ public class UpdateQuery
     //UPDATE t SET c1 = x1 WHERE c2 = x2
     
     private readonly string table;
-    private List<(string, object)> pairs = new();
-    private Condition condition;
+    private List<(string, object?)> pairs = new();
+    private Condition? condition;
 
     public UpdateQuery(string tableName)
     {
         table = tableName;
     }
     
-    public UpdateQuery Set(string columnName, object value)
+    public UpdateQuery Set(string columnName, object? value)
     {
         pairs.Add((columnName, value));
         return this;
     }
-    public UpdateQuery Set(Column column, object value)
+    public UpdateQuery Set(Column column, object? value)
     {
         return Set(column.name, value);
     }
@@ -62,12 +62,12 @@ public class UpdateQuery
         return queryBuilder.ToString();
     }
     //Item1 - columnName, Item2 - value
-    private void AttachPair(StringBuilder queryBuilder, (string, object) p)
+    private void AttachPair(StringBuilder queryBuilder, (string, object?) p)
     {
         queryBuilder.Append(p.Item1).Append(" = ");
         AppendValue(p.Item2, queryBuilder);
     }
-    private void AppendValue(object value, StringBuilder queryBuilder)
+    private void AppendValue(object? value, StringBuilder queryBuilder)
     {
         if (value is string str) {
             //check if contains single quote, if it does - modify the string

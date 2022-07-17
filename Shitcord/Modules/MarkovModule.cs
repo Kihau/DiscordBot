@@ -14,14 +14,16 @@ namespace Shitcord.Modules;
 [Description("Markov. Must. Consume.")]
 public class MarkovModule : BaseCommandModule 
 {
-    private MarkovService Markov { get; init; }
+    private MarkovService Markov { get; }
     private GuildMarkovData Data { get; set; }
 
-    public MarkovModule(MarkovService service) => this.Markov = service;
+    #pragma warning disable CS8618
+    public MarkovModule(MarkovService service) => Markov = service;
+    #pragma warning restore CS8618
 
     public override async Task BeforeExecutionAsync(CommandContext ctx)
     {
-        this.Data = this.Markov.GetOrAddData(ctx.Guild);
+        Data = Markov.GetOrAddData(ctx.Guild);
         await base.BeforeExecutionAsync(ctx);
     }
 
