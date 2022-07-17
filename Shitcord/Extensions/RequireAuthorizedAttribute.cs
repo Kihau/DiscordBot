@@ -1,34 +1,37 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using Shitcord.Database;
+using Shitcord.Database.Queries;
+using Shitcord.Services;
 
 namespace Shitcord.Extensions;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class RequireAuthorizedAttribute : CheckBaseAttribute
 {
-	private readonly List<ulong> _authorizedUsers;
-	public RequireAuthorizedAttribute()
-	{
-		// TODO: remove hardcoded authorized IDS
-		// Get authorized users from database
-		_authorizedUsers = new List<ulong>
-		{
-			278778540554715137,
-			790507097615237120,
-			489788192145539072,
-		};
-	}
+	public RequireAuthorizedAttribute() { }
 	
 	public override Task<bool> ExecuteCheckAsync(CommandContext ctx, bool help)
 	{
 		if (help) return Task.FromResult(true);
-		
-		if (_authorizedUsers.Contains(ctx.User.Id) || ctx.User.Id == ctx.Client.CurrentUser.Id)
+
+        if (ctx.User.Id == ctx.Client.CurrentUser.Id)
 			return Task.FromResult(true);
+
+        var service = ctx.Services.GetService(typeof(DatabaseService));
+        if (service is null) 
+            throw new CommandException("Could not retrive service");
+
+        var database = service as DatabaseService;
+        if (database is null) 
+            throw new CommandException("Could not get database service");
+		
+        var user_exists = database.ExistsInTable(AuthUsersTable.TABLE_NAME, Condition
+            .New(AuthUsersTable.USER_ID).Equals(ctx.User.Id)
+        );
+
+		if (user_exists) return Task.FromResult(true);
 		
 		throw new CommandException("You are not authorized to use this command");
-		
-		//if (_authorizedUsers.Contains(ctx.User.Id) || ctx.User.Id == ctx.Client.CurrentUser.Id)
-		// 	return Task.FromResult(true);
 	}
 }

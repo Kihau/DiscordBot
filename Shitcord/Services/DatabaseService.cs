@@ -26,6 +26,7 @@ public class DatabaseService
         CreateTableIfNotExists(
             MarkovExcludedChannelsTable.TABLE_NAME, MarkovExcludedChannelsTable.COLUMNS
         );
+        CreateTableIfNotExists(AuthUsersTable.TABLE_NAME, AuthUsersTable.COLUMNS);
     }
 
     ~DatabaseService() => connection.Close();

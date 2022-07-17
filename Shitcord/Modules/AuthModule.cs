@@ -1,5 +1,3 @@
-//using System.ComponentModel;
-
 using System.Diagnostics;
 using System.Reflection;
 using DSharpPlus;
@@ -10,6 +8,8 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Shitcord.Extensions;
 using Shitcord.Services;
+using Shitcord.Database;
+using Shitcord.Database.Queries;
 
 namespace Shitcord.Modules;
 
@@ -36,6 +36,63 @@ public class AuthModule : BaseCommandModule
 	{
 		await ctx.RespondAsync("Shutting down");
 		Environment.Exit(0);
+	}
+
+	[Command("authlist")]
+	[Description("Lists ids of all authorized users")]
+	public async Task AuthListCommand(CommandContext ctx)
+	{
+        var columns = Db.RetrieveColumns(QueryBuilder.New()
+            .Retrieve(AuthUsersTable.USER_ID)
+            .From(AuthUsersTable.TABLE_NAME)
+            .Build()
+        );
+
+        if (columns is null) throw new CommandException("No authorized users in the list");
+
+        var message = "```\n";
+        for (int i = 0; i < columns[0].Count; i++)
+            message += $"{i}. {columns[0][i]}\n";
+        message += "```";
+
+        await ctx.Channel.SendMessageAsync(message);
+	}
+
+	[Command("authadd")]
+	[Description("Adds authorized user to the database")]
+	public async Task AuthAddCommand(CommandContext ctx, DiscordUser user)
+	{
+        var user_exists = Db.ExistsInTable(AuthUsersTable.TABLE_NAME, Condition
+            .New(AuthUsersTable.USER_ID).Equals(user.Id)
+        );
+
+        if (user_exists) throw new CommandException("User is already in the authorized list");
+
+        Db.executeUpdate(QueryBuilder
+            .New().Insert().Into(AuthUsersTable.TABLE_NAME).Values(user.Id).Build()
+        );
+
+        await ctx.RespondAsync($"User `{user.Id}` successfuly added to the auth list");
+	}
+
+	[Command("authrm")]
+	[Description("Removes authorized user from the database")]
+	public async Task AuthRemoveCommand(CommandContext ctx, DiscordUser user)
+	{
+        var user_exists = Db.ExistsInTable(AuthUsersTable.TABLE_NAME, Condition
+            .New(AuthUsersTable.USER_ID).Equals(user.Id)
+        );
+
+        if (!user_exists) throw new CommandException("User is not in the authorized list");
+
+        Db.executeUpdate(QueryBuilder
+            .New().Delete()
+            .From(AuthUsersTable.TABLE_NAME)
+            .WhereEquals(AuthUsersTable.USER_ID, user.Id)
+            .Build()
+        );
+
+        await ctx.RespondAsync("Successfuly removed user from the auth list");
 	}
 
 	[Command("memoryusage"), Aliases("memuse"), Description("Displays bot memory usage")]
