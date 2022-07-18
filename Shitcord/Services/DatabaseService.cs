@@ -87,8 +87,8 @@ public class DatabaseService
                     maxOffsets[c] = Math.Max(maxOffsets[c], 4);
                     continue;
                 }
-                
-                maxOffsets[c] = Math.Max(maxOffsets[c], ((long)val).ToString().Length); 
+                //val cannot possibly be null here
+                maxOffsets[c] = Math.Max(maxOffsets[c], val.ToString()!.Length); 
             }
         }
 
@@ -119,7 +119,8 @@ public class DatabaseService
                     }
                     continue;
                 }
-                builder.Append(Spaces(maxOffsets[c] - ((long)val).ToString().Length))
+                //val cannot possibly be null here
+                builder.Append(Spaces(maxOffsets[c] - val.ToString()!.Length))
                     .Append(val).Append(' ');
                 if (c == cols - 1) {
                     builder.Append('\n');
@@ -231,7 +232,7 @@ public class DatabaseService
 
     //TODO return tuple for results consisting of two columns
     //TODO return single list for singular columns
-    public List<List<object?>>? RetrieveColumns(SqliteDataReader reader)
+    public static List<List<object?>>? RetrieveColumns(SqliteDataReader reader)
     {
         int columns = reader.FieldCount;
         //empty result set?
@@ -239,8 +240,7 @@ public class DatabaseService
             return null;
         
         List<List<object?>> dataList = new ();
-        for (int i = 0; i < columns; i++)
-        {
+        for (int i = 0; i < columns; i++) {
             //fill resulting list
             List<object?> column = new();
             dataList.Add(column);
@@ -250,8 +250,7 @@ public class DatabaseService
             for (int i = 0; i < columns; i++) {
                 List<object?> column = dataList[i];
                 object val = reader.GetValue(i);
-                if (val is DBNull)
-                {
+                if (val is DBNull) {
                     column.Add(null);
                     continue;
                 }
@@ -260,6 +259,24 @@ public class DatabaseService
         }
         reader.Close();
         return dataList;
+    }
+    public static List<T?> CastColumn<T>(List<object?>? aColumn)
+    {
+        if (aColumn == null){
+            throw new NullReferenceException();
+        }
+        
+        try {
+            var castColumn = aColumn.Cast<T?>();
+            return castColumn.ToList();
+        }
+        catch (Exception exc) {
+            throw exc switch {
+                InvalidCastException => new InvalidCastException("Invalid type was given at CastColumn"),
+                NullReferenceException => new NullReferenceException("Given type is not nullable at CastColumn"),
+                _ => exc
+            };
+        }
     }
 
     private static StringBuilder Spaces(int len)
