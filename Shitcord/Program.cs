@@ -10,7 +10,7 @@ static class Program
         #if DEBUG
             BotConfig config = new BotConfig("Resources/config-debug.json");
         #else
-            BotConfig config = new Config("Resources/config.json");
+            BotConfig config = new BotConfig("Resources/config.json");
         #endif
 
         try {
