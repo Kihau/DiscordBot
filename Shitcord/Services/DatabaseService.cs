@@ -119,7 +119,7 @@ public class DatabaseService
                     }
                     continue;
                 }
-                builder.Append(Spaces(maxOffsets[c] - ((int)val).ToString().Length))
+                builder.Append(Spaces(maxOffsets[c] - ((long)val).ToString().Length))
                     .Append(val).Append(' ');
                 if (c == cols - 1) {
                     builder.Append('\n');
