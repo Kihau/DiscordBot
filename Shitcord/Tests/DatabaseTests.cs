@@ -36,6 +36,28 @@ public class DatabaseTests
         string tableBasedOnSQL = service.QueryResultToString(cols, TABLE);
         Console.WriteLine("TABLE retrieved:");
         Console.WriteLine(tableBasedOnSQL);
+
+        string s1 = new QueryBuilder().Insert().Into(TABLE).Columns(MarkovTable.BASE, MarkovTable.CHAIN).Values(null, null).Build();
+        string s2 = new QueryBuilder().Insert().Into(TABLE).Columns(MarkovTable.CHAIN, MarkovTable.FREQUENCY).Values(null, null).Build();
+        service.executeUpdate(s1);
+        service.executeUpdate(s2);
+        var singleCol1 = service.RetrieveColumns($"SELECT {MarkovTable.BASE.name} FROM " + TABLE);
+        if (singleCol1?[0] != null) {
+            List<string?> strings = DatabaseService.CastColumn<string>(singleCol1[0]);
+            Console.WriteLine("STRINGS"); 
+            foreach (var VARIABLE in strings) {
+                Console.Write(VARIABLE + ", ");
+            }
+        }
+        
+        var singleCol2 = service.RetrieveColumns($"SELECT {MarkovTable.FREQUENCY.name} FROM " + TABLE);
+        if (singleCol2?[0] != null) {
+            List<long?> ints = DatabaseService.CastColumn<long?>(singleCol2[0]);
+            Console.WriteLine("INTS"); 
+            foreach (var VARIABLE in ints) {
+                Console.Write(VARIABLE + ", ");
+            }
+        }
     }
     private static void testEscapeValues()
     {
