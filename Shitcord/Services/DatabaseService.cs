@@ -62,7 +62,7 @@ public class DatabaseService
     }
 
     public String QueryResultToString(List<List<object?>>? data, params Column[] columns) {
-        // TODO: Is this correct? vvvvvvvvvvvv
+        // TODO: Is this correct? now is?
         if (columns.Length < 1 || data is null)
             return "";
         
@@ -170,8 +170,6 @@ public class DatabaseService
     
     public List<List<object?>>? RetrieveColumns(string selectStatement)
     {
-        Console.WriteLine(selectStatement);
-        Console.WriteLine("length: " + selectStatement.Length);
         var reader = executeRead(selectStatement);
         return RetrieveColumns(reader);
     }
