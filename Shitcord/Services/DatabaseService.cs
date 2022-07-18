@@ -88,8 +88,7 @@ public class DatabaseService
                     continue;
                 }
                 
-                if (val is Int32)
-                    maxOffsets[c] = Math.Max(maxOffsets[c], ((int)val).ToString().Length); 
+                maxOffsets[c] = Math.Max(maxOffsets[c], ((long)val).ToString().Length); 
             }
         }
 
