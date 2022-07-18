@@ -148,10 +148,6 @@ public class GuildAudioData
         if (retrieved is null)
             throw new UnreachableException();
 
-        var debug_string = DatabaseContext.TableToString(
-            GuildAudioTable.TABLE_NAME, GuildAudioTable.COLUMNS);
-        Console.WriteLine(debug_string);
-
         var qu_channel_id = retrieved[1][0];
         var qu_message_id = retrieved[3][0];
 

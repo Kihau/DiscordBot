@@ -12,6 +12,7 @@ using Shitcord.Extensions;
 using Shitcord.Services;
 using Shitcord.Database;
 using Shitcord.Database.Queries;
+using DSharpPlus.Interactivity.Enums;
 
 namespace Shitcord.Modules;
 
@@ -100,15 +101,18 @@ public class AuthModule : BaseCommandModule
         message_builder = new DiscordMessageBuilder()
             .WithEmbed(embed.Build())
             .AddComponents(
-                new DiscordButtonComponent(
-                    ButtonStyle.Primary, "stdoutput", "Standard Output"),
-                new DiscordButtonComponent(
-                    ButtonStyle.Danger, "stderror", "Standard Error")
+                new DiscordButtonComponent(ButtonStyle.Primary, "stdoutput", "Standard Output"),
+                new DiscordButtonComponent(ButtonStyle.Danger, "stderror", "Standard Error")
             );
 
         await message.ModifyAsync(message_builder);
 
-        // TODO: "Interaction failed" text appears even though it was handled 
+        var output = process.StandardOutput.ReadToEnd(); 
+        output = String.IsNullOrEmpty(output) ? "<No standard output>" : output;
+
+        var error = process.StandardOutput.ReadToEnd(); 
+        error = String.IsNullOrEmpty(error) ? "<No standard error>" : error;
+
         while (true) {
             var result = await message.WaitForButtonAsync(ctx.User, TimeSpan.FromSeconds(10));
 
@@ -116,17 +120,16 @@ public class AuthModule : BaseCommandModule
 
             IEnumerable<Page>? pages = null;
             var interactivity = ctx.Client.GetInteractivity();
-            if (result.Result.Id == "stdoutput") { 
-                var output = process.StandardOutput.ReadToEnd(); 
-                output = String.IsNullOrEmpty(output) ? "<No standard output>" : output;
+            if (result.Result.Id == "stdoutput") 
                 pages = interactivity.GeneratePagesInEmbed(output);
-            } else if (result.Result.Id == "stderror") {
-                var error = process.StandardOutput.ReadToEnd(); 
-                error = String.IsNullOrEmpty(error) ? "<No standard error>" : error;
+            else if (result.Result.Id == "stderror")
                 pages = interactivity.GeneratePagesInEmbed(error);
-            }
 
-            await ctx.Channel.SendPaginatedMessageAsync(ctx.Member, pages);
+            result.Result.Handled = true;
+            await ctx.Channel.SendPaginatedMessageAsync(
+                ctx.Member, pages, PaginationBehaviour.Ignore, 
+                ButtonPaginationBehavior.DeleteMessage
+            );
         }
     }
 
