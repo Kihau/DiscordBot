@@ -16,10 +16,10 @@ namespace Shitcord.Modules;
 [RequireAuthorized]
 public class AuthModule : BaseCommandModule
 {
-	public Discordbot Bot { get; }
+	public DiscordBot Bot { get; }
     public DatabaseService Db { get; }
 
-	public AuthModule(Discordbot bot, DatabaseService db) {
+	public AuthModule(DiscordBot bot, DatabaseService db) {
 		this.Bot = bot;
         this.Db = db;
     }
@@ -30,6 +30,65 @@ public class AuthModule : BaseCommandModule
 		await base.BeforeExecutionAsync(ctx);
 	}
 
+
+    [Command("execute"), Aliases("exec"), Priority(0)]
+    [Description("Executes a given command and displays its output (timeout is set to 10 sec)")]
+	public async Task ExecuteCommand(CommandContext ctx,
+        [Description("Specified command"), RemainingText] string command 
+    ) => await StartProcessAsync(ctx, command, 10);
+
+    [Command("executetimed"), Aliases("exect")]
+    [Description("Executes a given command and displays its output")]
+	public async Task ExecuteTimedCommand(CommandContext ctx,
+        [Description("Specified command")] string command, 
+        [Description("Maximium execution time (in seconds)")] int timeout
+    ) => await StartProcessAsync(ctx, command, timeout);
+
+    private async Task StartProcessAsync(CommandContext ctx, string command, int timeout)
+    {
+        // TODO: Try catch it and throw command exception
+        if (command.Length == 0)
+            throw new CommandException("Commands cannot be an empty string");
+
+        // TODO: This is very linux specifics - change it
+        var startInfo = new ProcessStartInfo {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            FileName = "bash",
+            Arguments = $"-c \"{command}\""
+        };
+
+        var start_time = DateTime.Now;
+        var process = Process.Start(startInfo);
+        if (process is null) throw new CommandException("Incorrect inputs parameters");
+
+        // TODO: Print embed (and modify it later) + execution output
+        var completed = process.WaitForExit(timeout * 1000);
+        if (!completed) {
+            await ctx.Channel.SendMessageAsync(
+                "Process has not finished execution in specified time. Terminating."
+            );
+
+            process.Kill(true);
+        } else {
+            // TODO: Improve this - add paging and other stuff
+            var result = process.ExitCode;
+            var time = DateTime.Now - start_time;
+            if (result == 0) {
+                await ctx.Channel.SendMessageAsync(
+                    $"Process has finished successfuly. Execution time: `{time}`\n" + 
+                    $"```{process.StandardOutput.ReadToEnd()}```"
+                );
+            } else {
+                await ctx.Channel.SendMessageAsync(
+                    $"Process has finished with an error, Execution time: `{time}`\n" + 
+                    $"```{process.StandardError.ReadToEnd()}```"
+                );
+            }
+        }
+    }
+
+
 	[Command("shutdown"), Aliases("exit")]
 	[Description("literally don't even try")]
 	public async Task ShutdownCommand(CommandContext ctx)
@@ -39,7 +98,7 @@ public class AuthModule : BaseCommandModule
 	}
 
 	[Command("authlist")]
-	[Description("Lists ids of all authorized users")]
+	[Description("Lists ids of all users in authorized list")]
 	public async Task AuthListCommand(CommandContext ctx)
 	{
         var columns = Db.RetrieveColumns(QueryBuilder.New()

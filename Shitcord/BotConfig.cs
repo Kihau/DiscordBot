@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace Shitcord;
 
 [Serializable]
-public class Config
+public class BotConfig
 {
     [JsonPropertyName("discord")] 
     public DiscordConfig Discord { get; set; } = new();
@@ -15,9 +15,9 @@ public class Config
     [JsonPropertyName("lavalink")] 
     public LavalinkConfig Lava { get; set; } = new();
 
-    public Config() { }
+    public BotConfig() { }
 
-    public Config(string? path = null)
+    public BotConfig(string? path = null)
     {
         path ??= "Resources/config.json";
         if (!File.Exists(path)) {
@@ -34,7 +34,7 @@ public class Config
     private void Load(string path)
     {
         var json = File.ReadAllText(path);
-        var config = JsonSerializer.Deserialize<Config>(json);
+        var config = JsonSerializer.Deserialize<BotConfig>(json);
 
         if (config == null)
             throw new Exception(
@@ -114,5 +114,6 @@ public class LavalinkConfig
     public bool AutoStart { get; set; } = false;
 
     [JsonPropertyName("javapath")]
-    public string JavaPath { get; set; } = "path/to/java.exe (or just java if set as enviroment veriable)";
+    public string JavaPath { get; set; } 
+        = "path/to/java.exe (or just java if set as enviroment veriable)";
 }

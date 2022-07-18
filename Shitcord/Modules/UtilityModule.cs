@@ -16,7 +16,7 @@ namespace Shitcord.Modules;
 [Description("Bot utility commands")]
 public class UtilityModule : BaseCommandModule
 {
-    public Discordbot Bot { get; }
+    public DiscordBot Bot { get; }
     public WeatherService Weather { get; }
     //public ModerationService Moderation { get; }
 
@@ -28,7 +28,7 @@ public class UtilityModule : BaseCommandModule
     //}
 
 
-    public UtilityModule(Discordbot bot, WeatherService weather)
+    public UtilityModule(DiscordBot bot, WeatherService weather)
     {
         Bot = bot;
         Weather = weather;

@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.Loader;
-using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
@@ -28,7 +22,7 @@ public class ReplyService
     public DiscordClient Client { get; init; }
     private Dictionary<ulong, List<ReplyData>> ReplyDataSet { get; init; }
 
-    public ReplyService(Discordbot bot)
+    public ReplyService(DiscordBot bot)
     {
         this.Client = bot.Client;
         this.ReplyDataSet = new Dictionary<ulong, List<ReplyData>>();

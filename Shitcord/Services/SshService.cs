@@ -15,9 +15,9 @@ public class SshService
 
     public bool IsEnabled => this.Config.IsEnabled;
     
-    #pragma warning disable CS8618
-    public SshService(Discordbot bot)
-    #pragma warning restore CS8618
+#pragma warning disable CS8618
+    public SshService(DiscordBot bot)
+#pragma warning restore CS8618
     {
         this.Client = bot.Client;
         this.Config = bot.Config.Ssh;

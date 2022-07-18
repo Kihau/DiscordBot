@@ -16,7 +16,7 @@ public class LavalinkService
     public bool IsEnabled => Config.IsEnabled;
 
     #pragma warning disable CS8618
-    public LavalinkService(Discordbot bot)
+    public LavalinkService(DiscordBot bot)
     #pragma warning restore CS8618
     {
         Config = bot.Config.Lava;

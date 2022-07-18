@@ -4,28 +4,21 @@ namespace Shitcord.Database.Queries;
 
 public class SelectQuery
 {
-
-    //SELECT c1 FROM t WHERE c2 = val;
-    //alternatively:
-    //SELECT (c1, c2, c3) FROM t WHERE c2 = val;
-    //select every column:
-    //SELECT * FROM t WHERE c2 = val;
-
-    private bool distinct;
-    private readonly string[] cols;
-    private string? table;
-    private Condition? condition;
-    private string? orderBy;
-    private bool isAscending = true;
-    private bool isRandom = false;
-    private int limit = -1;
+    private Condition? _condition;
+    private string? _table;
+    private string? _orderBy;
+    private readonly string[] _cols;
+    private bool _isAscending = true;
+    private bool _distinct = false;
+    private bool _isRandom = false;
+    private int _limit = -1;
 
     public SelectQuery(params string[] columnNames)
     {
         if (columnNames.Length < 1)
             throw new QueryException("No column parameters were given");
         
-        cols = columnNames;
+        _cols = columnNames;
     }
     public SelectQuery (params Column[] columns)
     {
@@ -34,26 +27,26 @@ public class SelectQuery
         for (int i = 0; i < columns.Length; i++) {
             names[i] = colsArr[i].name;
         }
-        cols = names;
+        _cols = names;
     }
     public SelectQuery Distinct()
     {
-        distinct = true;
+        _distinct = true;
         return this;
     }
     public SelectQuery From(string tableName)
     {
-        table = tableName;
+        _table = tableName;
         return this;
     }
     public SelectQuery Where(Condition condition)
     {
-        this.condition = condition;
+        _condition = condition;
         return this;
     }
     public SelectQuery WhereEquals(string columnName, object value)
     {
-        condition = Condition.New(columnName).Equals(value);
+        _condition = Condition.New(columnName).Equals(value);
         return this;
     }
     public SelectQuery WhereEquals(Column column, object value)
@@ -62,8 +55,8 @@ public class SelectQuery
     }
     public SelectQuery OrderBy(string columnName, bool isAscending = true)
     {
-        orderBy = columnName;
-        this.isAscending = isAscending;
+        _orderBy = columnName;
+        _isAscending = isAscending;
         return this;
     }
     public SelectQuery OrderBy(Column column, bool isAscending = true)
@@ -73,63 +66,54 @@ public class SelectQuery
     //limit the number of rows returned by the query (upper constraint)
     public SelectQuery Random()
     {
-        isRandom = true;
+        _isRandom = true;
         return this;
     }
     //limit the number of rows returned by the query (upper constraint)
     public SelectQuery Limit(int limit = 1)
     {
-        if (limit < 0) {
+        if (limit < 0)
             throw new QueryException($"Specified limit {limit} is less than zero");
-        }
-        this.limit = limit;
+        
+        _limit = limit;
         return this;
     }
     private void AppendColumns(StringBuilder sb)
     {
         for (int i = 0; ; i++) {
-            if (i == cols.Length - 1) {
-                sb.Append(cols[i]).Append(' ');
+            if (i == _cols.Length - 1) {
+                sb.Append(_cols[i]).Append(' ');
                 break;
             }
-            sb.Append(cols[i]).Append(',');
+            sb.Append(_cols[i]).Append(',');
         }
     }
     public string Build()
     {
-        if (table==null) 
+        if (_table==null) 
             throw new QueryException("A required field is null");
         
-
         StringBuilder selectQuery = new StringBuilder("SELECT ");
 
-        if (distinct)
-            selectQuery.Append("DISTINCT ");
+        if (_distinct) selectQuery.Append("DISTINCT ");
         
-        if(cols.Length==1 && cols[0]=="*")
+        if(_cols.Length == 1 && _cols[0] == "*")
             selectQuery.Append('*').Append(' ');
-        else 
-            AppendColumns(selectQuery);
+        else AppendColumns(selectQuery);
         
 
-        selectQuery.Append($"FROM {table} ");
-        if (condition != null){
+        selectQuery.Append($"FROM {_table} ");
+        if (_condition != null) {
             selectQuery.Append("WHERE ");
-            selectQuery.Append($"{condition.Get()}");
+            selectQuery.Append($"{_condition.Get()}");
         }
 
-        if (orderBy != null) {
-            selectQuery.Append($"ORDER BY {orderBy} ");
-            if (!isAscending) {
-                selectQuery.Append("DESC");
-            }
-        }
-        else if (isRandom) {
-            selectQuery.Append($"ORDER BY RAND() ");
-        }
-        if (limit != -1) {
-            selectQuery.Append($"LIMIT {limit}");
-        }
+        if (_orderBy != null) {
+            selectQuery.Append($"ORDER BY {_orderBy} ");
+            if (!_isAscending) selectQuery.Append("DESC");
+        } else if (_isRandom) selectQuery.Append($"ORDER BY RAND() ");
+        
+        if (_limit != -1) selectQuery.Append($"LIMIT {_limit}");
         return selectQuery.ToString();
     }
 }

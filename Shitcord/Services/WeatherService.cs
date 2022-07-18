@@ -9,7 +9,7 @@ public class WeatherService
     private Dictionary<ulong, GuildWeatherData> WeatherData { get; }
     private DiscordClient Client { get; }
     
-    public WeatherService(Discordbot bot)
+    public WeatherService(DiscordBot bot)
     {
         this.WeatherData = new Dictionary<ulong, GuildWeatherData>();
         this.Client = bot.Client;

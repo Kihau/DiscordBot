@@ -12,17 +12,16 @@ using DSharpPlus.Interactivity.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
-using Shitcord.Data;
 using Shitcord.Modules;
 using Shitcord.Services;
 using Shitcord.Extensions;
 
 namespace Shitcord;
 
-public class Discordbot
+public class DiscordBot
 {
     public DiscordClient Client { get; private set; }
-    public Config Config { get; }
+    public BotConfig Config { get; }
 
     public DiscordChannel LastChannel { get; set; }
     public DiscordGuild LastGuild { get; set; }
@@ -35,15 +34,12 @@ public class Discordbot
     public bool DebugEnabled { get; set; } = false;
 #endif
 
-    #pragma warning disable CS8618
-    public Discordbot()
-    #pragma warning restore CS8618
+#pragma warning disable CS8618
+    public DiscordBot(BotConfig config)
+#pragma warning restore CS8618
     {
         StartTime = DateTime.Now;
-        
-        Config = DebugEnabled
-            ? new Config("Resources/config-debug.json")
-            : new Config("Resources/config.json");
+        Config = config;
 
         ConfigureClient();
         ConfigureCommands();
@@ -80,10 +76,11 @@ public class Discordbot
 
     private Task PrintMessage(DiscordClient client, MessageCreateEventArgs e)
     {
-        if (DebugEnabled)
+        if (DebugEnabled) {
             Console.WriteLine(
                 $"[{e.Guild.Name}] {e.Author.Username}@{e.Channel.Name}: {e.Message.Content}"
             );
+        }
 
         return Task.CompletedTask;
     }
@@ -141,7 +138,6 @@ public class Discordbot
         );
 
         var _ = Task.Run(async () => await cnext.ExecuteCommandAsync(ctx));
-
         return true;
     }
 
@@ -217,6 +213,7 @@ public class Discordbot
         await Task.Delay(Config.Discord.StartDelay);
         var activity = new DiscordActivity(Config.Discord.Status, ActivityType.ListeningTo);
         await Client.ConnectAsync(activity, UserStatus.DoNotDisturb);
+
         Thread.Sleep(Timeout.Infinite);
     }
 }

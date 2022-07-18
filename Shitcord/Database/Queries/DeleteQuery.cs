@@ -2,23 +2,22 @@ namespace Shitcord.Database.Queries;
 
 public class DeleteQuery
 {
-    private string? table;
-    private Condition? condition;
-    //DELETE FROM t WHERE c1 = val;
+    private string? _table;
+    private Condition? _condition;
     
     public DeleteQuery From(string tableName)
     {
-        table = tableName;
+        _table = tableName;
         return this;
     }
     public DeleteQuery Where(Condition condition)
     {
-        this.condition = condition;
+        _condition = condition;
         return this;
     }
     public DeleteQuery WhereEquals(string columnName, object value)
     {
-        condition = Condition.New(columnName).Equals(value);
+        _condition = Condition.New(columnName).Equals(value);
         return this;
     }
     public DeleteQuery WhereEquals(Column column, object value)
@@ -27,13 +26,11 @@ public class DeleteQuery
     }
     public string Build()
     {
-        if (table == null) {
+        if (_table == null)
             throw new QueryException("A required field is null");
-        }
-        if (condition == null) {
-            //deletes all rows from table
-            return $"DELETE FROM {table}";
-        }
-        return $"DELETE FROM {table} WHERE {condition.Get()};";
+        
+        if (_condition == null)
+            return $"DELETE FROM {_table}";
+        return $"DELETE FROM {_table} WHERE {_condition.Get()};";
     }
 }

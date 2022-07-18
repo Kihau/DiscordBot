@@ -554,9 +554,6 @@ public class GuildAudioData
     {
         if (filters != null)
             this.Filters = filters;
-
-        // if (this.Filters == null)
-        //     return;
         
         if (this.Player is not {IsConnected: true})
             return;

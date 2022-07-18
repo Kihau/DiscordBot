@@ -16,7 +16,7 @@ public class MarkovService
     private Random Rng { get; }
     private char[] _excludeCharacters = { '.', ',', ':', ';', '?', '!' }; 
 
-    public MarkovService(Discordbot bot, DatabaseService database) 
+    public MarkovService(DiscordBot bot, DatabaseService database) 
     {
         Client = bot.Client;
         DatabaseContext = database;

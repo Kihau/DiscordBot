@@ -16,7 +16,7 @@ public class AudioService
     private DatabaseService DatabaseContext { get; }
     private Random Rng { get; }
     
-    public AudioService(Discordbot bot, LavalinkService lavalink, DatabaseService dbctx)
+    public AudioService(DiscordBot bot, LavalinkService lavalink, DatabaseService dbctx)
     {
         Lavalink = lavalink;
         AudioData = new Dictionary<ulong, GuildAudioData>();

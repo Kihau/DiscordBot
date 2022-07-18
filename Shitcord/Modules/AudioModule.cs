@@ -10,16 +10,15 @@ using Shitcord.Services;
 
 namespace Shitcord.Modules;
 
-//[Group("audio")]
 [Description("Audio and music commands")]
 public class AudioModule : BaseCommandModule
 {
     private GuildAudioData Data { get; set; }
     private AudioService Audio { get; init; }
 
-    #pragma warning disable CS8618
+#pragma warning disable CS8618
     public AudioModule(AudioService service) => this.Audio = service;
-    #pragma warning restore CS8618
+#pragma warning restore CS8618
 
     public override async Task BeforeExecutionAsync(CommandContext ctx)
     {
@@ -37,13 +36,15 @@ public class AudioModule : BaseCommandModule
 
     [Command("join"), Aliases("j")]
     [Description("Joins the voice channel")]
-    public async Task JoinCommand(CommandContext ctx, String? name = null)
-    {
-        var channel = name == null
+    public async Task JoinCommand(CommandContext ctx, 
+        [Description("Name of the channel to join")] String? channel_name = null
+    ) {
+        var channel = channel_name == null
             ? ctx.Member?.VoiceState?.Channel
             : ctx.Guild.Channels.First(x =>
-                x.Value.Name.Contains(name, StringComparison.OrdinalIgnoreCase) &&
-                x.Value.Type == ChannelType.Voice).Value;
+                x.Value.Name.Contains(channel_name, StringComparison.OrdinalIgnoreCase) &&
+                x.Value.Type == ChannelType.Voice
+            ).Value;
 
         if (channel == null)
             return;
@@ -52,12 +53,12 @@ public class AudioModule : BaseCommandModule
     }
 
     [Command("stop")]
-    [Description("Stops current song")]
+    [Description("Stops the currently playing track")]
     public async Task StopCommand(CommandContext ctx)
         => await this.Data.StopAsync();
 
     [Command("reset")]
-    [Description("Stops current song and resets the queue")]
+    [Description("Stops current track and clears the queue")]
     public async Task ResetCommand(CommandContext ctx)
     {
         this.Data.ClearQueue();
@@ -65,11 +66,11 @@ public class AudioModule : BaseCommandModule
     }
 
     [Command("play"), Aliases("p")]
-    [Description("Stops current track, searches for a song and plays it.")]
+    [Description("Stops current track, searches for the specified song and plays it")]
     public async Task PlayCommand(CommandContext ctx,
         [RemainingText, Description("Name of the song, song uri or playlist uri")]
-        string? message = null)
-    {
+        string? message = null
+    ) {
         var channel = ctx.Member?.VoiceState?.Channel;
 
         if (channel != null)
@@ -114,8 +115,11 @@ public class AudioModule : BaseCommandModule
     }
 
     [Command("songupdates"), Aliases("su")]
-    public async Task SetSongUpdatesCommand(CommandContext ctx, DiscordChannel? channel = null)
-    {
+    [Description("Creates an interactive embed that displays music info")]
+    public async Task SetSongUpdatesCommand(CommandContext ctx, 
+        [Description("Channel in which the embed should be created")] 
+        DiscordChannel? channel = null
+    ) {
         if (channel is null)
             await ctx.Message.DeleteAsync();
 
@@ -124,8 +128,11 @@ public class AudioModule : BaseCommandModule
     }
 
     [Command("queueupdates"), Aliases("qu")]
-    public async Task SetQueueUpdatesCommand(CommandContext ctx, DiscordChannel? channel = null)
-    {
+    [Description("Creates an interactive embed that displays song queue")]
+    public async Task SetQueueUpdatesCommand(CommandContext ctx,
+        [Description("Channel in which the embed should be created")] 
+        DiscordChannel? channel = null
+    ) {
         if (channel is null)
             await ctx.Message.DeleteAsync();
 
@@ -134,18 +141,19 @@ public class AudioModule : BaseCommandModule
     }
 
     [Command("destroysongupdates"), Aliases("dsu")]
+    [Description("Removes the interactive embed that displays music info")]
     public async Task DestroySongUpdatesCommand(CommandContext ctx)
         => await this.Data.DestroySongUpdate();
 
     [Command("createqueueupdates"), Aliases("dqu")]
+    [Description("Removes the interactive embed that displays song queue")]
     public async Task DestroyQueueUpdatesCommand(CommandContext ctx)
         => await this.Data.DestroyQueueUpdate();
 
     [Command("queue"), Aliases("q")]
-    [Description("Enqueues a song or a playlist")]
+    [Description("Enqueues specified track or playlist")]
     public async Task QueueCommand(CommandContext ctx,
-        [RemainingText, Description("Name of the song, song uri or playlist uri")]
-        string message)
+        [RemainingText, Description("Name of the song, song uri or playlist uri")] string message)
     {
         IEnumerable<LavalinkTrack> tracks;
         if (Uri.TryCreate(message, UriKind.Absolute, out var uri))
@@ -274,15 +282,6 @@ public class AudioModule : BaseCommandModule
         await ctx.Channel.SendMessageAsync(embed.Build());
     }
 
-    [Command("playfile")]
-    [Description("don't use it")]
-    public async Task MoanCommand(CommandContext ctx, string file)
-    {
-        var result = await this.Audio.GetTracksAsync(new FileInfo($"Resources/{file}"));
-        this.Data.Enqueue(result.Tracks.First());
-        await this.Data.PlayAsync();
-    }
-
     [Command("loop")]
     [Description("Loops the queue")]
     public async Task LoopCommand(CommandContext ctx)
@@ -307,21 +306,21 @@ public class AudioModule : BaseCommandModule
     {
         switch (state)
         {
-            case "on":
-                Data.Filters.Timescale = new TimeScale
-                {
-                    Speed = 1.0,
-                    Pitch = 1.05,
-                    Rate = 1.30
-                };
-                break;
-            case "reset":
-            case "off":
-                this.Data.Filters.Timescale = null;
-                break;
-            default:
-                throw new CommandException(
-                        "Incorrect usage, please specify if nightcore state (ex. >>nightcore on)");
+        case "on":
+            Data.Filters.Timescale = new TimeScale {
+                Speed = 1.0,
+                Pitch = 1.05,
+                Rate = 1.30
+            };
+            break;
+        case "reset":
+        case "off":
+            this.Data.Filters.Timescale = null;
+            break;
+        default:
+            throw new CommandException(
+                "Incorrect usage, please specify if nightcore state (ex. >>nightcore on)"
+            );
         }
 
         await this.Data.SetAudioFiltersAsync();
@@ -346,8 +345,7 @@ public class AudioModule : BaseCommandModule
     {
         switch (count)
         {
-            case 1:
-            {
+            case 1: {
                 var track = this.Data.Remove(--index);
 
                 if (track == null)
@@ -359,12 +357,10 @@ public class AudioModule : BaseCommandModule
                     .WithColor(DiscordColor.Purple);
 
                 await ctx.Channel.SendMessageAsync(embed.Build());
-                break;
-            }
-            case < 0:
+            } break;
+            case <= 0:
                 throw new CommandException("Count must be greater than 0");
-            default:
-            {
+            default: {
                 var tracks = this.Data.RemoveRange(--index, count).Count();
 
                 if (tracks == 0)
@@ -376,8 +372,7 @@ public class AudioModule : BaseCommandModule
                     .WithColor(DiscordColor.Purple);
 
                 await ctx.Channel.SendMessageAsync(embed.Build());
-                break;
-            }
+            } break;
         }
     }
 
@@ -415,8 +410,8 @@ public class AudioModule : BaseCommandModule
     [Command("volume")]
     [Description("Sets volume level of a command")]
     public async Task VolumeLavaCommand(CommandContext ctx, 
-            [Description("volume level (greater than 0)")] int level)
-        => await this.Data.SetVolumeAsync(level);
+        [Description("volume level (greater than 0)")] int level
+    ) => await this.Data.SetVolumeAsync(level);
 
     [Command("leave")]
     [Description("Leaves the voice channel")]
@@ -430,9 +425,9 @@ public class AudioModule : BaseCommandModule
         private GuildAudioData Data { get; set; }
         private AudioService Audio { get; init; }
 
-        #pragma warning disable CS8618
+    #pragma warning disable CS8618
         public FilterModule(AudioService service) => this.Audio = service;
-        #pragma warning restore CS8618
+    #pragma warning restore CS8618
 
         public override async Task BeforeExecutionAsync(CommandContext ctx)
         {
@@ -442,7 +437,6 @@ public class AudioModule : BaseCommandModule
 
         public override async Task AfterExecutionAsync(CommandContext ctx)
         {
-            // TODO: ADD "IgnoreFilterUpdate" ATTRIBUTE
             await this.Data.SetAudioFiltersAsync();
             await base.AfterExecutionAsync(ctx);
         }

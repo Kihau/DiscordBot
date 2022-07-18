@@ -10,9 +10,9 @@ namespace Shitcord.Modules;
 [Description("Memes and command testing")]
 public class TestingModule : BaseCommandModule
 {
-    private Discordbot Bot { get; }
+    private DiscordBot Bot { get; }
 
-    public TestingModule(Discordbot bot)
+    public TestingModule(DiscordBot bot)
     {
         this.Bot = bot;
     }
@@ -34,6 +34,17 @@ public class TestingModule : BaseCommandModule
         for (var i = 0; i < count; i++)
             await channel.SendMessageAsync("hello");
     }
+
+
+    //[Command("playfile")]
+    //[Description("don't use it")]
+    //public async Task MoanCommand(CommandContext ctx, string file)
+    //{
+    //    var result = await this.Audio.GetTracksAsync(new FileInfo($"Resources/{file}"));
+    //    this.Data.Enqueue(result.Tracks.First());
+    //    await this.Data.PlayAsync();
+    //}
+
 
     [Command("test")]
     [Description("Nothing to see here, just a simple test")]
