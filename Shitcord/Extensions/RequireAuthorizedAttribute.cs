@@ -26,8 +26,8 @@ public class RequireAuthorizedAttribute : CheckBaseAttribute
         if (database is null) 
             throw new CommandException("Could not get database service");
 		
-        var user_exists = database.ExistsInTable(AuthUsersTable.TABLE_NAME, Condition
-            .New(AuthUsersTable.USER_ID).Equals(ctx.User.Id)
+        var user_exists = database.ExistsInTable(AuthUsersTable.TABLE_NAME, 
+            Condition.New(AuthUsersTable.USER_ID).Equals(ctx.User.Id)
         );
 
 		if (user_exists) return Task.FromResult(true);

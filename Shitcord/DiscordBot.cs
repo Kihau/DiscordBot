@@ -76,9 +76,12 @@ public class DiscordBot
 
     private Task PrintMessage(DiscordClient client, MessageCreateEventArgs e)
     {
-        if (DebugEnabled) {
+        if (DebugEnabled || e.Author == client.CurrentUser) {
+            string message_content = String.IsNullOrWhiteSpace(e.Message.Content) 
+                ? "<Empty string>" : e.Message.Content;
+
             Console.WriteLine(
-                $"[{e.Guild.Name}] {e.Author.Username}@{e.Channel.Name}: {e.Message.Content}"
+                $"[{e.Guild.Name}] {e.Author.Username}@{e.Channel.Name}: {message_content}"
             );
         }
 
@@ -124,8 +127,12 @@ public class DiscordBot
         var cmd_name = msg.Remove(0, Config.Discord.Prefix.Length).Split(' ').First();
         var command = cnext.FindCommand(cmd_name, out var args);
 
-        if (command is null)
-            return false;
+        if (command is null) {
+            Console.WriteLine(
+                $"[{DateTime.Now}] [ERROR] ConsoleCommandHandler: Command not found."
+            );
+            return true;
+        }
 
         args = msg.Substring(Config.Discord.Prefix.Length + cmd_name.Length).Trim();
         var ctx = cnext.CreateFakeContext(

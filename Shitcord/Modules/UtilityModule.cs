@@ -141,8 +141,7 @@ public class UtilityModule : BaseCommandModule
 
         var channel = req_channel ?? ctx.Channel;
 
-        if (channel.Type == ChannelType.Text)
-        {
+        if (channel.Type == ChannelType.Text) {
             // Create comfirmation embed
             var confirm = new DiscordEmbedBuilder()
                 .WithTitle($"__***CHANNEL DETONATION:***__ `{channel.Name}`")
@@ -164,8 +163,7 @@ public class UtilityModule : BaseCommandModule
             await message.DeleteAsync();
 
             if (!result.TimedOut && result.Result.Emoji
-                    == DiscordEmoji.FromName(ctx.Client, ":white_check_mark:"))
-            {
+                    == DiscordEmoji.FromName(ctx.Client, ":white_check_mark:")) {
                 await ctx.RespondAsync("__**TACTICAL NUKE INCOMING!**__\nhttps://tenor.com" +
                         "/view/explosion-mushroom-cloud-atomic-bomb-bomb-boom-gif-4464831");
 

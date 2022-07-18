@@ -57,81 +57,81 @@ public class AudioService
             bool deferred = true;
             switch (args.Id)
             {
-                // Song Info
-                case "skip_btn":
-                    await data.SkipAsync(1);
-                    data.SongRequiresUpdate = true;
-                    data.QueueRequiresUpdate = true;
-                    break;
-                case "loop_btn":
-                    data.ChangeLoopingState();
-                    data.SongRequiresUpdate = true;
-                    break;
-                case "state_btn":
-                    if (data.IsStopped)
-                        await data.PlayAsync();
-                    else if (data.IsPaused)
-                        await data.ResumeAsync();
-                    else await data.PauseAsync();
-                    data.SongRequiresUpdate = true;
-                    data.QueueRequiresUpdate = true;
-                    break;
-                case "join_btn":
-                    var member = await args.Guild.GetMemberAsync(args.User.Id);
-                    if (member.VoiceState != null)
-                        await data.CreateConnectionAsync(member.VoiceState.Channel);
-                    break;
-                case "stop_btn":
-                    await data.StopAsync();
-                    data.SongRequiresUpdate = true;
-                    break;
-                case "leave_btn":
-                    await data.DestroyConnectionAsync();
-                    data.SongRequiresUpdate = true;
-                    break;
-                
-                // Queue Info
-                case "firstpage_btn":
-                    data.page = 0;
-                    data.QueueRequiresUpdate = true;
-                    break;
-                case "nextpage_btn":
-                    data.page++;
-                    data.QueueRequiresUpdate = true;
-                    break;
-                case "shuffle_btn":
-                    data.Shuffle();
-                    data.SongRequiresUpdate = true;
-                    data.QueueRequiresUpdate = true;
-                    break;
-                case "clear_btn":
-                    data.ClearQueue();
-                    data.SongRequiresUpdate = true;
-                    data.QueueRequiresUpdate = true;
-                    break;
-                case "prevpage_btn":
-                    data.page--;
-                    data.QueueRequiresUpdate = true;
-                    break;
-                case "lastpage_btn":
-                    data.page = Int32.MaxValue;
-                    data.QueueRequiresUpdate = true;
-                    break;
-                
-                default:
-                    deferred = false;
-                    break;
+            // Song Info
+            case "skip_btn":
+                await data.SkipAsync(1);
+                data.SongRequiresUpdate = true;
+                data.QueueRequiresUpdate = true;
+                break;
+            case "loop_btn":
+                data.ChangeLoopingState();
+                data.SongRequiresUpdate = true;
+                break;
+            case "state_btn":
+                if (data.IsStopped)
+                    await data.PlayAsync();
+                else if (data.IsPaused)
+                    await data.ResumeAsync();
+                else await data.PauseAsync();
+                data.SongRequiresUpdate = true;
+                data.QueueRequiresUpdate = true;
+                break;
+            case "join_btn":
+                var member = await args.Guild.GetMemberAsync(args.User.Id);
+                if (member.VoiceState != null)
+                    await data.CreateConnectionAsync(member.VoiceState.Channel);
+                break;
+            case "stop_btn":
+                await data.StopAsync();
+                data.SongRequiresUpdate = true;
+                break;
+            case "leave_btn":
+                await data.DestroyConnectionAsync();
+                data.SongRequiresUpdate = true;
+                break;
+            
+            // Queue Info
+            case "firstpage_btn":
+                data.page = 0;
+                data.QueueRequiresUpdate = true;
+                break;
+            case "nextpage_btn":
+                data.page++;
+                data.QueueRequiresUpdate = true;
+                break;
+            case "shuffle_btn":
+                data.Shuffle();
+                data.SongRequiresUpdate = true;
+                data.QueueRequiresUpdate = true;
+                break;
+            case "clear_btn":
+                data.ClearQueue();
+                data.SongRequiresUpdate = true;
+                data.QueueRequiresUpdate = true;
+                break;
+            case "prevpage_btn":
+                data.page--;
+                data.QueueRequiresUpdate = true;
+                break;
+            case "lastpage_btn":
+                data.page = Int32.MaxValue;
+                data.QueueRequiresUpdate = true;
+                break;
+            
+            default:
+                deferred = false;
+                break;
             }
             
-            if (deferred)
+            if (deferred) {
                 await args.Interaction.CreateResponseAsync(
                     InteractionResponseType.DeferredMessageUpdate
                 );
+            }
         });
         return Task.CompletedTask;
     }
     
-    // TODO: Check if global events
     private Task BotVoiceTimeout(DiscordClient sender, VoiceStateUpdateEventArgs args)
     {
         this.AudioData.TryGetValue(args.Guild.Id, out var data);

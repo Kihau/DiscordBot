@@ -4,6 +4,8 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.Interactivity;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using Shitcord.Extensions;
@@ -30,27 +32,25 @@ public class AuthModule : BaseCommandModule
 		await base.BeforeExecutionAsync(ctx);
 	}
 
-
-    [Command("execute"), Aliases("exec"), Priority(0)]
+    [Command("execute"), Aliases("exec")]
     [Description("Executes a given command and displays its output (timeout is set to 10 sec)")]
 	public async Task ExecuteCommand(CommandContext ctx,
         [Description("Specified command"), RemainingText] string command 
-    ) => await StartProcessAsync(ctx, command, 10);
+    ) => await ExecuteCommandAsync(ctx, command, 10);
 
     [Command("executetimed"), Aliases("exect")]
     [Description("Executes a given command and displays its output")]
 	public async Task ExecuteTimedCommand(CommandContext ctx,
         [Description("Specified command")] string command, 
         [Description("Maximium execution time (in seconds)")] int timeout
-    ) => await StartProcessAsync(ctx, command, timeout);
+    ) => await ExecuteCommandAsync(ctx, command, timeout);
 
-    private async Task StartProcessAsync(CommandContext ctx, string command, int timeout)
+    private async Task ExecuteCommandAsync(CommandContext ctx, string command, int timeout)
     {
-        // TODO: Try catch it and throw command exception
         if (command.Length == 0)
-            throw new CommandException("Commands cannot be an empty string");
+            throw new CommandException("Command cannot be an empty string");
 
-        // TODO: This is very linux specifics - change it
+        // TODO: This is very linux specific - change it
         var startInfo = new ProcessStartInfo {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -60,40 +60,82 @@ public class AuthModule : BaseCommandModule
 
         var start_time = DateTime.Now;
         var process = Process.Start(startInfo);
-        if (process is null) throw new CommandException("Incorrect inputs parameters");
+        if (process is null) throw new CommandException("Incorrect input parameters");
 
-        // TODO: Print embed (and modify it later) + execution output
+        var embed = new DiscordEmbedBuilder() {
+            Title = "Execution in progress",
+            Description = "The command is currently running. . .",
+            Color = DiscordColor.Purple
+        };
+
+        var message_builder = new DiscordMessageBuilder()
+            .WithEmbed(embed.Build())
+            .AddComponents(
+                new DiscordButtonComponent(
+                    ButtonStyle.Primary, "stdoutput", "Standard Output", true),
+                new DiscordButtonComponent(
+                    ButtonStyle.Danger, "stderror", "Standard Error", true)
+            );
+
+        var message = await ctx.Channel.SendMessageAsync(message_builder);
+
         var completed = process.WaitForExit(timeout * 1000);
         if (!completed) {
-            await ctx.Channel.SendMessageAsync(
-                "Process has not finished execution in specified time. Terminating."
-            );
+            embed.Title = "Execution failed";
+            embed.Color = DiscordColor.Red;
+            embed.Description = 
+                "Process has not finished execution in specified time. Terminating.";
 
             process.Kill(true);
         } else {
-            // TODO: Improve this - add paging and other stuff
-            var result = process.ExitCode;
             var time = DateTime.Now - start_time;
-            if (result == 0) {
-                await ctx.Channel.SendMessageAsync(
-                    $"Process has finished successfuly. Execution time: `{time}`\n" + 
-                    $"```{process.StandardOutput.ReadToEnd()}```"
-                );
-            } else {
-                await ctx.Channel.SendMessageAsync(
-                    $"Process has finished with an error, Execution time: `{time}`\n" + 
-                    $"```{process.StandardError.ReadToEnd()}```"
-                );
+
+            embed.Title = "Execution completed";
+            embed.Color = DiscordColor.Green;
+            embed.Description = process.ExitCode == 0 
+                ? $"Process has finished successfuly. Execution time: `{time}`\n" 
+                : $"Process has finished with an error. Execution time: `{time}`\n"; 
+        }
+
+        message_builder = new DiscordMessageBuilder()
+            .WithEmbed(embed.Build())
+            .AddComponents(
+                new DiscordButtonComponent(
+                    ButtonStyle.Primary, "stdoutput", "Standard Output"),
+                new DiscordButtonComponent(
+                    ButtonStyle.Danger, "stderror", "Standard Error")
+            );
+
+        await message.ModifyAsync(message_builder);
+
+        // TODO: "Interaction failed" text appears even though it was handled 
+        while (true) {
+            var result = await message.WaitForButtonAsync(ctx.User, TimeSpan.FromSeconds(10));
+
+            if (result.TimedOut) break;
+
+            IEnumerable<Page>? pages = null;
+            var interactivity = ctx.Client.GetInteractivity();
+            if (result.Result.Id == "stdoutput") { 
+                var output = process.StandardOutput.ReadToEnd(); 
+                output = String.IsNullOrEmpty(output) ? "<No standard output>" : output;
+                pages = interactivity.GeneratePagesInEmbed(output);
+            } else if (result.Result.Id == "stderror") {
+                var error = process.StandardOutput.ReadToEnd(); 
+                error = String.IsNullOrEmpty(error) ? "<No standard error>" : error;
+                pages = interactivity.GeneratePagesInEmbed(error);
             }
+
+            await ctx.Channel.SendPaginatedMessageAsync(ctx.Member, pages);
         }
     }
 
-
 	[Command("shutdown"), Aliases("exit")]
 	[Description("literally don't even try")]
-	public async Task ShutdownCommand(CommandContext ctx)
+	public async Task ShutdownCommand(CommandContext ctx, bool console = true)
 	{
-		await ctx.RespondAsync("Shutting down");
+        if (console) Console.WriteLine("Shutting down");
+        else await ctx.RespondAsync("Shutting down");
 		Environment.Exit(0);
 	}
 

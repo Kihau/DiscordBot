@@ -2,7 +2,6 @@ using System.Text;
 using Microsoft.Data.Sqlite;
 using Shitcord.Database;
 using Shitcord.Database.Queries;
-using Shitcord.Tests;
 
 namespace Shitcord.Services;
 

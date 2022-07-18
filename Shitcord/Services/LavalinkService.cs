@@ -1,10 +1,7 @@
-using System;
-using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Lavalink;
 using DSharpPlus.Net;
-using Shitcord.Data;
 
 namespace Shitcord.Services;
 
@@ -15,9 +12,9 @@ public class LavalinkService
     private LavalinkConfig Config { get; }
     public bool IsEnabled => Config.IsEnabled;
 
-    #pragma warning disable CS8618
+#pragma warning disable CS8618
     public LavalinkService(DiscordBot bot)
-    #pragma warning restore CS8618
+#pragma warning restore CS8618
     {
         Config = bot.Config.Lava;
         Client = bot.Client;
