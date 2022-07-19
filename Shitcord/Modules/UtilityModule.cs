@@ -9,6 +9,7 @@ using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using Shitcord.Extensions;
 using Shitcord.Services;
+using ExtensionMethods = Shitcord.Extensions.ExtensionMethods;
 
 namespace Shitcord.Modules;
 
@@ -119,13 +120,6 @@ public class UtilityModule : BaseCommandModule
             );
         }
     }
-
-    // TODO: Check if request exist
-    [Command("httpcat"), Aliases("http")]
-    [Description("Get http error reply")]
-    public async Task HttpErrorCommand(CommandContext ctx, int reponse) =>
-        await ctx.RespondAsync($"https://http.cat/{reponse}");
-
 
     [Command("ping")]
     [Description("pong?")]

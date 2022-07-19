@@ -1,5 +1,8 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using Shitcord.Extensions;
+using ExtensionMethods = Shitcord.Extensions.ExtensionMethods;
+
 namespace Shitcord.Modules;
 
 [Description("Fun and silly commands")]
@@ -12,6 +15,15 @@ public class FunModule : BaseCommandModule
     [Command("hlep")]
     public async Task HlepCommand(CommandContext ctx) 
         => await ctx.RespondAsync("https://tenor.com/view/falling-bread-bread-gif-19081960");
+
+    [Command("httpcat"), Aliases("http")]
+    [Description("Get http error reply")]
+    public async Task HttpErrorCommand(CommandContext ctx, int code) {
+        if (ExtensionMethods.WebConnectionOk($"https://http.cat/{code}"))
+            await ctx.RespondAsync($"https://http.cat/{code}");
+        else throw new CommandException("404 - HttpCat not found");
+    }
+
     
     // TODO: Shake command (that randomly throws user across all voice channels)
 }
