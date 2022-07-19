@@ -13,7 +13,7 @@ public class BotLoggerFactory : ILoggerFactory
 
     public ILogger CreateLogger(string categoryName)
     {
-        Directory.CreateDirectory("logs");
+        Directory.CreateDirectory("botlogs");
         return new BotLogger("logs/shitcord.log");
     }
 
