@@ -141,7 +141,7 @@ public class AudioService
         if (data.Channel == null)
             return Task.CompletedTask;
         
-        if (data.Channel.Users.Count == 1)
+        if (data.Channel.Users.Count <= 1)
             data.StartTimeout();
         else if (data.TimeoutStarted) 
             data.CancelTimeout();
