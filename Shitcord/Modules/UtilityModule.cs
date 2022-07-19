@@ -64,38 +64,38 @@ public class UtilityModule : BaseCommandModule
         public ReplyModule(AutoReplyService reply) => this.Reply = reply;
 
         [Command("add")]
-        [Description("Adds auto respose for a certain string in a message")]
-        public async Task AddCommand(CommandContext ctx, string match, string response) 
+        [Description("Adds auto reply for a certain string in a message")]
+        public async Task AddCommand(CommandContext ctx, string match, string reply) 
         { 
-            this.Reply.AddReplyData(ctx.Guild, new AutoReplyData(match.ToLower(), response)); 
-            await ctx.RespondAsync("Successfully added to the response list 👍");
+            this.Reply.AddReplyData(ctx.Guild, new AutoReplyData(match.ToLower(), reply)); 
+            await ctx.RespondAsync("Successfully added to the reply list 👍");
         }
 
-        [Command("remove")]
-        [Description("Removes auto respose for a certain string in a message")]
+        [Command("remove"), Aliases("rm")]
+        [Description("Removes auto reply for a certain string in a message")]
         public async Task RemoveCommand(CommandContext ctx, string match) 
         {
             this.Reply.RemoveReplyData(ctx.Guild, match.ToLower());
-            await ctx.RespondAsync("Successfully removed from the response list 👍");
+            await ctx.RespondAsync("Successfully removed from the reply list 👍");
         }
 
-        [Command("removeat")]
-        [Description("Removes auto respose for a certain reply index")]
+        [Command("removeat"), Aliases("rmat")]
+        [Description("Removes auto reply for a certain reply index")]
         public async Task RemoveAtCommand(CommandContext ctx, int index) 
         {
             this.Reply.RemoveReplyDataAt(ctx.Guild, index);
-            await ctx.RespondAsync("Successfully removed from the response list 👍");
+            await ctx.RespondAsync("Successfully removed from the reply list 👍");
         }
 
-        [Command("removeall")]
-        [Description("Removes all resposes for the datalist")]
+        [Command("removeall"), Aliases("rmall")]
+        [Description("Removes all reply for the datalist")]
         public async Task RemoveallCommand(CommandContext ctx) 
         {
             this.Reply.RemoveAllReplyData(ctx.Guild);
-            await ctx.RespondAsync("Successfully removed everything the response list 👍");
+            await ctx.RespondAsync("Successfully removed everything from the reply list 👍");
         }
 
-        [Command("list")]
+        [Command("list"), Aliases("ls")]
         [Description("List all matchreply queries")]
         public async Task ListCommand(CommandContext ctx) 
         {
@@ -104,11 +104,14 @@ public class UtilityModule : BaseCommandModule
 
             if (data is not null) {
                 for (int i = 0; i < data.Count; i++)
-                    string_builder.Append($"{i + 1}. {data[i].match} - {data[i].response}");
-            } else string_builder.Append("Dataset is empty");
+                    string_builder.Append($"{i + 1}. {data[i].match} - {data[i].reply}");
+            } else string_builder.Append("Autoreply list is empty");
 
             var interactivity = ctx.Client.GetInteractivity();
-            var pages = interactivity.GeneratePagesInEmbed(string_builder.ToString());
+            var list = string_builder.ToString();
+            var pages = interactivity.GeneratePagesInEmbed(
+                String.IsNullOrWhiteSpace(list) ? "Autoreply list is empty" : list  
+            );
 
             await ctx.Channel.SendPaginatedMessageAsync(
                 ctx.Member, pages, PaginationBehaviour.Ignore, 
@@ -119,7 +122,7 @@ public class UtilityModule : BaseCommandModule
 
     // TODO: Check if request exist
     [Command("httpcat"), Aliases("http")]
-    [Description("Get http error response")]
+    [Description("Get http error reply")]
     public async Task HttpErrorCommand(CommandContext ctx, int reponse) =>
         await ctx.RespondAsync($"https://http.cat/{reponse}");
 

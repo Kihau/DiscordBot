@@ -7,15 +7,15 @@ using Shitcord.Database.Queries;
 
 namespace Shitcord.Services;
 
-public struct AutoReplyData
+public class AutoReplyData
 {
     public string match;
-    public string response;
+    public string reply;
 
     public AutoReplyData(string m, string r)
     {
         match = m;
-        response = r;
+        reply = r;
     }
 }
 
@@ -33,7 +33,7 @@ public class AutoReplyService
 
         Client.MessageCreated += ReplyMessageHandler;
         Client.GuildDownloadCompleted += (_, _) => {
-            Task.Run(() => LoadDataFromDatabase());
+            Task.Run(LoadDataFromDatabase);
             return Task.CompletedTask;
         };
     }
@@ -44,29 +44,29 @@ public class AutoReplyService
             .New().Retrieve(
                 AutoReplyTable.GUILD_ID, 
                 AutoReplyTable.MATCH, 
-                AutoReplyTable.RESPONSE
+                AutoReplyTable.REPLY
             ).From(AutoReplyTable.TABLE_NAME)
             .Build()
         );
 
-        if (data is null) return;
+        if (data is null) 
+            throw new NullReferenceException("Could not load auto reply data");
 
-        for (int i = 0; i < data.Count; i++) {
-            var guild_id = (ulong)(long)data[i][0]!;
-            var match = (string)data[i][1]!;
-            var response = (string)data[i][2]!;
+        for (int i = 0; i < data[0].Count; i++) {
+            var guild_id = (ulong)(long)data[0][i]!;
+            var match = (string)data[1][i]!;
+            var reply = (string)data[2][i]!;
 
             if (!ReplyDataSet.ContainsKey(guild_id))
                 ReplyDataSet.Add(guild_id, new List<AutoReplyData>());
 
-            var auto_reply_data = new AutoReplyData(match, response);
+            var auto_reply_data = new AutoReplyData(match, reply);
             var item = ReplyDataSet[guild_id];
-            if (!item.Contains(auto_reply_data))
-                item.Add(auto_reply_data);
+            item.Add(auto_reply_data);
         }
     }
 
-    public async Task ReplyMessageHandler(DiscordClient client, MessageCreateEventArgs args)
+    private async Task ReplyMessageHandler(DiscordClient client, MessageCreateEventArgs args)
     {
         if (!ReplyDataSet.ContainsKey(args.Guild.Id))
             return;
@@ -75,7 +75,7 @@ public class AutoReplyService
         foreach (var data in dataset) {
             var msg = args.Message.Content.ToLower();
             if (msg.Contains(data.match, StringComparison.OrdinalIgnoreCase)) {
-                await args.Message.RespondAsync(data.response);
+                await args.Message.RespondAsync(data.reply);
                 return;
             }
         }
@@ -92,17 +92,16 @@ public class AutoReplyService
 
             Database.executeUpdate(QueryBuilder
                 .New().Insert().Into(AutoReplyTable.TABLE_NAME)
-                .Values(guild.Id, data.match, data.response)
+                .Values(guild.Id, data.match, data.reply)
                 .Build()
             );
         } else throw new CommandException("Match already exists in the dataset");
     }
 
-
     public void RemoveAllReplyData(DiscordGuild guild)
     {
         if (!ReplyDataSet.ContainsKey(guild.Id))
-            throw new CommandException("Response list is already empty");
+            throw new CommandException("Reply list is already empty");
 
         var dataset = ReplyDataSet[guild.Id];
         dataset.Clear();
@@ -117,7 +116,7 @@ public class AutoReplyService
     public void RemoveReplyData(DiscordGuild guild, string match)
     {
         if (!ReplyDataSet.ContainsKey(guild.Id))
-            throw new CommandException("Response list is empty");
+            throw new CommandException("Reply list is empty");
 
         var dataset = ReplyDataSet[guild.Id];
         AutoReplyData? found = null;
@@ -128,13 +127,13 @@ public class AutoReplyService
 
         if (found == null)
             throw new CommandException("Match not found.");
-        else dataset.Remove(found.Value);
+        else dataset.Remove(found);
 
         Database.executeUpdate(QueryBuilder
             .New().Delete().From(AutoReplyTable.TABLE_NAME)
             .Where(Condition
                 .New(AutoReplyTable.GUILD_ID).Equals(guild.Id)
-                .And(AutoReplyTable.MATCH).Equals(found.Value)
+                .And(AutoReplyTable.MATCH).Equals(found.match)
             ).Build()
         );
     }
@@ -142,7 +141,7 @@ public class AutoReplyService
     public void RemoveReplyDataAt(DiscordGuild guild, int index)
     {
         if (!ReplyDataSet.ContainsKey(guild.Id))
-            throw new CommandException("Response list is empty");
+            throw new CommandException("Reply list is empty");
 
         var dataset = ReplyDataSet[guild.Id];
         if (index > 0 && index < dataset.Count) {
