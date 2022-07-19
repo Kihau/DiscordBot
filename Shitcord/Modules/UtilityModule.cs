@@ -220,7 +220,6 @@ public class UtilityModule : BaseCommandModule
         } 
 
         await ctx.RespondAsync(bot_uptime + system_uptime);
-                               
     }
 
     [Command("avatar"), Description("Displays user avatar")]
