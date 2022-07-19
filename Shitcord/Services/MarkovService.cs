@@ -11,13 +11,15 @@ namespace Shitcord.Services;
 public class MarkovService
 {
     private DiscordClient Client { get; }
+    private BotConfig Config { get; }
     private Dictionary<ulong, GuildMarkovData> MarkovData { get; } = new();
     private DatabaseService DatabaseContext { get; }
     private Random Rng { get; }
     private char[] _excludeCharacters = { '.', ',', ':', ';', '?', '!' }; 
 
-    public MarkovService(DiscordBot bot, DatabaseService database) 
+    public MarkovService(DiscordBot bot, DatabaseService database)
     {
+        Config = bot.Config;
         Client = bot.Client;
         DatabaseContext = database;
         Rng = new Random();
@@ -223,7 +225,6 @@ public class MarkovService
 
     public void FeedStringsToMarkov(List<string> data) 
     {
-        // TODO: Last potential base string is discarded - fix it
         for (int i = 0; i < data.Count - 1; i++) {
             // TODO(?): Do not store chain string if the next value is the same as the previous one 
             if (ContainsBaseString(data[i])) {
@@ -233,8 +234,8 @@ public class MarkovService
             } else InsertNewBaseString(data[i--]); 
         }
 
-        if (data.Count > 0 && !ContainsBaseString(data[data.Count - 1]))
-            InsertNewBaseString(data[data.Count - 1]); 
+        if (data.Count > 0 && !ContainsBaseString(data.Last()))
+            InsertNewBaseString(data.Last()); 
     }
 
     public GuildMarkovData GetOrAddData(DiscordGuild guild)
@@ -247,8 +248,7 @@ public class MarkovService
 
         return data;
     }
-
-    // TODO(?): Ignore strings that start with the bot prefix
+    
     private Task MarkovMessageHandler(DiscordClient client, MessageCreateEventArgs e)
     {
         Task.Run(async () => {
@@ -260,7 +260,11 @@ public class MarkovService
             if (!data.IsEnabled)
                 return;
 
-            string input = e.Message.Content;
+            string input = e.Message.Content.Trim();
+            // Ignore strings that start with the bot prefix
+            if (input.StartsWith(Config.Discord.Prefix)) 
+                return;
+            
             // When the bot is tagged, respond with a markov message
             if (input.StartsWith(Client.CurrentUser.Mention)) { 
                 var response = GenerateMarkovString(data.MinChainLength, data.MaxChainLength);
@@ -277,7 +281,7 @@ public class MarkovService
                 new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries
             ).Where(x => x.Length <= 255).ToList();
 
-            // TODO (?): Some logic to remove unnesessary characters
+            // TODO (?): Some logic to remove unnecessary characters
             /*
             for (int i = 0; i < data.Count; i++) {
                 if (_excludeCharacters.Contains(data[i].Last()))
