@@ -12,10 +12,7 @@ public class BotLoggerFactory : ILoggerFactory
     }
 
     public ILogger CreateLogger(string categoryName)
-    {
-        Directory.CreateDirectory("botlogs");
-        return new BotLogger("logs/shitcord.log");
-    }
+        => new BotLogger("shitcord", "botlogs");
 
     public void Dispose() { }
 }
@@ -24,16 +21,27 @@ public class BotLogger : ILogger
 {
     public LogLevel MinimumLevel { get; }
     public string TimestampFormat { get; }
-    public string? OutputLogPath { get; }
+    public string? LogFileName { get; }
+    public string? LogDirectoryName { get; }
+
+    private string _path = "";
 
     public BotLogger(
-        string? output_path = null,
+        string? file_name = null,
+        string? directory_name = null,
         LogLevel min_level = LogLevel.Information,
         string timestamp_format = "yyyy-MM-dd HH:mm:ss zzz"
     ) {
         MinimumLevel = min_level;
         TimestampFormat = timestamp_format;
-        OutputLogPath = output_path;
+        LogFileName = file_name;
+        LogDirectoryName = directory_name;
+
+        if (LogDirectoryName != null)
+            _path += LogDirectoryName + "/";
+
+        if (LogFileName != null)
+            _path += LogFileName + ".log";
     }
 
     public void Log<TState>(
@@ -109,16 +117,18 @@ public class BotLogger : ILogger
             Console.WriteLine(exception);
         }
 
-        if (OutputLogPath == null)
+        if (LogFileName == null)
             return;
 
-        if (File.Exists(OutputLogPath)) {
-            var file_info = new FileInfo(OutputLogPath);
-            if (DateTime.Now - file_info.CreationTime > TimeSpan.FromDays(1))
-                File.Move(OutputLogPath, $"{OutputLogPath}-{DateTime.Now.ToString("yyyy-MM-dd")}");
+        if (LogDirectoryName != null && !Directory.Exists(LogDirectoryName)) {
+            Directory.CreateDirectory(LogDirectoryName);
         }
 
-        File.AppendAllText(OutputLogPath, log_output.ToString());
+        File.AppendAllText(_path, log_output.ToString());
+
+        var file_info = new FileInfo(_path);
+        if (DateTime.Now - file_info.CreationTime > TimeSpan.FromDays(1))
+            File.Move(_path, $"{_path}-{DateTime.Now.ToString("yyyy-MM-dd")}");
     }
 
     public bool IsEnabled(LogLevel log_level)
