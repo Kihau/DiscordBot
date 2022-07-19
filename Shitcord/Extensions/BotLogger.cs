@@ -17,6 +17,7 @@ public class BotLoggerFactory : ILoggerFactory
     public void Dispose() { }
 }
 
+// TODO: Add some options - max log file size, how many days to keep, etc
 public class BotLogger : ILogger
 {
     public LogLevel MinimumLevel { get; }
@@ -37,7 +38,7 @@ public class BotLogger : ILogger
         LogFileName = file_name;
         LogDirectoryName = directory_name;
 
-        if (LogDirectoryName != null)
+        if (LogDirectoryName != null && !String.IsNullOrWhiteSpace(LogDirectoryName))
             _path += LogDirectoryName + "/";
 
         if (LogFileName != null)
@@ -104,8 +105,10 @@ public class BotLogger : ILogger
         Console.ResetColor();
 
         // The foreground color is off.
-        if (log_level == LogLevel.Critical)
+        if (log_level == LogLevel.Critical) {
             Console.Write(" ");
+            log_output.Append(" ");
+        }
 
         var message = formatter(state, exception);
 
