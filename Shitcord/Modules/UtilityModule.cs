@@ -1,9 +1,11 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using Shitcord.Extensions;
 using Shitcord.Services;
@@ -58,48 +60,60 @@ public class UtilityModule : BaseCommandModule
     [Group("reply"), Description("Reply commands")]
     public class ReplyModule : BaseCommandModule
     {
-        public ReplyService Reply { get; }
-        public ReplyModule(ReplyService reply) => this.Reply = reply;
+        public AutoReplyService Reply { get; }
+        public ReplyModule(AutoReplyService reply) => this.Reply = reply;
 
         [Command("add")]
         [Description("Adds auto respose for a certain string in a message")]
-        public Task AddCommand(CommandContext ctx, string match, string response) 
+        public async Task AddCommand(CommandContext ctx, string match, string response) 
         { 
-            this.Reply.AddReplyData(ctx.Guild, new ReplyData(match.ToLower(), response)); 
-            return Task.CompletedTask;
+            this.Reply.AddReplyData(ctx.Guild, new AutoReplyData(match.ToLower(), response)); 
+            await ctx.RespondAsync("Successfully added to the response list 👍");
         }
 
         [Command("remove")]
         [Description("Removes auto respose for a certain string in a message")]
-        public Task RemoveCommand(CommandContext ctx, string match) 
+        public async Task RemoveCommand(CommandContext ctx, string match) 
         {
             this.Reply.RemoveReplyData(ctx.Guild, match.ToLower());
-            return Task.CompletedTask;
+            await ctx.RespondAsync("Successfully removed from the response list 👍");
         }
-
 
         [Command("removeat")]
         [Description("Removes auto respose for a certain reply index")]
-        public Task RemoveAtCommand(CommandContext ctx, int index) 
+        public async Task RemoveAtCommand(CommandContext ctx, int index) 
         {
             this.Reply.RemoveReplyDataAt(ctx.Guild, index);
-            return Task.CompletedTask;
+            await ctx.RespondAsync("Successfully removed from the response list 👍");
+        }
+
+        [Command("removeall")]
+        [Description("Removes all resposes for the datalist")]
+        public async Task RemoveallCommand(CommandContext ctx) 
+        {
+            this.Reply.RemoveAllReplyData(ctx.Guild);
+            await ctx.RespondAsync("Successfully removed everything the response list 👍");
         }
 
         [Command("list")]
         [Description("List all matchreply queries")]
         public async Task ListCommand(CommandContext ctx) 
         {
-            var data = this.Reply.GetReplyData(ctx.Guild); 
-            
-            // TODO:
-            // Create embed out of this data (or something)
-            // Add interactions ???
-            var embed = new DiscordEmbedBuilder()
-                .WithTitle("Added reply strings:")
-                .WithColor(DiscordColor.Purple);
+            var data = Reply.GetReplyData(ctx.Guild); 
+            var string_builder = new StringBuilder();
 
-            await ctx.Channel.SendMessageAsync(embed.Build());
+            if (data is not null) {
+                for (int i = 0; i < data.Count; i++)
+                    string_builder.Append($"{i + 1}. {data[i].match} - {data[i].response}");
+            } else string_builder.Append("Dataset is empty");
+
+            var interactivity = ctx.Client.GetInteractivity();
+            var pages = interactivity.GeneratePagesInEmbed(string_builder.ToString());
+
+            await ctx.Channel.SendPaginatedMessageAsync(
+                ctx.Member, pages, PaginationBehaviour.Ignore, 
+                ButtonPaginationBehavior.DeleteMessage
+            );
         }
     }
 

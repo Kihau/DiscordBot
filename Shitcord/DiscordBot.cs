@@ -196,7 +196,7 @@ public class DiscordBot
             .AddSingleton<LavalinkService>()
             .AddSingleton<SshService>()
             .AddSingleton<WeatherService>()
-            .AddSingleton<ReplyService>()
+            .AddSingleton<AutoReplyService>()
             .AddSingleton<MarkovService>()
             .AddSingleton(this);
 
