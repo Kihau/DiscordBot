@@ -55,10 +55,12 @@ public class DiscordBot
             MinimumLogLevel = LogLevel.Information,
             AutoReconnect = true,
             MessageCacheSize = botConf.CacheSize,
+            LoggerFactory = new BotLoggerFactory(),
         };
 
         Client = new DiscordClient(clientConfig);
 
+        // TODO: Log command uses after they finish
         Client.MessageCreated += PrintMessage;
         Client.GuildDownloadCompleted += (_, _) => {
             Task.Run(StartBotConsoleInput);
@@ -78,7 +80,7 @@ public class DiscordBot
     {
         if (DebugEnabled || e.Author == client.CurrentUser) {
             string message_content = String.IsNullOrWhiteSpace(e.Message.Content) 
-                ? "<Empty string>" : e.Message.Content;
+                ? "<Empty message>" : e.Message.Content;
 
             Console.WriteLine(
                 $"[{e.Guild.Name}] {e.Author.Username}@{e.Channel.Name}: {message_content}"
@@ -128,9 +130,7 @@ public class DiscordBot
         var command = cnext.FindCommand(cmd_name, out var args);
 
         if (command is null) {
-            Console.WriteLine(
-                $"[{DateTime.Now}] [ERROR] ConsoleCommandHandler: Command not found."
-            );
+            Client.Logger.LogError(new EventId(0, "CCHandler"), "Command not found");
             return true;
         }
 
@@ -175,7 +175,7 @@ public class DiscordBot
             commands.RegisterCommands<TestingModule>();
 
         commands.CommandErrored += async (sender, e) => {
-            Console.WriteLine($"Exception thrown: {e.Exception}");
+            Client.Logger.LogError(new EventId(0, "Exception"), $"{e.Exception}"); 
 
             if (!DebugEnabled && e.Exception is not CommandException)
                 return;
@@ -196,7 +196,7 @@ public class DiscordBot
             .AddSingleton<LavalinkService>()
             .AddSingleton<SshService>()
             .AddSingleton<WeatherService>()
-            .AddSingleton<ReplyService>()
+            .AddSingleton<AutoReplyService>()
             .AddSingleton<MarkovService>()
             .AddSingleton(this);
 

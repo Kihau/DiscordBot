@@ -1,12 +1,15 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using Shitcord.Extensions;
 using Shitcord.Services;
+using ExtensionMethods = Shitcord.Extensions.ExtensionMethods;
 
 namespace Shitcord.Modules;
 
@@ -58,57 +61,65 @@ public class UtilityModule : BaseCommandModule
     [Group("reply"), Description("Reply commands")]
     public class ReplyModule : BaseCommandModule
     {
-        public ReplyService Reply { get; }
-        public ReplyModule(ReplyService reply) => this.Reply = reply;
+        public AutoReplyService Reply { get; }
+        public ReplyModule(AutoReplyService reply) => this.Reply = reply;
 
         [Command("add")]
-        [Description("Adds auto respose for a certain string in a message")]
-        public Task AddCommand(CommandContext ctx, string match, string response) 
+        [Description("Adds auto reply for a certain string in a message")]
+        public async Task AddCommand(CommandContext ctx, string match, string reply) 
         { 
-            this.Reply.AddReplyData(ctx.Guild, new ReplyData(match.ToLower(), response)); 
-            return Task.CompletedTask;
+            this.Reply.AddReplyData(ctx.Guild, new AutoReplyData(match.ToLower(), reply)); 
+            await ctx.RespondAsync("Successfully added to the reply list 👍");
         }
 
-        [Command("remove")]
-        [Description("Removes auto respose for a certain string in a message")]
-        public Task RemoveCommand(CommandContext ctx, string match) 
+        [Command("remove"), Aliases("rm")]
+        [Description("Removes auto reply for a certain string in a message")]
+        public async Task RemoveCommand(CommandContext ctx, string match) 
         {
             this.Reply.RemoveReplyData(ctx.Guild, match.ToLower());
-            return Task.CompletedTask;
+            await ctx.RespondAsync("Successfully removed from the reply list 👍");
         }
 
-
-        [Command("removeat")]
-        [Description("Removes auto respose for a certain reply index")]
-        public Task RemoveAtCommand(CommandContext ctx, int index) 
+        [Command("removeat"), Aliases("rmat")]
+        [Description("Removes auto reply for a certain reply index")]
+        public async Task RemoveAtCommand(CommandContext ctx, int index) 
         {
             this.Reply.RemoveReplyDataAt(ctx.Guild, index);
-            return Task.CompletedTask;
+            await ctx.RespondAsync("Successfully removed from the reply list 👍");
         }
 
-        [Command("list")]
+        [Command("removeall"), Aliases("rmall")]
+        [Description("Removes all reply for the datalist")]
+        public async Task RemoveallCommand(CommandContext ctx) 
+        {
+            this.Reply.RemoveAllReplyData(ctx.Guild);
+            await ctx.RespondAsync("Successfully removed everything from the reply list 👍");
+        }
+
+        [Command("list"), Aliases("ls")]
         [Description("List all matchreply queries")]
         public async Task ListCommand(CommandContext ctx) 
         {
-            var data = this.Reply.GetReplyData(ctx.Guild); 
-            
-            // TODO:
-            // Create embed out of this data (or something)
-            // Add interactions ???
-            var embed = new DiscordEmbedBuilder()
-                .WithTitle("Added reply strings:")
-                .WithColor(DiscordColor.Purple);
+            var data = Reply.GetReplyData(ctx.Guild); 
+            var string_builder = new StringBuilder();
 
-            await ctx.Channel.SendMessageAsync(embed.Build());
+            if (data is not null) {
+                for (int i = 0; i < data.Count; i++)
+                    string_builder.Append($"{i + 1}. {data[i].match} - {data[i].reply}");
+            } else string_builder.Append("Autoreply list is empty");
+
+            var interactivity = ctx.Client.GetInteractivity();
+            var list = string_builder.ToString();
+            var pages = interactivity.GeneratePagesInEmbed(
+                String.IsNullOrWhiteSpace(list) ? "Autoreply list is empty" : list  
+            );
+
+            await ctx.Channel.SendPaginatedMessageAsync(
+                ctx.Member, pages, PaginationBehaviour.Ignore, 
+                ButtonPaginationBehavior.DeleteMessage
+            );
         }
     }
-
-    // TODO: Check if request exist
-    [Command("httpcat"), Aliases("http")]
-    [Description("Get http error response")]
-    public async Task HttpErrorCommand(CommandContext ctx, int reponse) =>
-        await ctx.RespondAsync($"https://http.cat/{reponse}");
-
 
     [Command("ping")]
     [Description("pong?")]
@@ -209,7 +220,6 @@ public class UtilityModule : BaseCommandModule
         } 
 
         await ctx.RespondAsync(bot_uptime + system_uptime);
-                               
     }
 
     [Command("avatar"), Description("Displays user avatar")]

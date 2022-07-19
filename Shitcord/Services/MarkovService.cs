@@ -72,6 +72,8 @@ public class MarkovService
             MarkovTable.TABLE_NAME, Condition
                 .New(MarkovTable.BASE)
                 .Equals(base_string)
+                .And(MarkovTable.FREQUENCY)
+                .IsMoreThan(0)
         );
     }
 
@@ -203,10 +205,10 @@ public class MarkovService
             generated_string += rand_base + " ";
 
             if (ContainsBaseString(rand_base)) {
-                var chain_freq = GetAllChainFrequency(rand_base);
-                if (chain_freq.Length != 0) {
-                    int index = CalculateRandomIndex(chain_freq);
-                    rand_base = chain_freq[index].Item1;
+                var chain_freq_array = GetAllChainFrequency(rand_base);
+                if (chain_freq_array.Length != 0) {
+                    int index = CalculateRandomIndex(chain_freq_array);
+                    rand_base = chain_freq_array[index].Item1;
                 } else if (current_len < min_len) {
                     next = Rng.Next(base_strings.Length);
                     rand_base = base_strings[next];
