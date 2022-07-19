@@ -57,12 +57,12 @@ public class UtilityModule : BaseCommandModule
     }
 
     // TODO: Add more description to this module
-    // TODO: Add matching options (agressive, whole string, etc.)
+    // TODO: Add matching options (agressive, whole string, startswith, any, etc.)
     [Group("reply"), Description("Reply commands")]
     public class ReplyModule : BaseCommandModule
     {
         public AutoReplyService Reply { get; }
-        public ReplyModule(AutoReplyService reply) => this.Reply = reply;
+        public ReplyModule(AutoReplyService reply) => Reply = reply;
 
         [Command("add")]
         [Description("Adds auto reply for a certain string in a message")]

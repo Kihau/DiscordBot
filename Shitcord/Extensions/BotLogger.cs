@@ -17,7 +17,7 @@ public class BotLoggerFactory : ILoggerFactory
     public void Dispose() { }
 }
 
-// TODO: Add some options - max log file size, how many days to keep, etc
+// TODO: Add some options - max log file size, compression, how many days to keep, etc
 public class BotLogger : ILogger
 {
     public LogLevel MinimumLevel { get; }

@@ -24,6 +24,9 @@ public class FunModule : BaseCommandModule
         else throw new CommandException("404 - HttpCat not found");
     }
 
+    [Command("mcseed")]
+    public async Task MCSeedCommand(CommandContext ctx) 
+        => await ctx.RespondAsync(new Random().NextInt64().ToString());
     
     // TODO: Shake command (that randomly throws user across all voice channels)
 }
