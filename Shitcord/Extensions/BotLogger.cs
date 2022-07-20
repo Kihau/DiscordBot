@@ -1,4 +1,6 @@
 using System.Text;
+using System.IO.Compression;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace Shitcord.Extensions;
@@ -12,7 +14,7 @@ public class BotLoggerFactory : ILoggerFactory
     }
 
     public ILogger CreateLogger(string categoryName)
-        => new BotLogger("shitcord", "botlogs");
+        => new BotLogger();
 
     public void Dispose() { }
 }
@@ -22,14 +24,17 @@ public class BotLogger : ILogger
 {
     public LogLevel MinimumLevel { get; }
     public string TimestampFormat { get; }
-    public string? LogFileName { get; }
-    public string? LogDirectoryName { get; }
+    public string LogFileName { get; }
+    public string LogDirectoryName { get; }
+
+    public bool LogToFile { get; set; }
 
     private string _path = "";
 
     public BotLogger(
-        string? file_name = null,
-        string? directory_name = null,
+        bool log_to_file = true,
+        string file_name = "shitcord",
+        string directory_name = "botlogs",
         LogLevel min_level = LogLevel.Information,
         string timestamp_format = "yyyy-MM-dd HH:mm:ss zzz"
     ) {
@@ -37,26 +42,27 @@ public class BotLogger : ILogger
         TimestampFormat = timestamp_format;
         LogFileName = file_name;
         LogDirectoryName = directory_name;
+        LogToFile = log_to_file;
 
-        if (LogDirectoryName != null && !String.IsNullOrWhiteSpace(LogDirectoryName))
-            _path += LogDirectoryName + "/";
+        if (String.IsNullOrWhiteSpace(LogDirectoryName))
+            throw new ArgumentException("Directory name cannot be whitespace");
 
-        if (LogFileName != null)
-            _path += LogFileName + ".log";
+        _path += LogDirectoryName + "/";
+        _path += LogFileName + ".log";
     }
 
     public void Log<TState>(
         LogLevel log_level, EventId event_id, TState state, Exception exception, 
         Func<TState, Exception, string> formatter
     ) {
-        if (!this.IsEnabled(log_level))
+        if (!IsEnabled(log_level))
             return;
 
         var log_output = new StringBuilder();
 
         var ename = event_id.Name;
         ename = ename?.Length > 12 ? ename?.Substring(0, 12) : ename;
-        var time = DateTimeOffset.Now.ToString(this.TimestampFormat);
+        var time = DateTimeOffset.Now.ToString(TimestampFormat);
 
         log_output.Append($"[{time}] [{event_id.Id,-4}/{ename,-12}] ");
         Console.Write($"[{time}] [{event_id.Id,-4}/{ename,-12}] ");
@@ -88,7 +94,7 @@ public class BotLogger : ILogger
                 break;
         }
 
-        var level_string = (log_level switch {
+        var level_string = log_level switch {
             LogLevel.Trace => "[Trace] ",
             LogLevel.Debug => "[Debug] ",
             LogLevel.Information => "[Info ] ",
@@ -97,7 +103,7 @@ public class BotLogger : ILogger
             LogLevel.Critical => "[Crit ]",
             LogLevel.None => "[None ] ",
             _ => "[?????] "
-        });
+        };
 
         Console.Write(level_string);
         log_output.Append(level_string);
@@ -120,18 +126,54 @@ public class BotLogger : ILogger
             Console.WriteLine(exception);
         }
 
-        if (LogFileName == null)
-            return;
+        if (!LogToFile) return;
 
-        if (LogDirectoryName != null && !Directory.Exists(LogDirectoryName)) {
+        if (!Directory.Exists(LogDirectoryName))
             Directory.CreateDirectory(LogDirectoryName);
-        }
 
+        ArchiveOldLogs();
         File.AppendAllText(_path, log_output.ToString());
 
+    }
+
+    private void ArchiveOldLogs()
+    {
+        if (!File.Exists(_path))
+            return;
+        
         var file_info = new FileInfo(_path);
-        if (DateTime.Now - file_info.CreationTime > TimeSpan.FromDays(1))
-            File.Move(_path, $"{_path}-{DateTime.Now.ToString("yyyy-MM-dd")}");
+        if (DateTime.Now - file_info.CreationTime > TimeSpan.FromDays(1)) {
+
+            var log_files = new DirectoryInfo(LogDirectoryName).GetFiles()
+                .Where(files => files.Name.StartsWith(LogFileName + ".log")).ToList();
+
+            const int FILE_COUNT = 30;
+            if (log_files.Count >= FILE_COUNT) {
+                int amount = log_files.Count - FILE_COUNT - 1;
+                var files_to_rm = log_files.OrderBy(file => file.CreationTime).Take(amount);
+                
+                foreach (var file in files_to_rm)
+                    file.Delete();
+            }
+
+            CompressAndMove();
+        }
+    }
+
+    public void CompressAndMove()
+    {
+        var file = new FileInfo(_path);
+        using (FileStream original_fs = file.OpenRead()) {
+            using FileStream compressed_fs = 
+                File.Create($"{_path}-{DateTime.Now.ToString("yyyy-MM-dd")}.gz");
+
+            using GZipStream compression_stream = 
+                new GZipStream(compressed_fs, CompressionMode.Compress);
+
+            original_fs.CopyTo(compression_stream);
+        }
+
+        file.Delete();
     }
 
     public bool IsEnabled(LogLevel log_level)

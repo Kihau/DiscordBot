@@ -7,7 +7,7 @@
 #
 # Required dependencies:
 #   - GNU screen
-#   - DotNet SDK
+#   - .Net SDK
 #   - Lavalink
 #
 # by Kihau 2022 
@@ -87,22 +87,22 @@ if [ ! -d "${SHITCORD_DIR}" ]; then
 fi
 
 case "$1" in
-   start)
-      start
-   ;;
-   stop)
-      stop
-   ;;
-   restart)
-      restart
-   ;;
-   build)
-      build
-   ;;
-   rebuild)
-      rebuild
-   ;;
-   
-   *)
-      echo "Usage: $0 {start|stop|restart|build|rebuild}"
+    start)
+        start
+    ;;
+    stop)
+        stop
+    ;;
+    restart)
+        restart
+    ;;
+    build)
+        build
+    ;;
+    rebuild)
+        rebuild
+    ;;
+    
+    *)
+        echo "Usage: $0 {start|stop|restart|build|rebuild}"
 esac
