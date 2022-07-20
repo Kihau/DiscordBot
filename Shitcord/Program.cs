@@ -51,16 +51,17 @@ static class Program
         /*
          * Example SshService message payload:
          *
-         * ```bash       <- \n
-         * $ ls          <- \n
-         * <some stuff>  <- \n
-         * ```           <- \n
+         * ```bash             <- \n   
+         * $ touch grass       <- \n   <─┐  
+         * $ ls                <- \n     │ Buffer
+         * Stuff/ Temp/ grass  <- \n   <─┘
+         * ```           
          *
          */
 
         // vvvvvvvvvvvvvvvvvvvvvvv The limit might be larger for bots
-        // discord character limit - ``` - ``` - bash - 2x newline char
-        const int buffer_size = 2000 - 3 - 3 - 4 - 2;
+        // discord character limit - ``` - ``` - bash - newline char
+        const int buffer_size = 2000 - 3 - 3 - 4 - 1;
         var buffer = new char[buffer_size];
         buffer[0] = 'h';
         buffer[1] = 'e';
