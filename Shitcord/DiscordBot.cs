@@ -192,13 +192,16 @@ public class DiscordBot
     {
         var collection = new ServiceCollection()
             .AddSingleton<DatabaseService>()
-            .AddSingleton<AudioService>()
-            .AddSingleton<LavalinkService>()
             .AddSingleton<SshService>()
             .AddSingleton<WeatherService>()
             .AddSingleton<AutoReplyService>()
             .AddSingleton<MarkovService>()
             .AddSingleton(this);
+
+        if (Config.Lava.IsEnabled) {
+            collection.AddSingleton<AudioService>()
+                .AddSingleton<LavalinkService>();
+        }
 
         var services = collection.BuildServiceProvider();
         return services;

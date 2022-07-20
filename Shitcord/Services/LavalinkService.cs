@@ -19,16 +19,14 @@ public class LavalinkService
         Config = bot.Config.Lava;
         Client = bot.Client;
         
-        if (IsEnabled)
-            Client.Ready += Client_Ready;
+        Client.Ready += Client_Ready;
     }
     
     private Task Client_Ready(DiscordClient sender, ReadyEventArgs e)
     {
-        var lava = sender.GetLavalink();
-        var config = ConfigureLavalink();
-
         try {
+            var lava = sender.GetLavalink();
+            var config = ConfigureLavalink();
             Node = lava.ConnectAsync(config).GetAwaiter().GetResult();
         } catch {
             Environment.Exit(-1);
