@@ -73,20 +73,23 @@ public class GuildAudioData
         Task.Run(AutoMessageUpdater);
     }
 
-    public async Task AutoMessageUpdater() 
+    private async Task AutoMessageUpdater() 
     {
         while (true) {
             if (SongRequiresUpdate) {
                 await UpdateSongMessage();
-                await Task.Delay(TimeSpan.FromSeconds(1));
                 SongRequiresUpdate = false;
+                continue;
             }
+            
+            await Task.Delay(TimeSpan.FromSeconds(1));
 
-            if (QueueRequiresUpdate) {
-                await UpdateQueueMessage();
-                await Task.Delay(TimeSpan.FromSeconds(1));
-                QueueRequiresUpdate = false;
-            }
+            if (!QueueRequiresUpdate)
+                continue;
+            
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            await UpdateQueueMessage();
+            QueueRequiresUpdate = false;
         }
     }
 
