@@ -265,15 +265,24 @@ public class DatabaseService
         reader.Close();
         return dataList;
     }
-    public static List<T?> CastColumn<T>(List<object?>? aColumn)
+    public static List<T?> CastColumnToList<T>(List<object?>? aColumn)
+    {
+        IEnumerable<T?> enumerable = CastColumn<T>(aColumn);
+        return enumerable.ToList();
+    }
+    public static T?[] CastColumnToArray<T>(List<object?>? aColumn)
+    {
+        IEnumerable<T?> enumerable = CastColumn<T>(aColumn);
+        return enumerable.ToArray();
+    }
+
+    private static IEnumerable<T?> CastColumn<T>(List<object?>? aColumn)
     {
         if (aColumn == null){
             throw new NullReferenceException();
         }
-        
         try {
-            var castColumn = aColumn.Cast<T?>();
-            return castColumn.ToList();
+            return aColumn.Cast<T?>();
         }
         catch (Exception exc) {
             throw exc switch {

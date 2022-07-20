@@ -9,7 +9,7 @@ public class DatabaseTests
 {
     static DatabaseService service = new();
     //custom table name to avoid accidental table drop
-    static string TABLE = "markov";
+    static string TABLE = TestTable.TABLE_NAME;
     public static void runDBTests()
     {
         var testTimer = Stopwatch.StartNew();
@@ -37,22 +37,22 @@ public class DatabaseTests
         Console.WriteLine("TABLE retrieved:");
         Console.WriteLine(tableBasedOnSQL);
 
-        string s1 = new QueryBuilder().Insert().Into(TABLE).Columns(MarkovTable.BASE, MarkovTable.CHAIN).Values(null, null).Build();
-        string s2 = new QueryBuilder().Insert().Into(TABLE).Columns(MarkovTable.CHAIN, MarkovTable.FREQUENCY).Values(null, null).Build();
+        string s1 = new QueryBuilder().Insert().Into(TABLE).Columns(TestTable.BASE, TestTable.CHAIN).Values(null, null).Build();
+        string s2 = new QueryBuilder().Insert().Into(TABLE).Columns(TestTable.CHAIN, TestTable.FREQUENCY).Values(null, null).Build();
         service.executeUpdate(s1);
         service.executeUpdate(s2);
-        var singleCol1 = service.RetrieveColumns($"SELECT {MarkovTable.BASE.name} FROM " + TABLE);
+        var singleCol1 = service.RetrieveColumns($"SELECT {TestTable.BASE.name} FROM " + TABLE);
         if (singleCol1?[0] != null) {
-            List<string?> strings = DatabaseService.CastColumn<string>(singleCol1[0]);
+            List<string?> strings = DatabaseService.CastColumnToList<string>(singleCol1[0]);
             Console.WriteLine("STRINGS"); 
             foreach (var VARIABLE in strings) {
                 Console.Write(VARIABLE + ", ");
             }
         }
         
-        var singleCol2 = service.RetrieveColumns($"SELECT {MarkovTable.FREQUENCY.name} FROM " + TABLE);
+        var singleCol2 = service.RetrieveColumns($"SELECT {TestTable.FREQUENCY.name} FROM " + TABLE);
         if (singleCol2?[0] != null) {
-            List<long?> ints = DatabaseService.CastColumn<long?>(singleCol2[0]);
+            List<long?> ints = DatabaseService.CastColumnToList<long?>(singleCol2[0]);
             Console.WriteLine("INTS"); 
             foreach (var VARIABLE in ints) {
                 Console.Write(VARIABLE + ", ");
@@ -90,7 +90,7 @@ public class DatabaseTests
         service.executeUpdate(QueryBuilder.New().Insert()
             .Into(TABLE)
             .Values("D", "E", 2).Build());
-        var dbStringed = service.TableToString(TABLE, MarkovTable.COLUMNS);
+        var dbStringed = service.TableToString(TABLE, TestTable.COLUMNS);
         Console.WriteLine("STRINGED DB: ");
         Console.WriteLine(dbStringed);
     }
@@ -111,28 +111,28 @@ public class DatabaseTests
             .Into(TABLE)
             .Values(null, "B", null).Build());
         service.executeUpdate(QueryBuilder.New().Insert()
-            .Columns(MarkovTable.CHAIN.name)
+            .Columns(TestTable.CHAIN.name)
             .Into(TABLE)
             .Values("E").Build());
         service.executeUpdate(QueryBuilder.New().Insert()
-            .Columns(MarkovTable.BASE.name, MarkovTable.CHAIN.name)
+            .Columns(TestTable.BASE.name, TestTable.CHAIN.name)
             .Into(TABLE)
             .Values("G", "H").Build());
         service.executeUpdate(QueryBuilder.New().Insert()
             .Into(TABLE)
             .Values("L", "M", null).Build());
         
-        string table1 = service.TableToString(TABLE, MarkovTable.COLUMNS);
+        string table1 = service.TableToString(TABLE, TestTable.COLUMNS);
         Console.WriteLine("result of inserts");
         Console.WriteLine(table1);
         
         //UPDATE queries
         string updateQ = QueryBuilder.New().Update(TABLE)
-            .Set(MarkovTable.CHAIN.name, "freshchain")
-            .Where(Condition.New(MarkovTable.CHAIN.name).IsDiffFrom("H")).Build();
+            .Set(TestTable.CHAIN.name, "freshchain")
+            .Where(Condition.New(TestTable.CHAIN.name).IsDiffFrom("H")).Build();
         int rowsAffected = service.executeUpdate(updateQ);
 
-        string table2 = service.TableToString(TABLE, MarkovTable.COLUMNS);
+        string table2 = service.TableToString(TABLE, TestTable.COLUMNS);
         Console.WriteLine($"affected {rowsAffected} rows as a result");
         Console.WriteLine(table2);
         
@@ -152,15 +152,15 @@ public class DatabaseTests
         deleteIfExistsCreateNew();
 
         service.executeUpdate(QueryBuilder.New().Insert()
-            .Columns(MarkovTable.CHAIN.name)
+            .Columns(TestTable.CHAIN.name)
             .Into(TABLE)
             .Values("B").Build());
         service.executeUpdate(QueryBuilder.New().Insert()
-            .Columns(MarkovTable.BASE.name, MarkovTable.CHAIN.name)
+            .Columns(TestTable.BASE.name, TestTable.CHAIN.name)
             .Into(TABLE)
             .Values("B", "C").Build());
         service.executeUpdate(QueryBuilder.New().Insert()
-            .Columns(MarkovTable.BASE.name, MarkovTable.CHAIN.name, MarkovTable.FREQUENCY.name)
+            .Columns(TestTable.BASE.name, TestTable.CHAIN.name, TestTable.FREQUENCY.name)
             .Into(TABLE)
             .Values("X", "Y", 32).Build());
         service.executeUpdate(QueryBuilder.New().Insert()
@@ -169,8 +169,8 @@ public class DatabaseTests
         
         //to investigate - ExistsInTable causes table lock
         //targeting Y
-        var CONDITION = Condition.New(MarkovTable.FREQUENCY.name).IsLessThan(333)
-                                 .And(MarkovTable.FREQUENCY.name).IsMoreThan(10);
+        var CONDITION = Condition.New(TestTable.FREQUENCY.name).IsLessThan(333)
+                                 .And(TestTable.FREQUENCY.name).IsMoreThan(10);
 
         bool existsInTable = service.ExistsInTable(TABLE, CONDITION);
         Console.WriteLine("[Exists] Y scuffed: " + existsInTable);
@@ -186,17 +186,17 @@ public class DatabaseTests
         Console.WriteLine($"[Exists Y (not scuffed)] {exists}");
 
         bool existsY = service.ExistsInTable(TABLE, 
-            Condition.New(MarkovTable.CHAIN.name).IsDiffFrom("B")
-                .And(MarkovTable.CHAIN.name).IsDiffFrom("C")
-                .And(MarkovTable.CHAIN.name).IsDiffFrom("U"));
+            Condition.New(TestTable.CHAIN.name).IsDiffFrom("B")
+                .And(TestTable.CHAIN.name).IsDiffFrom("C")
+                .And(TestTable.CHAIN.name).IsDiffFrom("U"));
         Console.WriteLine("[Exists] records other than B, C, U: " + existsY);
         
         bool existsFreq = service.ExistsInTable(TABLE,
-            Condition.New(MarkovTable.FREQUENCY.name).IsLessThan(999)
-                .And(MarkovTable.FREQUENCY.name).IsMoreThan(40));
+            Condition.New(TestTable.FREQUENCY.name).IsLessThan(999)
+                .And(TestTable.FREQUENCY.name).IsMoreThan(40));
         Console.WriteLine("[Exists] frequency 40<f<999: " + existsFreq);
             
-        string table = service.TableToString(TABLE, MarkovTable.COLUMNS);
+        string table = service.TableToString(TABLE, TestTable.COLUMNS);
         Console.WriteLine(table);
     }
 
@@ -204,7 +204,7 @@ public class DatabaseTests
     {
         service.executeUpdate($"DROP TABLE IF EXISTS {TABLE}");
         //create table
-        string createTableQuery = DatabaseService.ProduceCreateTableQuery(TABLE, MarkovTable.COLUMNS);
+        string createTableQuery = DatabaseService.ProduceCreateTableQuery(TABLE, TestTable.COLUMNS);
         service.executeUpdate(createTableQuery);
     }
 
@@ -220,7 +220,7 @@ public class DatabaseTests
         service.executeUpdate(QueryBuilder.New().Insert().Into(TABLE).Values("else", "if", 1).Build());
         
         //retrieve two cols
-        string query = QueryBuilder.New().Retrieve(MarkovTable.CHAIN.name, MarkovTable.BASE.name).From(TABLE).Build();
+        string query = QueryBuilder.New().Retrieve(TestTable.CHAIN.name, TestTable.BASE.name).From(TABLE).Build();
         //retrieve all cols
         string allColQuery = QueryBuilder.New().Retrieve("*").From(TABLE).Build();
         Console.WriteLine("query: " + query);
@@ -228,9 +228,9 @@ public class DatabaseTests
         List<List<object?>>? data = service.RetrieveColumns(query);
         List<List<object?>>? allData = service.RetrieveColumns(allColQuery);
         
-        String res1 = service.QueryResultToString(data, MarkovTable.CHAIN, MarkovTable.BASE);
-        String res2 = service.QueryResultToString(allData, MarkovTable.COLUMNS.ToArray());
-        String table = service.TableToString(TABLE, MarkovTable.COLUMNS);
+        String res1 = service.QueryResultToString(data, TestTable.CHAIN, TestTable.BASE);
+        String res2 = service.QueryResultToString(allData, TestTable.COLUMNS.ToArray());
+        String table = service.TableToString(TABLE, TestTable.COLUMNS);
         Console.WriteLine(res1);
         Console.WriteLine(res2);
         //Console.Write(table);
@@ -241,7 +241,7 @@ public class DatabaseTests
 
     private static void createTableQueries()
     {
-        string createQuery1 = DatabaseService.ProduceCreateTableQuery(MarkovTable.TABLE_NAME, MarkovTable.COLUMNS);
+        string createQuery1 = DatabaseService.ProduceCreateTableQuery(TestTable.TABLE_NAME, TestTable.COLUMNS);
         string createQuery2 = DatabaseService.ProduceCreateTableQuery(GuildAudioTable.TABLE_NAME, GuildAudioTable.COLUMNS);
         Console.WriteLine(createQuery1);
         Console.WriteLine(createQuery2);
