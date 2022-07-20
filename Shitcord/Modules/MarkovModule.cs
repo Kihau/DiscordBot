@@ -27,6 +27,13 @@ public class MarkovModule : BaseCommandModule
         await base.BeforeExecutionAsync(ctx);
     }
 
+    [RequireAuthorized]
+    [Command("clearcorupted"), Aliases("cc"), Description("Clears corupted markov strings")]
+    public async Task ClearCoruptedCommand(CommandContext ctx) { 
+        Markov.ClearCoruptedStrings();
+        await ctx.RespondAsync($"Corupted strings cleared");
+    }
+
     [Command("disable"), Description("Disables markov service")]
     public async Task DisableCommand(CommandContext ctx) { 
         Data.IsEnabled = false;

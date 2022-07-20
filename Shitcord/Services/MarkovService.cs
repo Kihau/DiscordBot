@@ -27,6 +27,21 @@ public class MarkovService
         Client.MessageCreated += MarkovMessageHandler;
     }
 
+    public void ClearCoruptedStrings() 
+    {
+        DatabaseContext.executeUpdate(@$"
+            DELETE FROM {MarkovTable.TABLE_NAME}
+            WHERE rowid NOT IN (
+                SELECT MIN(rowid)
+                FROM {MarkovTable.TABLE_NAME}
+                GROUP BY
+                    {MarkovTable.BASE.name}, 
+                    {MarkovTable.CHAIN.name}, 
+                    {MarkovTable.FREQUENCY.name}
+            )
+        ");
+    }
+
     // NOTE: We can simplify this to a simple DISTINCT query if that is needed
     public string[] GetAllBaseStrings() 
     {
