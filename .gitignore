@@ -6,6 +6,7 @@ botlogs/
 
 DSharpPlus/
 Software/**
+External/**
 
 *.user
 
