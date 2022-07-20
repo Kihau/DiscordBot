@@ -33,6 +33,13 @@ public class AuthModule : BaseCommandModule
 		await base.BeforeExecutionAsync(ctx);
 	}
 
+    [Command("shrinkdatabase"), Aliases("shrinkdb")]
+    [Description("Shrinks sqlite database file")]
+	public Task ExecuteCommand(CommandContext ctx) {
+        Db.ShrinkSqliteDBFile();
+        return Task.CompletedTask;
+    }
+
     [Command("execute"), Aliases("exec")]
     [Description("Executes a given command and displays its output (timeout is set to 10 sec)")]
 	public async Task ExecuteCommand(CommandContext ctx,

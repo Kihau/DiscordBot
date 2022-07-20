@@ -39,6 +39,12 @@ public class DatabaseService
         createCommand.ExecuteNonQuery();
     }
 
+    public void ShrinkSqliteDBFile()
+    {
+        var updateCommand = new SqliteCommand("VACUUM", connection);
+        updateCommand.ExecuteNonQuery();
+    }
+
     public static string ProduceCreateTableQuery(string tableName, List<Column> columns)
     {
         StringBuilder query = new StringBuilder($"CREATE TABLE IF NOT EXISTS {tableName} (");
