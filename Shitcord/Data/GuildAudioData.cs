@@ -73,6 +73,7 @@ public class GuildAudioData
         Task.Run(AutoMessageUpdater);
     }
 
+    // TODO (!!!): This is not good - redesign this
     private async Task AutoMessageUpdater() 
     {
         while (true) {

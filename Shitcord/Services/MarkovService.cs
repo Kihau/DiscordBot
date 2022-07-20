@@ -72,6 +72,16 @@ public class MarkovService
             MarkovTable.TABLE_NAME, Condition
                 .New(MarkovTable.BASE)
                 .Equals(base_string)
+        );
+    }
+    
+    
+    public bool ContainsAnyChainString(string base_string) 
+    {
+        return DatabaseContext.ExistsInTable(
+            MarkovTable.TABLE_NAME, Condition
+                .New(MarkovTable.BASE)
+                .Equals(base_string)
                 .And(MarkovTable.FREQUENCY)
                 .IsMoreThan(0)
         );
@@ -204,7 +214,7 @@ public class MarkovService
 
             generated_string += rand_base + " ";
 
-            if (ContainsBaseString(rand_base)) {
+            if (ContainsAnyChainString(rand_base)) {
                 var chain_freq_array = GetAllChainFrequency(rand_base);
                 if (chain_freq_array.Length != 0) {
                     int index = CalculateRandomIndex(chain_freq_array);
