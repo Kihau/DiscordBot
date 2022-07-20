@@ -51,6 +51,8 @@ public class GuildAudioData
     public DiscordMessage? SongUpdateMessage { get; set; }
     public DiscordChannel? SongUpdateChannel { get; set; }
 
+    public Timer MessageUpdaterTimer { get; }
+
     public bool QueueRequiresUpdate { get; set; } = true;
     public bool SongRequiresUpdate { get; set; } = true;
 
@@ -70,28 +72,24 @@ public class GuildAudioData
         this.Queue = new ConcurrentQueue<LavalinkTrack>();
         this.Filters = new AudioFilters();
 
-        Task.Run(AutoMessageUpdater);
+        //Task.Run(AutoMessageUpdater);
+        MessageUpdaterTimer = new Timer(AutoMessageUpdater, null, 1000, 1000);
     }
 
     // TODO (!!!): This is not good - redesign this
-    private async Task AutoMessageUpdater() 
+    private async void AutoMessageUpdater(object? state_info)
     {
-        while (true) {
-            if (SongRequiresUpdate) {
-                await UpdateSongMessage();
-                SongRequiresUpdate = false;
-                continue;
-            }
-            
-            await Task.Delay(TimeSpan.FromSeconds(1));
-
-            if (!QueueRequiresUpdate)
-                continue;
-            
-            await Task.Delay(TimeSpan.FromSeconds(1));
-            await UpdateQueueMessage();
-            QueueRequiresUpdate = false;
+        if (SongRequiresUpdate) {
+            await UpdateSongMessage();
+            SongRequiresUpdate = false;
+            return;
         }
+
+        if (!QueueRequiresUpdate)
+            return;
+        
+        await UpdateQueueMessage();
+        QueueRequiresUpdate = false;
     }
 
     public async Task CreateConnectionAsync(DiscordChannel vchannel)
