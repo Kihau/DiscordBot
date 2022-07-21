@@ -125,7 +125,6 @@ public class BotLogger : ILogger
 
         ArchiveOldLogs();
         File.AppendAllText(_path, log_output.ToString());
-
     }
 
     private void ArchiveOldLogs()
@@ -134,6 +133,7 @@ public class BotLogger : ILogger
             return;
         
         var file_info = new FileInfo(_path);
+        file_info.Refresh();
         if (DateTime.Now - file_info.CreationTime > TimeSpan.FromDays(1)) {
 
             var log_files = new DirectoryInfo(Config.Directory).GetFiles()
