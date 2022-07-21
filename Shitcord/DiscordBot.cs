@@ -55,7 +55,7 @@ public class DiscordBot
             MinimumLogLevel = LogLevel.Information,
             AutoReconnect = true,
             MessageCacheSize = botConf.CacheSize,
-            LoggerFactory = new BotLoggerFactory(),
+            LoggerFactory = new BotLoggerFactory(Config),
         };
 
         Client = new DiscordClient(clientConfig);

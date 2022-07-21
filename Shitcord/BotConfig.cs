@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Shitcord;
 
@@ -8,6 +9,9 @@ public class BotConfig
 {
     [JsonPropertyName("discord")] 
     public DiscordConfig Discord { get; set; } = new();
+
+    [JsonPropertyName("logging")] 
+    public LoggingConfig Logging { get; set; } = new();
 
     [JsonPropertyName("ssh")] 
     public SshConfig Ssh { get; set; } = new();
@@ -55,8 +59,6 @@ public class BotConfig
     }
 }
 
-// TODO: Add option to enable/disable logging
-// TODO: Create logging class (maybe) add option similar to those in lavalink config file 
 [Serializable]
 public class DiscordConfig
 {
@@ -74,6 +76,25 @@ public class DiscordConfig
 
     [JsonPropertyName("startdelay")]
     public int StartDelay { get; set; } = 0;
+}
+
+[Serializable]
+public class LoggingConfig
+{
+    [JsonPropertyName("enabled")]
+    public bool IsEnabled { get; set; } = true;
+
+    [JsonPropertyName("min-loglevel")]
+    public LogLevel MinLogLevel { get; set; } = LogLevel.Information;
+
+    [JsonPropertyName("save-to-file")]
+    public bool SaveToFile { get; set; } = true;
+
+    [JsonPropertyName("directory")] 
+    public string Directory { get; set; } = "botlogs";
+
+    [JsonPropertyName("max-history")]
+    public int MaxHistory { get; set; } = 30;
 }
 
 [Serializable]

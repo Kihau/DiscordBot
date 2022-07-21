@@ -6,6 +6,13 @@
     "status": "bot discord status"
     "startdelay": 0
   },
+  "logging": {
+    "enabled": true,
+    "min-loglevel": 2,
+    "save-to-file": true,
+    "directory": "botlogs",
+    "max-history": 30
+  },
   "ssh": {
     "hostname": "localhost",
     "port": 1111,

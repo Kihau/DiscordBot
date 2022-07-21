@@ -8,46 +8,38 @@ namespace Shitcord.Extensions;
 // NODE: This is garbage, but the DSharpPlus requires this crap to set up custom logging
 public class BotLoggerFactory : ILoggerFactory
 {
+    private BotConfig Config { get; }
+
+    public BotLoggerFactory(BotConfig config) 
+        => Config = config;
+
     public void AddProvider(ILoggerProvider provider)
     {
         throw new NotImplementedException();
     }
 
     public ILogger CreateLogger(string categoryName)
-        => new BotLogger();
+        => new BotLogger(Config.Logging);
 
     public void Dispose() { }
 }
 
-// TODO: Add some options - max log file size, compression, how many days to keep, etc
 public class BotLogger : ILogger
 {
-    public LogLevel MinimumLevel { get; }
-    public string TimestampFormat { get; }
-    public string LogFileName { get; }
-    public string LogDirectoryName { get; }
-
-    public bool LogToFile { get; set; }
+    public string TimestampFormat { get; set; } = "yyyy-MM-dd HH:mm:ss zzz";
+    public string LogFileName { get; set; } = "shitcord";
 
     private string _path = "";
+    private LoggingConfig Config { get; }
 
-    public BotLogger(
-        bool log_to_file = true,
-        string file_name = "shitcord",
-        string directory_name = "botlogs",
-        LogLevel min_level = LogLevel.Information,
-        string timestamp_format = "yyyy-MM-dd HH:mm:ss zzz"
-    ) {
-        MinimumLevel = min_level;
-        TimestampFormat = timestamp_format;
-        LogFileName = file_name;
-        LogDirectoryName = directory_name;
-        LogToFile = log_to_file;
+    public BotLogger(LoggingConfig config) 
+    {
+        Config = config;
 
-        if (String.IsNullOrWhiteSpace(LogDirectoryName))
+        if (String.IsNullOrWhiteSpace(Config.Directory))
             throw new ArgumentException("Directory name cannot be whitespace");
 
-        _path += LogDirectoryName + "/";
+        _path += Config.Directory+ "/";
         _path += LogFileName + ".log";
     }
 
@@ -126,10 +118,10 @@ public class BotLogger : ILogger
             Console.WriteLine(exception);
         }
 
-        if (!LogToFile) return;
+        if (!Config.SaveToFile) return;
 
-        if (!Directory.Exists(LogDirectoryName))
-            Directory.CreateDirectory(LogDirectoryName);
+        if (!Directory.Exists(Config.Directory))
+            Directory.CreateDirectory(Config.Directory);
 
         ArchiveOldLogs();
         File.AppendAllText(_path, log_output.ToString());
@@ -144,12 +136,12 @@ public class BotLogger : ILogger
         var file_info = new FileInfo(_path);
         if (DateTime.Now - file_info.CreationTime > TimeSpan.FromDays(1)) {
 
-            var log_files = new DirectoryInfo(LogDirectoryName).GetFiles()
+            var log_files = new DirectoryInfo(Config.Directory).GetFiles()
                 .Where(files => files.Name.StartsWith(LogFileName + ".log")).ToList();
 
-            const int FILE_COUNT = 30;
-            if (log_files.Count >= FILE_COUNT) {
-                int amount = log_files.Count - FILE_COUNT - 1;
+            // When number of log files exceeds MaxHistory, delete old logs 
+            if (log_files.Count >= Config.MaxHistory) {
+                int amount = log_files.Count - Config.MaxHistory - 1;
                 var files_to_rm = log_files.OrderBy(file => file.CreationTime).Take(amount);
                 
                 foreach (var file in files_to_rm)
@@ -177,7 +169,7 @@ public class BotLogger : ILogger
     }
 
     public bool IsEnabled(LogLevel log_level)
-        => log_level >= MinimumLevel;
+        => log_level >= Config.MinLogLevel && Config.IsEnabled;
 
     public IDisposable BeginScope<TState>(TState state) 
         => throw new NotImplementedException();
