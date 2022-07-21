@@ -124,7 +124,17 @@ public class BotLogger : ILogger
             Directory.CreateDirectory(Config.Directory);
 
         ArchiveOldLogs();
+
+        // Why do I have to do this?!?!
+        // What THE FUCK is wrong with this language
+        DateTime creation_time = DateTime.Now;
+        if (File.Exists(_path))
+            creation_time = File.GetCreationTime(_path); 
+
+        // Also I might want to open the stream and keep writing to it
+        // instead of opening the file every time.
         File.AppendAllText(_path, log_output.ToString());
+        File.SetCreationTime(_path, creation_time);
     }
 
     private void ArchiveOldLogs()
@@ -132,9 +142,7 @@ public class BotLogger : ILogger
         if (!File.Exists(_path))
             return;
         
-        var file_info = new FileInfo(_path);
-        file_info.Refresh();
-        if (DateTime.Now - file_info.CreationTime > TimeSpan.FromDays(1)) {
+        if (DateTime.Now - File.GetCreationTime(_path) > TimeSpan.FromDays(1)) {
 
             var log_files = new DirectoryInfo(Config.Directory).GetFiles()
                 .Where(files => files.Name.StartsWith(LogFileName + ".log")).ToList();
