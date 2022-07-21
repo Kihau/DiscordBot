@@ -199,8 +199,8 @@ public class DiscordBot
             .AddSingleton(this);
 
         if (Config.Lava.IsEnabled) {
-            collection.AddSingleton<AudioService>()
-                .AddSingleton<LavalinkService>();
+            collection.AddSingleton<AudioService>();
+            collection.AddSingleton<LavalinkService>();
         }
 
         var services = collection.BuildServiceProvider();
