@@ -80,16 +80,16 @@ public class GuildAudioData
     private async void AutoMessageUpdater(object? state_info)
     {
         if (SongRequiresUpdate) {
-            await UpdateSongMessage();
             SongRequiresUpdate = false;
+            await UpdateSongMessage();
             return;
         }
 
         if (!QueueRequiresUpdate)
             return;
         
-        await UpdateQueueMessage();
         QueueRequiresUpdate = false;
+        await UpdateQueueMessage();
     }
 
     public async Task CreateConnectionAsync(DiscordChannel vchannel)
@@ -181,19 +181,6 @@ public class GuildAudioData
         Volume = (int)(long)(retrieved[5][0] ?? 100);
         IsLooping = (long)(retrieved[6][0] ?? 0) == 1;
     }
-
-    /*
-    private void SaveToDatabase() 
-    {
-        var db = DatabaseContext;
-        if (db.IsGuildInTable(Guild.Id)) {
-            // TODO: Updating all values is not good - change it?
-            db.UpdateTable(Guild.Id, QueueUpdateChannel?.Id, SongUpdateChannel?.Id, 
-                QueueUpdateMessage?.Id, SongUpdateMessage?.Id, Volume, IsLooping);
-        } else db.InsertRow(Guild.Id, QueueUpdateChannel?.Id, SongUpdateChannel?.Id, 
-            QueueUpdateMessage?.Id, SongUpdateMessage?.Id, Volume, IsLooping);
-    }
-    */
 
     void DatabaseUpdateQU() 
     {

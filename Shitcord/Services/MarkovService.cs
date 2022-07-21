@@ -42,6 +42,17 @@ public class MarkovService
         ");
     }
 
+    public void RemoveAnyString(string to_be_remove) 
+    {
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New().Delete().From(MarkovTable.TABLE_NAME)
+            .Where(Condition
+                .New(MarkovTable.BASE).Equals(to_be_remove)
+                .Or(MarkovTable.CHAIN).Equals(to_be_remove)
+            ).Build()
+        );
+    }
+
     // NOTE: We can simplify this to a simple DISTINCT query if that is needed
     public string[] GetAllBaseStrings() 
     {
@@ -308,7 +319,7 @@ public class MarkovService
                 new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries
             ).Where(x => x.Length <= 255).ToList();
 
-            // TODO (?): Some logic to remove unnecessary characters
+            // Some logic to remove unnecessary characters
             /*
             for (int i = 0; i < data.Count; i++) {
                 if (_excludeCharacters.Contains(data[i].Last()))

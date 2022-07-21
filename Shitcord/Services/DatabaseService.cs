@@ -69,7 +69,6 @@ public class DatabaseService
     }
 
     public String QueryResultToString(List<List<object?>>? data, params Column[] columns) {
-        // TODO: Is this correct? now is?
         if (columns.Length < 1 || data is null)
             return "";
         

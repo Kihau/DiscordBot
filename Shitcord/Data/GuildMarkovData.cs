@@ -5,12 +5,16 @@ using Shitcord.Database.Queries;
 
 namespace Shitcord.Data;
 
+// I could easily add an option to store markov strings separete for each guild.
+// That being said, currently this bo is only in ~3 guilds so there is no need for that
 public class GuildMarkovData
 {
     public DiscordGuild Guild { get; }
     public DatabaseService Database { get; } 
 
     public bool IsEnabled { get; set; } = false;
+    //public bool IsGlobal { get; set; } = false;
+
     // NOTE: Adding channel blocks either auto response and data gathering
     public List<ulong> ExcludedChannelIDs { get; set; } = new();
 

@@ -58,12 +58,30 @@ public class AuthModule : BaseCommandModule
         if (command.Length == 0)
             throw new CommandException("Command cannot be an empty string");
 
-        // TODO: This is very linux specific - change it
+        string file_name = "";
+        string arguments = "";
+
+        if (System.OperatingSystem.IsLinux()) {
+            file_name = "bash";
+            arguments = $"-c \"{command}\""; 
+        } else {
+            // Not sure it this works correctly, but also don't care
+             
+            var split = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (split.Length == 0)
+                throw new CommandException("Incorrect input command");
+
+            file_name = split[0];
+
+            if (split.Length > 1)
+                arguments = String.Join(' ', split.Skip(1));
+        }
+
         var startInfo = new ProcessStartInfo {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            FileName = "bash",
-            Arguments = $"-c \"{command}\""
+            FileName = file_name,
+            Arguments = arguments
         };
 
         var start_time = DateTime.Now;

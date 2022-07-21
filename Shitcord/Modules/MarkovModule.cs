@@ -34,6 +34,14 @@ public class MarkovModule : BaseCommandModule
         await ctx.RespondAsync($"Corupted strings cleared");
     }
 
+
+    [Command("remove"), Aliases("rm"), Description("Removes selected markov strings")]
+    public async Task RemoveStringCommand(CommandContext ctx, string to_be_removed)
+    {
+        Markov.RemoveAnyString(to_be_removed);
+        await ctx.RespondAsync($"Removed any matching strings");
+    }
+
     [Command("disable"), Description("Disables markov service")]
     public async Task DisableCommand(CommandContext ctx) { 
         Data.IsEnabled = false;
