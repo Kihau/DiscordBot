@@ -106,7 +106,8 @@ class QueryTests
             .WhereEquals(MarkovTable.CHAIN, "chunky")
             .Limit(0)
             .Build();
-
+        
+        
         Console.WriteLine("Selects:");
         compareStartsWith(select1, expected1);
         compareStartsWith(select2, expected2);
@@ -192,10 +193,46 @@ class QueryTests
             .Set("info", "warning")
             .Where(Condition.New("smth").IsMoreThan(444))
             .Build();
+        
+        const string expectedSetByIncrement1 = "UPDATE any_table SET number = 23, info = 'warning', occurrence = occurrence+3 WHERE s > 0";
+        string setByIncrement1 = QueryBuilder.New().Update("any_table")
+            .Set("number", 23)
+            .Set("info", "warning")
+            .SetIncrementBy("occurrence", 3)
+            .Where(Condition.New("s").IsMoreThan(0))
+            .Build();
+        const string expectedSetByIncrement2 = "UPDATE any_table SET a = 1, x = x-1 WHERE s > 0 AND z LIKE '%d'";
+        string setByIncrement2 = QueryBuilder.New().Update("any_table")
+            .Set("a", 1)
+            .SetIncrementBy("x", -1)
+            .Where(Condition.New("s").IsMoreThan(0).And("z").IsLike("%d"))
+            .Build();
+        const string expectedBunchOfIncrements = "UPDATE any_table SET name = 'John', x = x-1, y = y+1";
+        string bunchOfIncrements = QueryBuilder.New().Update("any_table")
+            .SetIncrementBy("x", -1)
+            .Set("name", "John")
+            .SetIncrementBy("y", +1)
+            .Build();
+        const string expectedSingleIncrement = "UPDATE aTable SET freq = freq+1 WHERE name = 'Charlie'";
+        string singleIncrement = QueryBuilder.New().Update("aTable")
+            .SetIncrementBy("freq", 1)
+            .WhereEquals("name", "Charlie")
+            .Build();
+        const string expectedTwoIncrements = "UPDATE aTable SET f = f+2, g = g-3 WHERE f > 4";
+        string twoIncrements = QueryBuilder.New().Update("aTable")
+            .Where(Condition.New("f").IsMoreThan(4))
+            .SetIncrementBy("f", 2)
+            .SetIncrementBy("g", -3)
+            .Build();
 
         Console.WriteLine("Updates:");
         compareStartsWith(update1, expected1);
         compareStartsWith(update2, expected2);
+        compareStartsWith(setByIncrement1, expectedSetByIncrement1);
+        compareStartsWith(setByIncrement2, expectedSetByIncrement2);
+        compareStartsWith(bunchOfIncrements, expectedBunchOfIncrements);
+        compareStartsWith(singleIncrement, expectedSingleIncrement);
+        compareStartsWith(twoIncrements, expectedTwoIncrements);
     }
     
     private static void escapeCharactersTests()
