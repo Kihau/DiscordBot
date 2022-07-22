@@ -9,32 +9,21 @@ using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using Shitcord.Extensions;
 using Shitcord.Services;
-using ExtensionMethods = Shitcord.Extensions.ExtensionMethods;
 
 namespace Shitcord.Modules;
 
-// TODO: Add snipe and editsnipe command
-
-//[Group("utils")]
 [Description("Bot utility commands")]
 public class UtilityModule : BaseCommandModule
 {
     public DiscordBot Bot { get; }
     public WeatherService Weather { get; }
-    //public ModerationService Moderation { get; }
+    public ModerationService Mod { get; }
 
-    //public UtilityModule(Discordbot bot, WeatherService weather, ModerationService moderation)
-    //{
-    //    Bot = bot;
-    //    Weather = weather;
-    //    Moderation = moderation;
-    //}
-
-
-    public UtilityModule(DiscordBot bot, WeatherService weather)
+    public UtilityModule(DiscordBot bot, WeatherService weather, ModerationService moderation)
     {
         Bot = bot;
         Weather = weather;
+        Mod = moderation;
     }
 
     public override async Task BeforeExecutionAsync(CommandContext ctx)
@@ -127,15 +116,20 @@ public class UtilityModule : BaseCommandModule
         await ctx.RespondAsync($"Current bot ping is: `{ctx.Client.Ping}ms`");
 
     [Command("info")]
-    [Description("Displays info about the bot")]
+    [Description("Displays info about the bot (I can't bother to update this)")]
     public async Task InfoCommand(CommandContext ctx) 
     {
-        // TODO: Print info about the bot
         var embed = new DiscordEmbedBuilder()
             .WithTitle($"Shitcord V0.6")
-            // Embed bot image url (small top right icon)
-            //.WithImageUrl(user.GetAvatarUrl(ImageFormat.Auto, size))
-            .WithTimestamp(DateTime.UtcNow)
+            .WithThumbnail(
+                ctx.Client.CurrentUser.GetAvatarUrl(ImageFormat.Png), 20, 20
+            ).WithTimestamp(DateTime.UtcNow)
+            .WithDescription(
+                "Written in C#: https://dotnet.microsoft.com/en-us/\n" + 
+                "Bot source code: https://github.com/Kihau/DiscordBot\n" +
+                "Discord API lib: https://github.com/kihau/DSharpPlus\n" +
+                "Audio service: https://github.com/freyacodes/Lavalink\n" 
+            )
             .WithFooter("Created by: Kihau & Frisk")
             .WithColor(DiscordColor.Purple);
         await ctx.RespondAsync(embed);
@@ -253,15 +247,45 @@ public class UtilityModule : BaseCommandModule
         await clone.ModifyAsync(x => x.Name = name);
     }
 
-    //[Command("rmsnipe")]
-    //public async Task RemoveSnipeCommand(CommandContext ctx) 
-    //{
-    //    var data = Moderation.GetOrAddDeleteData(ctx.Guild);
-    //}
+    [Command("rmsnipe"), Description("Snipes last deleted message")]
+    public async Task RemoveSnipeCommand(CommandContext ctx, int index = 0) 
+    {
+        var data = Mod.GetOrAddDeleteData(ctx.Guild);
 
-    //[Command("editsnipe")]
-    //public async Task EditSnipeCommand(CommandContext ctx) 
-    //{
-    //    var data = Moderation.GetOrAddEditData(ctx.Guild);
-    //}
+        if (data.Count == 0)
+            throw new CommandException("There is nothing to snipe");
+
+        if (index < 0 && index >= data.Count - 1)
+            throw new CommandException("Incorrect index");
+
+        var mess = data[data.Count - index - 1];
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor(mess.Author.Username, null , mess.Author.AvatarUrl)
+            .WithDescription(mess.Content)
+            .WithFooter($"#{mess.Channel.Name} - {mess.CreationTimestamp}")
+            .WithColor(DiscordColor.Purple);
+
+        await ctx.RespondAsync(embed);
+    }
+
+    [Command("editsnipe"), Description("Snipes last message edit")]
+    public async Task EditSnipeCommand(CommandContext ctx, int index = 0) 
+    {
+        var data = Mod.GetOrAddEditData(ctx.Guild);
+
+        if (data.Count == 0)
+            throw new CommandException("There is nothing to snipe");
+
+        if (index < 0 && index >= data.Count - 1)
+            throw new CommandException("Incorrect index");
+
+        var tup = data[data.Count - index - 1];
+        var embed = new DiscordEmbedBuilder()
+            .WithAuthor(tup.Item1.Author.Username, null , tup.Item1.Author.AvatarUrl)
+            .WithDescription(tup.Item2)
+            .WithFooter($"#{tup.Item1.Channel.Name}")
+            .WithColor(DiscordColor.Purple);
+
+        await ctx.RespondAsync(embed);
+    }
 }

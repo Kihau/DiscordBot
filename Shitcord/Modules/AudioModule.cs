@@ -282,13 +282,22 @@ public class AudioModule : BaseCommandModule
     }
 
     [Command("loop")]
-    [Description("Loops the queue")]
-    public async Task LoopCommand(CommandContext ctx)
+    [Description("Sets the looping mode")]
+    public async Task LoopCommand(CommandContext ctx, int? mode = null)
     {
-        var loop = this.Data.ChangeLoopingState();
-        if (loop)
-            await ctx.RespondAsync("Looping enabled");
-        else await ctx.RespondAsync("Looping disabled");
+        if (mode is null) {
+            Data.Looping = Data.Looping switch {
+                LoopingMode.None => LoopingMode.Queue,
+                _ => LoopingMode.None,
+            };
+        } else if (Enum.IsDefined(typeof(LoopingMode), mode)) {
+            Data.Looping = (LoopingMode)mode;
+        } else throw new CommandException(
+            "Incorrect looping mode, correct modes are:\n" + 
+            "` None - 0 `, ` Queue - 1 `, ` Song - 2 `, ` Shuffle - 3 `"
+        );
+
+        await ctx.RespondAsync($"Loopig mode set to: `{Data.Looping}`");
     }
 
     [Command("shuffle")]

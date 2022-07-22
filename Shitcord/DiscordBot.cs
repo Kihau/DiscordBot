@@ -60,7 +60,6 @@ public class DiscordBot
 
         Client = new DiscordClient(clientConfig);
 
-        // TODO: Log command uses after they finish
         Client.MessageCreated += PrintMessage;
         Client.GuildDownloadCompleted += (_, _) => {
             Task.Run(StartBotConsoleInput);
@@ -130,7 +129,7 @@ public class DiscordBot
         var command = cnext.FindCommand(cmd_name, out var args);
 
         if (command is null) {
-            Client.Logger.LogError(new EventId(0, "CCHandler"), "Command not found");
+            Client.Logger.LogError(new EventId(1, "CCHandler"), "Command not found");
             return true;
         }
 
@@ -174,10 +173,18 @@ public class DiscordBot
         if (DebugEnabled)
             commands.RegisterCommands<TestingModule>();
 
+        commands.CommandExecuted += (sender, e) => {
+            Client.Logger.LogInformation(new EventId(2, "Executed"),
+                $"Called: {e.Command.Name} by {e.Context.User.Id} in " +
+                $"{e.Context.Guild.Id}@{e.Context.Channel.Id}"
+            ); 
+            return Task.CompletedTask;
+        };
+
         commands.CommandErrored += async (sender, e) => {
             Client.Logger.LogError(new EventId(0, "Exception"), $"{e.Exception}"); 
-
-            if (!DebugEnabled && e.Exception is not CommandException)
+                
+            if (!DebugEnabled && e.Exception is CommandException)
                 return;
 
             var embed = new DiscordEmbedBuilder();
@@ -196,6 +203,7 @@ public class DiscordBot
             .AddSingleton<WeatherService>()
             .AddSingleton<AutoReplyService>()
             .AddSingleton<MarkovService>()
+            .AddSingleton<ModerationService>()
             .AddSingleton(this);
 
         if (Config.Lava.IsEnabled) {

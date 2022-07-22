@@ -1,6 +1,7 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using Renci.SshNet.Messages;
 
 namespace Shitcord.Services;
 
@@ -9,20 +10,24 @@ public class ModerationService
     DiscordClient Client;
 
     public const int CACHE_SIZE = 10;
-    public Dictionary<ulong, List<(string, string)>> GuildEditData { get; set; } = new();
-    public Dictionary<ulong, List<(string, string)>> GuildDeleteData { get; set; } = new();
 
-    public ModerationService(DiscordClient client) 
+    public Dictionary<ulong, List<(DiscordMessage, string)>> GuildEditData { get; set; } = new();
+    public Dictionary<ulong, List<DiscordMessage>> GuildDeleteData { get; set; } = new();
+
+    public ModerationService(DiscordBot bot) 
     {
-        Client = client;
+        Client = bot.Client;
         Client.MessageDeleted += MessageDeletedHandler; 
         Client.MessageUpdated += MessageEditedHandler;
     }
 
     private Task MessageDeletedHandler(DiscordClient client, MessageDeleteEventArgs e)
     {
+        if (!e.Message.Author.IsBot)
+            return Task.CompletedTask;
+        
         var data = GetOrAddDeleteData(e.Guild);
-        data.Add((e.Message.Author.Username, e.Message.Content));
+        data.Add(e.Message);
 
         if (data.Count > CACHE_SIZE)
             data.RemoveAt(0);
@@ -30,21 +35,29 @@ public class ModerationService
         return Task.CompletedTask;
     }
 
-    public List<(string, string)> GetOrAddDeleteData(DiscordGuild guild)
+    public List<DiscordMessage> GetOrAddDeleteData(DiscordGuild guild)
     {
-        if (GuildDeleteData.TryGetValue(guild.Id, out var data))
+        if (GuildDeleteData.TryGetValue(guild.Id, out var data)) {
+            data.RemoveAll(msg => DateTime.Now - msg.CreationTimestamp > TimeSpan.FromHours(1));
             return data;
+        }
 
-        data = new List<(string, string)>();
-        GuildEditData.Add(guild.Id, data);
+        data = new List<DiscordMessage>();
+        GuildDeleteData.Add(guild.Id, data);
 
         return data;
     }
 
     private Task MessageEditedHandler(DiscordClient client, MessageUpdateEventArgs e)
     {
+        if (e.MessageBefore is null || !e.Author.IsBot)
+            return Task.CompletedTask;
+        
         var data = GetOrAddEditData(e.Guild);
-        data.Add((e.Message.Author.Username, e.Message.Content));
+        if (e.MessageBefore is null)
+            return Task.CompletedTask;
+        
+        data.Add((e.Message, e.MessageBefore.Content));
 
         if (data.Count > CACHE_SIZE)
             data.RemoveAt(0);
@@ -52,14 +65,14 @@ public class ModerationService
         return Task.CompletedTask;
     }
 
-    public List<(string, string)> GetOrAddEditData(DiscordGuild guild)
+    public List<(DiscordMessage, string)> GetOrAddEditData(DiscordGuild guild)
     {
-        // TODO: Check wether deleted message is also on edited messages list
-        // (if yes - delete it from the list)
-        if (GuildEditData.TryGetValue(guild.Id, out var data))
+        if (GuildEditData.TryGetValue(guild.Id, out var data)) {
+            data.RemoveAll(x => DateTime.Now - x.Item1.CreationTimestamp > TimeSpan.FromHours(1));
             return data;
+        }
 
-        data = new List<(string, string)>();
+        data = new List<(DiscordMessage, string)>();
         GuildEditData.Add(guild.Id, data);
 
         return data;

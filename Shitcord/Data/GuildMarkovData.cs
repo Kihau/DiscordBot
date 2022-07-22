@@ -5,8 +5,9 @@ using Shitcord.Database.Queries;
 
 namespace Shitcord.Data;
 
+// NOTE: Privacy
 // I could easily add an option to store markov strings separete for each guild.
-// That being said, currently this bo is only in ~3 guilds so there is no need for that
+// That being said, this is not a widely used bot, so there is no need for that.
 public class GuildMarkovData
 {
     public DiscordGuild Guild { get; }

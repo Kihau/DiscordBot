@@ -15,6 +15,14 @@ namespace Shitcord.Data;
 // TODO: Major cleanup required
 // -----------------------------------------------------------------------------------------------
 
+public enum LoopingMode : int
+{
+    None = 0,
+    Queue = 1,
+    Song = 2,
+    Shuffle = 3,
+}
+
 /// This data is stored inside a hashmap (in AudioService) and mapped to each guild
 public class GuildAudioData
 {
@@ -30,8 +38,21 @@ public class GuildAudioData
     public DiscordChannel? Channel => this.Player?.Channel;
     public bool SkipEventFire { get; set; } = false;
 
-    // TODO: Looping mode (song, queue, shuffle. none)
-    public bool IsLooping { get; private set; }
+    private LoopingMode _looping;
+    public LoopingMode Looping { 
+        get => _looping;
+        set {
+             _looping = value;                                      
+                                                                  
+             DatabaseContext.executeUpdate(QueryBuilder
+                 .New().Update(GuildAudioTable.TABLE_NAME)
+                 .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
+                 .Set(GuildAudioTable.LOOPING, (int)Looping)
+                 .Build()
+             );
+        }
+    }
+
     public bool IsPaused { get; private set; }
     public bool IsConnected => this.Player != null;
     public bool IsStopped => this.CurrentTrack == null;
@@ -76,7 +97,6 @@ public class GuildAudioData
         MessageUpdaterTimer = new Timer(AutoMessageUpdater, null, 1000, 1000);
     }
 
-    // TODO (!!!): This is not good - redesign this
     private async void AutoMessageUpdater(object? state_info)
     {
         if (SongRequiresUpdate) {
@@ -133,7 +153,7 @@ public class GuildAudioData
                     QueueUpdateMessage?.Id,
                     SongUpdateMessage?.Id,
                     Volume,
-                    IsLooping
+                    (int)Looping
                 ).Build()
             );
 
@@ -179,7 +199,7 @@ public class GuildAudioData
         } 
 
         Volume = (int)(long)(retrieved[5][0] ?? 100);
-        IsLooping = (long)(retrieved[6][0] ?? 0) == 1;
+        Looping = (LoopingMode)(long)(retrieved[6][0] ?? 0);
     }
 
     void DatabaseUpdateQU() 
@@ -372,9 +392,9 @@ public class GuildAudioData
                              $":play_pause: **Song length:** {length}\n" +
                              $":cinema: **Song Author:** {author}\n" +
                              $":track_next: **Next Song:** {next_song}\n" +
-                             $":arrow_right: **Songs in queue:** {this.Queue.Count}\n" +
+                             $":arrow_right: **Songs in queue:** {Queue.Count}\n" +
                              $":information_source: **Song state:** {state}\n" +
-                             $":arrows_clockwise: **Song looping:** {this.IsLooping}")
+                             $":arrows_clockwise: **Song looping mode:** {Looping}")
             .WithColor(DiscordColor.Purple);
 
         var builder = new DiscordMessageBuilder()
@@ -480,12 +500,23 @@ public class GuildAudioData
 
     private async Task PlaybackFinished(LavalinkGuildConnection con, TrackFinishEventArgs e)
     {
-        // var previous = e.Track;
-        if (this.IsLooping /*&& !this.IsStopped*/)
-            this.Queue.Enqueue(e.Track);
+        switch (Looping) {
+            case LoopingMode.None: break;
 
-        if (this.SkipEventFire)
-        {
+            case LoopingMode.Queue: {
+                Enqueue(e.Track);
+            } break;
+
+            case LoopingMode.Song: { 
+                EnqueueFirst(e.Track);
+            } break;
+
+            case LoopingMode.Shuffle: { 
+                EnqueueRandom(e.Track);
+            } break;
+        }
+
+        if (this.SkipEventFire) {
             this.SkipEventFire = false;
             return;
         }
@@ -515,7 +546,30 @@ public class GuildAudioData
     }
 
     public void Enqueue(LavalinkTrack track)
-        => this.Queue.Enqueue(track);
+        => Queue.Enqueue(track);
+
+    public void EnqueueFirst(LavalinkTrack track)
+    {
+        var items = Queue.ToArray();
+        Queue.Clear();
+        Queue.Enqueue(track);
+
+        foreach (var item in items)
+            Queue.Enqueue(item);
+    }
+
+    public void EnqueueRandom(LavalinkTrack track)
+    {
+        var items = Queue.ToList();
+        this.Queue.Clear();
+
+        var rng = new Random();
+        var index = rng.Next(items.Count);
+        items.Insert(index, track);
+
+        foreach (var item in items)
+            this.Queue.Enqueue(item);
+    }
 
     public void Enqueue(IEnumerable<LavalinkTrack> tracks)
     {
@@ -530,6 +584,23 @@ public class GuildAudioData
 
         foreach (var track in tracks)
             this.Queue.Enqueue(track);
+
+        foreach (var item in items)
+            this.Queue.Enqueue(item);
+    }
+
+    public void EnqueueRandom(IEnumerable<LavalinkTrack> tracks)
+    {
+        var items = Queue.ToList();
+        this.Queue.Clear();
+
+        // Awful, horrible, disgusting
+        // Also, don't care
+        var rng = new Random();
+        foreach (var track in tracks) {
+            var index = rng.Next(items.Count);
+            items.Insert(index, track);
+        }
 
         foreach (var item in items)
             this.Queue.Enqueue(item);
@@ -549,19 +620,19 @@ public class GuildAudioData
     public LavalinkTrack? Dequeue() =>
         this.Queue.TryDequeue(out var track) ? track : null;
 
-    public bool ChangeLoopingState()
-    {
-        this.IsLooping = !this.IsLooping;
+    //public LoopingMode ChangeLoopingState(LoopingMode looping)
+    //{
+    //    Looping = looping;
 
-        DatabaseContext.executeUpdate(QueryBuilder
-            .New().Update(GuildAudioTable.TABLE_NAME)
-            .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
-            .Set(GuildAudioTable.LOOPING, IsLooping)
-            .Build()
-        );
+    //    DatabaseContext.executeUpdate(QueryBuilder
+    //        .New().Update(GuildAudioTable.TABLE_NAME)
+    //        .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
+    //        .Set(GuildAudioTable.LOOPING, Looping)
+    //        .Build()
+    //    );
 
-        return IsLooping;
-    }
+    //    return Looping;
+    //}
 
     public LavalinkTrack? Remove(int index)
         => this.RemoveRange(index, 1).FirstOrDefault();
@@ -634,20 +705,33 @@ public class GuildAudioData
 
     public async Task SkipAsync(int num)
     {
-        if (this.Player is not {IsConnected: true})
+        if (Player is not {IsConnected: true})
             return;
 
         var tracks = new List<LavalinkTrack>();
-        while (--num > 0)
-        {
-            var track = this.Dequeue();
+        while (--num > 0) {
+            var track = Dequeue();
             
-            if (track != null && this.IsLooping)
+            if (track != null && Looping != LoopingMode.None)
                 tracks.Add(track);
         }
-        
-        await this.Player.StopAsync();
-        this.Enqueue(tracks);
+                
+        await Player.StopAsync();
+
+        switch (Looping) {
+            case LoopingMode.None:
+            case LoopingMode.Queue: {
+                Enqueue(tracks);
+            } break;
+
+            case LoopingMode.Song: { 
+                EnqueueFirst(tracks);
+            } break;
+
+            case LoopingMode.Shuffle: { 
+                EnqueueRandom(tracks);
+            } break;
+        }
     }
 
     public async Task SeekAsync(TimeSpan timestamp) 

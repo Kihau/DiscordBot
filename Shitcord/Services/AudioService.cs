@@ -48,8 +48,7 @@ public class AudioService
     private Task AudioUpdateButtons(
         DiscordClient client, ComponentInteractionCreateEventArgs args
     ) {
-        Task.Run(async () =>
-        {
+        Task.Run(async () => {
             this.AudioData.TryGetValue(args.Guild.Id, out var data);
             if (data == null) 
                 return;
@@ -57,17 +56,20 @@ public class AudioService
             bool deferred = true;
             switch (args.Id)
             {
+
             // Song Info
-            case "skip_btn":
+            case "skip_btn": {
                 await data.SkipAsync(1);
                 data.SongRequiresUpdate = true;
                 data.QueueRequiresUpdate = true;
-                break;
-            case "loop_btn":
-                data.ChangeLoopingState();
+            } break;
+            case "loop_btn": {
+                if (data.Looping == LoopingMode.Shuffle)
+                    data.Looping = 0;
+                else data.Looping++;
                 data.SongRequiresUpdate = true;
-                break;
-            case "state_btn":
+            } break;
+            case "state_btn": { 
                 if (data.IsStopped)
                     await data.PlayAsync();
                 else if (data.IsPaused)
@@ -75,52 +77,51 @@ public class AudioService
                 else await data.PauseAsync();
                 data.SongRequiresUpdate = true;
                 data.QueueRequiresUpdate = true;
-                break;
-            case "join_btn":
+            } break;
+            case "join_btn": {
                 var member = await args.Guild.GetMemberAsync(args.User.Id);
                 if (member.VoiceState != null)
                     await data.CreateConnectionAsync(member.VoiceState.Channel);
-                break;
-            case "stop_btn":
+            } break;
+            case "stop_btn": {
                 await data.StopAsync();
                 data.SongRequiresUpdate = true;
-                break;
-            case "leave_btn":
+            } break;
+            case "leave_btn": {
                 await data.DestroyConnectionAsync();
                 data.SongRequiresUpdate = true;
-                break;
-            
+            } break;
+
             // Queue Info
-            case "firstpage_btn":
+            case "firstpage_btn": {
                 data.page = 0;
                 data.QueueRequiresUpdate = true;
-                break;
-            case "nextpage_btn":
+            } break;
+            case "nextpage_btn": {
                 data.page++;
                 data.QueueRequiresUpdate = true;
-                break;
-            case "shuffle_btn":
+            } break;
+            case "shuffle_btn": {
                 data.Shuffle();
                 data.SongRequiresUpdate = true;
                 data.QueueRequiresUpdate = true;
-                break;
-            case "clear_btn":
+            } break;
+            case "clear_btn": {
                 data.ClearQueue();
                 data.SongRequiresUpdate = true;
                 data.QueueRequiresUpdate = true;
-                break;
-            case "prevpage_btn":
+            } break;
+            case "prevpage_btn": {
                 data.page--;
                 data.QueueRequiresUpdate = true;
-                break;
-            case "lastpage_btn":
+            } break;
+            case "lastpage_btn": {
                 data.page = Int32.MaxValue;
                 data.QueueRequiresUpdate = true;
-                break;
-            
+            } break;
             default:
                 deferred = false;
-                break;
+                break; 
             }
             
             if (deferred) {

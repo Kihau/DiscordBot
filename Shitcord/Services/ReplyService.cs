@@ -23,7 +23,7 @@ public class AutoReplyService
 {
     public DiscordClient Client { get; init; }
     public DatabaseService Database { get; }
-    private Dictionary<ulong, List<AutoReplyData>> ReplyDataSet { get; init; }
+    private Dictionary<ulong, List<AutoReplyData>> ReplyDataSet { get; }
 
     public AutoReplyService(DiscordBot bot, DatabaseService database)
     {
@@ -50,7 +50,7 @@ public class AutoReplyService
         );
 
         if (data is null) 
-            throw new NullReferenceException("Could not load auto reply data");
+            return;
 
         for (int i = 0; i < data[0].Count; i++) {
             var guild_id = (ulong)(long)data[0][i]!;

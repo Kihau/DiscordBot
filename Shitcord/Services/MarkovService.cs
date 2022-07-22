@@ -182,7 +182,7 @@ public class MarkovService
 
         if (columns is null) throw new UnreachableException();
 
-        int freq = (int)(long)(columns[0][0] ?? 0);
+        int freq_num = (int)(long)(columns[0][0] ?? 0);
 
         DatabaseContext.executeUpdate(QueryBuilder
             .New()
@@ -192,7 +192,7 @@ public class MarkovService
                 .Equals(base_string)
                 .And(MarkovTable.CHAIN)
                 .Equals(chain_string)
-            ).Set(MarkovTable.FREQUENCY, freq + 1)
+            ).Set(MarkovTable.FREQUENCY, freq_num + 1)
             .Build()
         );
     }
@@ -218,8 +218,6 @@ public class MarkovService
         return index;
     }
 
-    // TODO(?): Rename base strings to key strings (maybe).
-    
     // TODO: Detect if markov is repeating same strings - 3 chains at least
     public string GenerateMarkovString(int min_len, int max_len)
     {
