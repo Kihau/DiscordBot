@@ -215,7 +215,7 @@ public class DatabaseService
         var delCommand = new SqliteCommand(delStatement, connection);
         return delCommand.ExecuteNonQuery();
     }
-    //TODO unfinished
+
     public bool DoesTableExist(string tableName)
     {
         string retrieve = QueryBuilder.New()
@@ -234,8 +234,8 @@ public class DatabaseService
         return true;
     }
 
-    //TODO return tuple for results consisting of two columns
-    //TODO return single list for singular columns
+    // NOTE: We could return tuple for results consisting of two columns
+    //       and single list for singular columns
     public static List<List<object?>>? RetrieveColumns(SqliteDataReader reader)
     {
         int columns = reader.FieldCount;

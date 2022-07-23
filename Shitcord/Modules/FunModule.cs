@@ -1,5 +1,7 @@
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using Shitcord.Extensions;
 using ExtensionMethods = Shitcord.Extensions.ExtensionMethods;
 
@@ -28,5 +30,21 @@ public class FunModule : BaseCommandModule
     public async Task MCSeedCommand(CommandContext ctx) 
         => await ctx.RespondAsync(new Random().NextInt64().ToString());
     
-    // TODO: Shake command (that randomly throws user across all voice channels)
+    [Command("shakeuser"), Aliases("shake")]
+    public async Task ShakeUserCommand(CommandContext ctx, DiscordMember member) 
+    {
+        var vchannels = ctx.Guild.Channels
+            .Where(x => x.Value.Type == ChannelType.Voice)
+            .Select(x => x.Value)
+            .ToArray();
+
+        if (vchannels.Length == 0)
+            throw new CommandException("There is no voice channels?");
+
+        var rng = new Random();
+        for (int i = 0; i < 10; i++) {
+            var rng_index = rng.Next(vchannels.Length);
+            await member.ModifyAsync(x => x.VoiceChannel = vchannels[rng_index]);
+        }
+    }
 }

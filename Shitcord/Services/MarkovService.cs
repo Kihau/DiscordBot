@@ -53,19 +53,18 @@ public class MarkovService
         );
     }
 
-    // NOTE: We can simplify this to a simple DISTINCT query if that is needed
-    public string[] GetAllBaseStrings() 
+    public string GetRandomBaseString()
     {
         var all_columns = DatabaseContext.RetrieveColumns(
-            QueryBuilder.New().Retrieve(MarkovTable.BASE).Distinct()
-            .From(MarkovTable.TABLE_NAME).Build()
+            QueryBuilder.New().Retrieve(MarkovTable.BASE)
+                .Distinct().Random().Limit()
+                .From(MarkovTable.TABLE_NAME).Build()
         );
 
         if (all_columns is null)
-            throw new UnreachableException();
+            throw new UnreachableException("No elements in markov table");
 
-        var base_strings = all_columns[0].Select(row => (string)(row ?? "")).ToArray();
-        return base_strings;
+        return (string)all_columns[0][0]!;
     }
 
     public (string, int)[] GetAllChainFrequency(string base_string) 
@@ -100,7 +99,6 @@ public class MarkovService
                 .Equals(base_string)
         );
     }
-    
     
     public bool ContainsAnyChainString(string base_string) 
     {
@@ -201,19 +199,12 @@ public class MarkovService
         return index;
     }
 
-    // TODO: Detect if markov is repeating same strings - 3 chains at least
     public string GenerateMarkovString(int min_len, int max_len)
     {
-        var base_strings = GetAllBaseStrings();
-
-        if (base_strings.Length == 0)
-            throw new CommandException("Markov is speechless. It needs to learn more");
-
         string generated_string = "";
         int current_len = 0;
 
-        var next = Rng.Next(base_strings.Length);
-        var rand_base = base_strings[next];
+        var rand_base = GetRandomBaseString();
 
         do {
             if (generated_string.Length + rand_base.Length + 1 >= 2000)
@@ -227,25 +218,21 @@ public class MarkovService
                     int index = CalculateRandomIndex(chain_freq_array);
                     rand_base = chain_freq_array[index].Item1;
                 } else if (current_len < min_len) {
-                    next = Rng.Next(base_strings.Length);
-                    rand_base = base_strings[next];
+                    rand_base = GetRandomBaseString();
                 } else break;
                 
             } else if (current_len < min_len) {
-                next = Rng.Next(base_strings.Length);
-                rand_base = base_strings[next];
+                rand_base = GetRandomBaseString();
             } else break;
             
         } while (current_len++ < max_len);
 
-        //return $"{generated_string[0]}{generated_string.Remove(0, 1)}";
         return generated_string;
     }
 
     public void FeedStringsToMarkov(List<string> data) 
     {
         for (int i = 0; i < data.Count - 1; i++) {
-            // TODO(?): Do not store chain string if the next value is the same as the previous one 
             if (ContainsBaseString(data[i])) {
                 if (ContainsChainString(data[i], data[i + 1]))
                     UpdateChainFrequency(data[i], data[i + 1]);

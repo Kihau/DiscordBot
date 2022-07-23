@@ -2,7 +2,9 @@
 using Shitcord;
 
 // TODO: Create one discord message (a terminal) and print actual terminal output (add interaction button)
-// TODO: In config file store default prefix - guild prefixes store in database
+//
+// NOTE: We could store custom prefix for each guild and use Config.Prefix
+//       as a default prefix.
 static class Program
 {
     static void Main(string[] args)

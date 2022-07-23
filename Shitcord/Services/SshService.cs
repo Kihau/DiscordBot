@@ -37,7 +37,6 @@ public class SshService
 
         this.Ssh = new SshClient(sshConf);
 
-        // TODO: Add ssh handlers and other things in here
         this.Ssh.Connect();
         sender.MessageCreated += SshCommandHandler;
         

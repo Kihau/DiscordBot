@@ -341,6 +341,7 @@ public class AuthModule : BaseCommandModule
         await ctx.RespondAsync($"```\n{tables}```\n");
     }
 
+    // TODO: eval timeout - similar to exec command
     [Command("eval")]
     public async Task EvalCommand(CommandContext ctx, [RemainingText] string code)
     {
