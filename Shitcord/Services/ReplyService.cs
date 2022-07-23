@@ -86,7 +86,7 @@ public class AutoReplyService
         var dataset = ReplyDataSet[args.Guild.Id];
         foreach (var data in dataset) {
             StringComparison cmp;
-            if (data.match_case) cmp = StringComparison.OrdinalIgnoreCase;
+            if (!data.match_case) cmp = StringComparison.OrdinalIgnoreCase;
             else cmp = StringComparison.Ordinal;
 
             var msg = args.Message.Content;
