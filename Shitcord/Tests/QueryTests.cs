@@ -82,13 +82,13 @@ class QueryTests
             .WhereEquals(MarkovTable.FREQUENCY.name, 3)
             .Build();
         
-        const string expectedRandom1 = "SELECT * FROM table ORDER BY RAND() LIMIT 1";
+        const string expectedRandom1 = "SELECT * FROM table ORDER BY RANDOM() LIMIT 1";
         string random1 = QueryBuilder.New()
             .Retrieve("*").From("table")
             .Random().Limit()
             .Build();
         
-        const string expectedRandom2 = "SELECT * FROM table ORDER BY RAND() LIMIT 3";
+        const string expectedRandom2 = "SELECT * FROM table ORDER BY RANDOM() LIMIT 3";
         string random2 = QueryBuilder.New()
             .Retrieve("*").From("table")
             .Random().Limit(3)

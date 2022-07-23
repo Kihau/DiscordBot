@@ -111,7 +111,7 @@ public class SelectQuery
         if (_orderBy != null) {
             selectQuery.Append($"ORDER BY {_orderBy} ");
             if (!_isAscending) selectQuery.Append("DESC");
-        } else if (_isRandom) selectQuery.Append($"ORDER BY RAND() ");
+        } else if (_isRandom) selectQuery.Append($"ORDER BY RANDOM() ");
         
         if (_limit != -1) selectQuery.Append($"LIMIT {_limit}");
         return selectQuery.ToString();
