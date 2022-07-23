@@ -7,15 +7,23 @@ using Shitcord.Database.Queries;
 
 namespace Shitcord.Services;
 
+public enum MatchMode : int {
+    Any = 0, First = 1, Exact = 2
+}
+
 public class AutoReplyData
 {
     public string match;
     public string reply;
+    public MatchMode mode;
+    public bool match_case;
 
-    public AutoReplyData(string m, string r)
+    public AutoReplyData(string m, string r, MatchMode md, bool mc)
     {
         match = m;
         reply = r;
+        mode = md; 
+        match_case = mc;
     }
 }
 
@@ -44,7 +52,9 @@ public class AutoReplyService
             .New().Retrieve(
                 AutoReplyTable.GUILD_ID, 
                 AutoReplyTable.MATCH, 
-                AutoReplyTable.REPLY
+                AutoReplyTable.REPLY,
+                AutoReplyTable.MODE,
+                AutoReplyTable.CASE
             ).From(AutoReplyTable.TABLE_NAME)
             .Build()
         );
@@ -56,11 +66,13 @@ public class AutoReplyService
             var guild_id = (ulong)(long)data[0][i]!;
             var match = (string)data[1][i]!;
             var reply = (string)data[2][i]!;
+            var mode = (MatchMode)(long)data[3][i]!;
+            var match_case = (long)data[4][i]! == 1;
 
             if (!ReplyDataSet.ContainsKey(guild_id))
                 ReplyDataSet.Add(guild_id, new List<AutoReplyData>());
 
-            var auto_reply_data = new AutoReplyData(match, reply);
+            var auto_reply_data = new AutoReplyData(match, reply, mode, match_case);
             var item = ReplyDataSet[guild_id];
             item.Add(auto_reply_data);
         }
@@ -73,8 +85,20 @@ public class AutoReplyService
 
         var dataset = ReplyDataSet[args.Guild.Id];
         foreach (var data in dataset) {
-            var msg = args.Message.Content.ToLower();
-            if (msg.Contains(data.match, StringComparison.OrdinalIgnoreCase)) {
+            StringComparison cmp;
+            if (data.match_case) cmp = StringComparison.OrdinalIgnoreCase;
+            else cmp = StringComparison.Ordinal;
+
+            var msg = args.Message.Content;
+            bool found_match = data.mode switch {
+                MatchMode.Any => msg.Contains(data.match, cmp), 
+                MatchMode.Exact => data.match_case ?
+                    msg.ToLower() == data.match.ToLower() : msg == data.match,
+                MatchMode.First => msg.StartsWith(data.match, cmp),
+                _ => false,
+            };
+
+            if (found_match) {
                 await args.Message.RespondAsync(data.reply);
                 return;
             }
@@ -92,7 +116,7 @@ public class AutoReplyService
 
             Database.executeUpdate(QueryBuilder
                 .New().Insert().Into(AutoReplyTable.TABLE_NAME)
-                .Values(guild.Id, data.match, data.reply)
+                .Values(guild.Id, data.match, data.reply, (int)data.mode, data.match_case)
                 .Build()
             );
         } else throw new CommandException("Match already exists in the dataset");

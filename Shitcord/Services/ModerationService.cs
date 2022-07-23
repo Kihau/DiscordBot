@@ -1,7 +1,6 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
-using Renci.SshNet.Messages;
 
 namespace Shitcord.Services;
 
@@ -54,8 +53,6 @@ public class ModerationService
             return Task.CompletedTask;
         
         var data = GetOrAddEditData(e.Guild);
-        if (e.MessageBefore is null)
-            return Task.CompletedTask;
         
         data.Add((e.Message, e.MessageBefore.Content));
 

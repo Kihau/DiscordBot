@@ -53,11 +53,39 @@ public class UtilityModule : BaseCommandModule
         public AutoReplyService Reply { get; }
         public ReplyModule(AutoReplyService reply) => Reply = reply;
 
-        [Command("add")]
-        [Description("Adds auto reply for a certain string in a message")]
-        public async Task AddCommand(CommandContext ctx, string match, string reply) 
-        { 
-            this.Reply.AddReplyData(ctx.Guild, new AutoReplyData(match.ToLower(), reply)); 
+        [Command("addany")]
+        [Description("Adds auto reply that responds to messages." +
+            "Tries to match any message part with provided match string")]
+        public async Task AddAnyCommand(
+            CommandContext ctx, string match, string reply, bool match_case = false
+        ) { 
+            this.Reply.AddReplyData(
+                ctx.Guild, new AutoReplyData(match.ToLower(), reply, MatchMode.Any, match_case)
+            ); 
+            await ctx.RespondAsync("Successfully added to the reply list 👍");
+        }
+
+        [Command("addfirst")]
+        [Description("Adds auto reply that responds to messages." +
+            "Tries to match first message characters with provided match string")]
+        public async Task AddFirstCommand(
+            CommandContext ctx, string match, string reply, bool match_case = false
+        ) { 
+            this.Reply.AddReplyData(
+                ctx.Guild, new AutoReplyData(match.ToLower(), reply, MatchMode.First, match_case)
+            ); 
+            await ctx.RespondAsync("Successfully added to the reply list 👍");
+        }
+
+        [Command("addexact")]
+        [Description("Adds auto reply that responds to messages." +
+            "Tries to match all message with provided match string")]
+        public async Task AddExactCommand(
+            CommandContext ctx, string match, string reply, bool match_case = true
+        ) { 
+            this.Reply.AddReplyData(
+                ctx.Guild, new AutoReplyData(match.ToLower(), reply, MatchMode.Exact, match_case)
+            ); 
             await ctx.RespondAsync("Successfully added to the reply list 👍");
         }
 
