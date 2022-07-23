@@ -165,25 +165,8 @@ public class MarkovService
         );
     }
 
-    // TODO: Increment query (increment by 1 in this case)
     public void UpdateChainFrequency(string base_string, string chain_string)
     {
-        var columns = DatabaseContext.RetrieveColumns(QueryBuilder
-            .New()
-            .Retrieve(MarkovTable.FREQUENCY)
-            .From(MarkovTable.TABLE_NAME)
-            .Where(Condition
-                .New(MarkovTable.BASE)
-                .Equals(base_string)
-                .And(MarkovTable.CHAIN)
-                .Equals(chain_string)
-            ).Build()
-        );
-
-        if (columns is null) throw new UnreachableException();
-
-        int freq_num = (int)(long)(columns[0][0] ?? 0);
-
         DatabaseContext.executeUpdate(QueryBuilder
             .New()
             .Update(MarkovTable.TABLE_NAME)
@@ -192,7 +175,7 @@ public class MarkovService
                 .Equals(base_string)
                 .And(MarkovTable.CHAIN)
                 .Equals(chain_string)
-            ).Set(MarkovTable.FREQUENCY, freq_num + 1)
+            ).SetIncrementBy(MarkovTable.FREQUENCY, 1)
             .Build()
         );
     }

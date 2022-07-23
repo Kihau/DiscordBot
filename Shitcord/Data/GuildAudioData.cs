@@ -11,10 +11,6 @@ using Shitcord.Extensions;
 
 namespace Shitcord.Data;
 
-// -----------------------------------------------------------------------------------------------
-// TODO: Major cleanup required
-// -----------------------------------------------------------------------------------------------
-
 public enum LoopingMode : int
 {
     None = 0,
@@ -42,14 +38,13 @@ public class GuildAudioData
     public LoopingMode Looping { 
         get => _looping;
         set {
-             _looping = value;                                      
-                                                                  
-             DatabaseContext.executeUpdate(QueryBuilder
-                 .New().Update(GuildAudioTable.TABLE_NAME)
-                 .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
-                 .Set(GuildAudioTable.LOOPING, (int)Looping)
-                 .Build()
-             );
+            _looping = value;                                      
+            DatabaseContext.executeUpdate(QueryBuilder
+                .New().Update(GuildAudioTable.TABLE_NAME)
+                .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
+                .Set(GuildAudioTable.LOOPING, (int)value)
+                .Build()
+            );
         }
     }
 
@@ -60,13 +55,13 @@ public class GuildAudioData
     public int Volume { get; private set; } = 100;
     public AudioFilters Filters { get; set; } = new();
 
-    // TODO: Autoresume, autojoin guild dependent 
-    // TODO: Custom timeout times for those two
+    //public bool ResumeOnAutoJoin { get; set; } = false;
+    //public bool AutoJoinChannel { get; set; } = true;
+
     private Timer? _leaveTimer;
+    public TimeSpan LeaveTimeout { get; set; } = TimeSpan.FromSeconds(10);
     public bool TimeoutStarted { get; private set; }
 
-    // TODO: Update message only when content has changed (ratelimits)
-    // TODO: Set custom timeout for updating messages (to not queue unnesessary updates)
     public DiscordMessage? QueueUpdateMessage { get; set; }
     public DiscordChannel? QueueUpdateChannel { get; set; }
     public DiscordMessage? SongUpdateMessage { get; set; }
@@ -74,8 +69,8 @@ public class GuildAudioData
 
     public Timer MessageUpdaterTimer { get; }
 
-    public bool QueueRequiresUpdate { get; set; } = true;
-    public bool SongRequiresUpdate { get; set; } = true;
+    public bool QueueRequiresUpdate { get; set; } = false;
+    public bool SongRequiresUpdate { get; set; } = false;
 
     // Change it later (maybe not?)
     public int page = 0;
@@ -114,8 +109,7 @@ public class GuildAudioData
 
     public async Task CreateConnectionAsync(DiscordChannel vchannel)
     {
-        if (this.Player is {IsConnected: true})
-        {
+        if (this.Player is {IsConnected: true}) {
             if (vchannel != this.Player.Channel)
                 await this.DestroyConnectionAsync();
             else return;
@@ -129,12 +123,6 @@ public class GuildAudioData
 
     private void InitializeDatabase() 
     {
-        //var str = DatabaseContext.TableToString(
-        //    GuildAudioTable.TABLE_NAME, GuildAudioTable.COLUMNS
-        //);
-        //
-        //Console.WriteLine(str);
-
         bool exists_in_table = DatabaseContext.ExistsInTable(
             GuildAudioTable.TABLE_NAME, 
             Condition.New(GuildAudioTable.GUILD_ID).Equals(Guild.Id)
@@ -153,7 +141,8 @@ public class GuildAudioData
                     QueueUpdateMessage?.Id,
                     SongUpdateMessage?.Id,
                     Volume,
-                    (int)Looping
+                    (int)Looping,
+                    LeaveTimeout.Ticks
                 ).Build()
             );
 
@@ -200,6 +189,7 @@ public class GuildAudioData
 
         Volume = (int)(long)(retrieved[5][0] ?? 100);
         Looping = (LoopingMode)(long)(retrieved[6][0] ?? 0);
+        LeaveTimeout = TimeSpan.FromTicks((long)(retrieved[6][0] ?? 0));
     }
 
     void DatabaseUpdateQU() 
@@ -220,6 +210,16 @@ public class GuildAudioData
             .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
             .Set(GuildAudioTable.SU_CHANNEL, SongUpdateChannel?.Id)
             .Set(GuildAudioTable.SU_MSG, SongUpdateMessage?.Id)
+            .Build()
+        );
+    }
+
+    public void DatabaseUpdateLeavetimeout() 
+    {
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New().Update(GuildAudioTable.TABLE_NAME)
+            .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
+            .Set(GuildAudioTable.TIMEOUT, LeaveTimeout.Ticks)
             .Build()
         );
     }
@@ -440,14 +440,13 @@ public class GuildAudioData
 
     public void StartTimeout()
     {
-        this._leaveTimer?.Dispose();
-        
-        this._leaveTimer = new Timer(
-            this.LeaveTimerCallback, null, 
-            new TimeSpan(0, 0, 0, 10), Timeout.InfiniteTimeSpan
+        _leaveTimer?.Dispose();
+        _leaveTimer = new Timer(
+            LeaveTimerCallback, null, 
+            LeaveTimeout, Timeout.InfiniteTimeSpan
         );
 
-        this.TimeoutStarted = true;
+        TimeoutStarted = true;
     }
 
     public void CancelTimeout()

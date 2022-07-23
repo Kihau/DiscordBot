@@ -10,7 +10,8 @@ public class GuildAudioTable
     public static readonly Column QU_MSG     = new("qu_msg_id", "bigint");
     public static readonly Column SU_MSG     = new("su_msg_id", "bigint");
     public static readonly Column VOLUME     = new("volume", "int", false);
-    public static readonly Column LOOPING    = new("looping", "boolean", false);
+    public static readonly Column LOOPING    = new("looping", "int", false);
+    public static readonly Column TIMEOUT    = new("looping", "bigint", false);
     
     public static readonly List<Column> COLUMNS = new() {
         GUILD_ID, QU_CHANNEL, SU_CHANNEL, QU_MSG, SU_MSG, VOLUME, LOOPING 

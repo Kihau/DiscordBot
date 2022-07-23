@@ -25,6 +25,7 @@ public class AudioService
         DatabaseContext = dbctx;
 
         Client.VoiceStateUpdated += BotVoiceTimeout;
+        //Client.VoiceStateUpdated += BotVoiceAutoJoin;
         Client.ComponentInteractionCreated += AudioUpdateButtons;
 
         Client.GuildDownloadCompleted += (_, _) => {
@@ -49,7 +50,7 @@ public class AudioService
         DiscordClient client, ComponentInteractionCreateEventArgs args
     ) {
         Task.Run(async () => {
-            this.AudioData.TryGetValue(args.Guild.Id, out var data);
+            AudioData.TryGetValue(args.Guild.Id, out var data);
             if (data == null) 
                 return;
 
@@ -132,10 +133,30 @@ public class AudioService
         });
         return Task.CompletedTask;
     }
+
+    /* NOTE: This was supposed to be auto join logic, but either the dsharp lib is broken
+     *       or the Discord Api is garbage (probably both), so that is no fun...
+    private async Task BotVoiceAutoJoin(DiscordClient sender, VoiceStateUpdateEventArgs args)
+    {
+        AudioData.TryGetValue(args.Guild.Id, out var data);
+        if (data == null || data.IsConnected) 
+            return;
+
+        if (args.Before == null || args.Before.Channel == null)
+            return;
+
+        if (args.Before.Channel.Users.Count == 0) {
+            await data.CreateConnectionAsync(args.Channel);
+
+            if (data.ResumeOnAutoJoin)
+                await data.PlayAsync();
+        }
+    }
+    */
     
     private Task BotVoiceTimeout(DiscordClient sender, VoiceStateUpdateEventArgs args)
     {
-        this.AudioData.TryGetValue(args.Guild.Id, out var data);
+        AudioData.TryGetValue(args.Guild.Id, out var data);
         if (data is not {IsConnected: true}) 
             return Task.CompletedTask;
 
@@ -152,11 +173,11 @@ public class AudioService
 
     public GuildAudioData GetOrAddData(DiscordGuild guild)
     {
-        if (this.AudioData.TryGetValue(guild.Id, out var data))
+        if (AudioData.TryGetValue(guild.Id, out var data))
             return data;
 
         data = new GuildAudioData(
-            guild, this.Lavalink.Node, this.Client, this.DatabaseContext
+            guild, Lavalink.Node, Client, DatabaseContext
         );
 
         this.AudioData.Add(guild.Id, data);
@@ -165,7 +186,7 @@ public class AudioService
 
     public async Task<IEnumerable<LavalinkTrack>> GetTracksAsync(Uri uri)
     {
-        var result = await this.Lavalink.Node.Rest.GetTracksAsync(uri);
+        var result = await Lavalink.Node.Rest.GetTracksAsync(uri);
         if (result.LoadResultType == LavalinkLoadResultType.PlaylistLoaded)
             return result.Tracks;
 

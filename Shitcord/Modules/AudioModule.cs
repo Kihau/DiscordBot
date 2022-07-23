@@ -387,12 +387,12 @@ public class AudioModule : BaseCommandModule
 
     [Command("pause")]
     [Description("Pauses current track")]
-    public async Task PauseLavaCommand(CommandContext ctx)
+    public async Task PauseCommand(CommandContext ctx)
         => await this.Data.PauseAsync();
 
     [Command("nowplaying"), Aliases("current", "np")]
     [Description("Displays info about current song")]
-    public async Task NowPlayingLavaCommand(CommandContext ctx)
+    public async Task NowPlayingCommand(CommandContext ctx)
     {
         if (this.Data.CurrentTrack != null)
         {
@@ -412,19 +412,29 @@ public class AudioModule : BaseCommandModule
 
     [Command("resume")]
     [Description("Resumes paused song")]
-    public async Task ResumeLavaCommand(CommandContext ctx)
-        => await this.Data.ResumeAsync();
+    public async Task ResumeCommand(CommandContext ctx)
+        => await Data.ResumeAsync();
 
     [Command("volume")]
     [Description("Sets volume level of a command")]
-    public async Task VolumeLavaCommand(CommandContext ctx, 
+    public async Task VolumeCommand(CommandContext ctx, 
         [Description("volume level (greater than 0)")] int level
-    ) => await this.Data.SetVolumeAsync(level);
+    ) => await Data.SetVolumeAsync(level);
 
     [Command("leave")]
     [Description("Leaves the voice channel")]
-    public async Task LeaveLavaCommand(CommandContext ctx)
-        => await this.Data.DestroyConnectionAsync();
+    public async Task LeaveCommand(CommandContext ctx)
+        => await Data.DestroyConnectionAsync();
+
+
+    [Command("autoleave")]
+    [Description("Sets timeout for the auto leave when noone is in a voice channel")]
+    public Task AutoLeaveTimeoutCommand(CommandContext ctx, TimeSpan timeout) 
+    {
+        Data.LeaveTimeout = timeout;
+        Data.DatabaseUpdateLeavetimeout();
+        return Task.CompletedTask;
+    }
 
     [Group("filters")]
     [Description("Track filter commands")]
