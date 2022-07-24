@@ -55,8 +55,8 @@ public class GuildAudioData
     public int Volume { get; private set; } = 100;
     public AudioFilters Filters { get; set; } = new();
 
+    public bool AutoJoinChannel { get; set; } = false;
     public bool ResumeOnAutoJoin { get; set; } = false;
-    public bool AutoJoinChannel { get; set; } = true;
 
     private Timer? _leaveTimer;
     public TimeSpan LeaveTimeout { get; set; } = TimeSpan.FromSeconds(10);
@@ -143,7 +143,9 @@ public class GuildAudioData
                     SongUpdateMessage?.Id,
                     Volume,
                     (int)Looping,
-                    LeaveTimeout.Ticks
+                    LeaveTimeout.Ticks,
+                    AutoJoinChannel,
+                    ResumeOnAutoJoin
                 ).Build()
             );
 
@@ -191,6 +193,8 @@ public class GuildAudioData
         Volume = (int)(long)(retrieved[5][0] ?? 100);
         Looping = (LoopingMode)(long)(retrieved[6][0] ?? 0);
         LeaveTimeout = TimeSpan.FromTicks((long)(retrieved[6][0] ?? 0));
+        AutoJoinChannel = (long)(retrieved[7][0] ?? false) == 1;
+        ResumeOnAutoJoin = (long)(retrieved[8][0] ?? false) == 1;
     }
 
     void DatabaseUpdateQU() 
@@ -221,6 +225,17 @@ public class GuildAudioData
             .New().Update(GuildAudioTable.TABLE_NAME)
             .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
             .Set(GuildAudioTable.TIMEOUT, LeaveTimeout.Ticks)
+            .Build()
+        );
+    }
+
+    public void DatabaseUpdateAutoJoin() 
+    {
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New().Update(GuildAudioTable.TABLE_NAME)
+            .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
+            .Set(GuildAudioTable.AUTOJOIN, AutoJoinChannel)
+            .Set(GuildAudioTable.AUTORESUME, ResumeOnAutoJoin)
             .Build()
         );
     }

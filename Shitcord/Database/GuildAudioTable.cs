@@ -12,8 +12,11 @@ public class GuildAudioTable
     public static readonly Column VOLUME     = new("volume", "int", false);
     public static readonly Column LOOPING    = new("looping", "int", false);
     public static readonly Column TIMEOUT    = new("timeout", "bigint", false);
+    public static readonly Column AUTOJOIN   = new("autojoin", "boolean", false);
+    public static readonly Column AUTORESUME = new("autoresume", "boolean", false);
     
     public static readonly List<Column> COLUMNS = new() {
-        GUILD_ID, QU_CHANNEL, SU_CHANNEL, QU_MSG, SU_MSG, VOLUME, LOOPING, TIMEOUT
+        GUILD_ID, QU_CHANNEL, SU_CHANNEL, QU_MSG, SU_MSG, VOLUME, LOOPING, TIMEOUT, AUTOJOIN,
+        AUTORESUME,
     };
 }

@@ -429,11 +429,39 @@ public class AudioModule : BaseCommandModule
 
     [Command("autoleave")]
     [Description("Sets timeout for the auto leave when noone is in a voice channel")]
-    public Task AutoLeaveTimeoutCommand(CommandContext ctx, TimeSpan timeout) 
+    public async Task AutoLeaveTimeoutCommand(CommandContext ctx, TimeSpan timeout) 
     {
         Data.LeaveTimeout = timeout;
         Data.DatabaseUpdateLeavetimeout();
-        return Task.CompletedTask;
+
+        await ctx.RespondAsync($"Leave timeout now set to: {Data.LeaveTimeout}");
+    }
+
+
+    [Command("autojoin")]
+    [Description("Sets flag for the auto join when noone when someone enters a voice channel")]
+    public async Task AutoJoinCommand(CommandContext ctx, bool? flag = null) 
+    {
+        if (flag is null)
+            Data.AutoJoinChannel = !Data.AutoJoinChannel;
+        else Data.AutoJoinChannel = flag.Value;
+
+        Data.DatabaseUpdateAutoJoin();
+
+        await ctx.RespondAsync($"Autojoin is now set to: {Data.AutoJoinChannel}");
+    }
+
+    [Command("autoresume")]
+    [Description("Sets flag for the auto resume when noone when someone enters a voice channel")]
+    public async Task AutoResumeCommand(CommandContext ctx, bool? flag = null)
+    {
+        if (flag is null)
+            Data.ResumeOnAutoJoin = !Data.ResumeOnAutoJoin;
+        else Data.ResumeOnAutoJoin = flag.Value;
+
+        Data.DatabaseUpdateAutoJoin();
+
+        await ctx.RespondAsync($"Autoresume is now set to: {Data.ResumeOnAutoJoin}");
     }
 
     [Group("filters")]

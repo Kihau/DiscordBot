@@ -22,7 +22,7 @@ public class ModerationService
 
     private Task MessageDeletedHandler(DiscordClient client, MessageDeleteEventArgs e)
     {
-        if (e.Message is null || e.Message.Author.IsBot)
+        if (e.Message is null || e.Message.Author == null ||  e.Message.Author.IsBot)
             return Task.CompletedTask;
         
         var data = GetOrAddDeleteData(e.Guild);
@@ -49,7 +49,7 @@ public class ModerationService
 
     private Task MessageEditedHandler(DiscordClient client, MessageUpdateEventArgs e)
     {
-        if (e.MessageBefore is null || e.Author.IsBot)
+        if (e.MessageBefore is null || e.Author == null || e.Author.IsBot)
             return Task.CompletedTask;
         
         var data = GetOrAddEditData(e.Guild);
