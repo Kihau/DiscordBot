@@ -704,24 +704,6 @@ public class GuildAudioData
         if (this.Player is not {IsConnected: true})
             return;
 
-        if (CurrentTrack != null) {
-            switch (Looping) {
-                case LoopingMode.None: break;
-
-                case LoopingMode.Queue: {
-                    Enqueue(CurrentTrack);
-                } break;
-
-                case LoopingMode.Song: { 
-                    EnqueueFirst(CurrentTrack);
-                } break;
-
-                case LoopingMode.Shuffle: { 
-                    EnqueueRandom(CurrentTrack);
-                } break;
-            }
-        }
-
         this.CurrentTrack = null;
         this.SkipEventFire = true;
 
