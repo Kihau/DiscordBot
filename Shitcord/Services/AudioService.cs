@@ -25,16 +25,13 @@ public class AudioService
         DatabaseContext = dbctx;
 
         Client.VoiceStateUpdated += BotVoiceTimeout;
-        //Client.VoiceStateUpdated += BotVoiceAutoJoin;
+        Client.VoiceStateUpdated += BotVoiceAutoJoin;
         Client.ComponentInteractionCreated += AudioUpdateButtons;
 
-        Client.GuildDownloadCompleted += (_, _) => {
-            Task.Run(LoadAllDataFromDatabase);
-            return Task.CompletedTask;
-        };
+        Client.GuildDownloadCompleted += (_, _) => Task.Run(LoadAllDataFromDatabase);
     }
 
-    public void LoadAllDataFromDatabase()
+    private void LoadAllDataFromDatabase()
     {
         foreach (var (id, guild) in Client.Guilds) {
             bool exists_in_table = DatabaseContext.ExistsInTable(
@@ -134,25 +131,26 @@ public class AudioService
         return Task.CompletedTask;
     }
 
-    /* NOTE: This was supposed to be auto join logic, but either the dsharp lib is broken
-     *       or the Discord Api is garbage (probably both), so that is no fun...
-    private async Task BotVoiceAutoJoin(DiscordClient sender, VoiceStateUpdateEventArgs args)
+    private Task BotVoiceAutoJoin(DiscordClient sender, VoiceStateUpdateEventArgs args)
     {
-        AudioData.TryGetValue(args.Guild.Id, out var data);
-        if (data == null || data.IsConnected) 
-            return;
+        Task.Run(async () => {
+            AudioData.TryGetValue(args.Guild.Id, out var data);
+            if (data == null || data.IsConnected || !data.AutoJoinChannel) 
+                return;
 
-        if (args.Before == null || args.Before.Channel == null)
-            return;
+            if (args.Channel == null)
+                return;
 
-        if (args.Before.Channel.Users.Count == 0) {
-            await data.CreateConnectionAsync(args.Channel);
+            if (args.Before == null && args.Channel.Users.Count == 1) {
+                await data.CreateConnectionAsync(args.Channel);
 
-            if (data.ResumeOnAutoJoin)
-                await data.PlayAsync();
-        }
+                if (data.ResumeOnAutoJoin)
+                    await data.PlayAsync();
+            }
+        });
+
+        return Task.CompletedTask;
     }
-    */
     
     private Task BotVoiceTimeout(DiscordClient sender, VoiceStateUpdateEventArgs args)
     {

@@ -55,8 +55,8 @@ public class GuildAudioData
     public int Volume { get; private set; } = 100;
     public AudioFilters Filters { get; set; } = new();
 
-    //public bool ResumeOnAutoJoin { get; set; } = false;
-    //public bool AutoJoinChannel { get; set; } = true;
+    public bool ResumeOnAutoJoin { get; set; } = false;
+    public bool AutoJoinChannel { get; set; } = true;
 
     private Timer? _leaveTimer;
     public TimeSpan LeaveTimeout { get; set; } = TimeSpan.FromSeconds(10);
@@ -109,16 +109,17 @@ public class GuildAudioData
 
     public async Task CreateConnectionAsync(DiscordChannel vchannel)
     {
-        if (this.Player is {IsConnected: true}) {
-            if (vchannel != this.Player.Channel)
-                await this.DestroyConnectionAsync();
+        if (Player is {IsConnected: true}) {
+            if (vchannel != Player.Channel)
+                await DestroyConnectionAsync();
             else return;
         }
 
-        this.Player = await this.Lavalink.ConnectAsync(vchannel);
-        await this.Player.SetVolumeAsync(this.Volume);
-        await this.Player.SetAudiofiltersAsync(this.Filters);
-        this.Player.PlaybackFinished += PlaybackFinished;
+        // TODO: FIX: For some reason ConnectAsync can block the bot - check why
+        Player = await Lavalink.ConnectAsync(vchannel);
+        await Player.SetVolumeAsync(Volume);
+        await Player.SetAudiofiltersAsync(Filters);
+        Player.PlaybackFinished += PlaybackFinished;
     }
 
     private void InitializeDatabase() 
