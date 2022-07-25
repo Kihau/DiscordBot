@@ -136,12 +136,12 @@ public class MarkovModule : BaseCommandModule
         if (Data.ExcludedChannelIDs.Contains(channel.Id)) {
             Data.DeleteExcludeChannel(channel.Id);
             await ctx.RespondAsync(
-                $"Channel `{channel.Name}` is now excluded from data gathering"
+                $"Channel `{channel.Name}` is no longer excluded from data gathering"
             );
         } else {
             Data.InsertNewExcludeChannel(channel.Id);
             await ctx.RespondAsync(
-                $"Channel `{channel.Name}` is no longer excluded from data gathering"
+                $"Channel `{channel.Name}` is now excluded from data gathering"
             );
         }
     }
