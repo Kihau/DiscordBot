@@ -115,7 +115,8 @@ public class GuildAudioData
             else return;
         }
 
-        // TODO: FIX: For some reason ConnectAsync can block the bot - check why
+        // TODO: THIS CODE IS BLOCKING
+        // For some reason ConnectAsync can block the bot - check why
         Player = await Lavalink.ConnectAsync(vchannel);
         await Player.SetVolumeAsync(Volume);
         await Player.SetAudiofiltersAsync(Filters);

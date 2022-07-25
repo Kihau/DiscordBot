@@ -2,8 +2,6 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using DSharpPlus.Lavalink;
-using DSharpPlus.Lavalink.Entities;
 using Shitcord.Data;
 using Shitcord.Extensions;
 using Shitcord.Services;
@@ -17,9 +15,9 @@ public class MarkovModule : BaseCommandModule
     private MarkovService Markov { get; }
     private GuildMarkovData Data { get; set; }
 
-    #pragma warning disable CS8618
+#pragma warning disable CS8618
     public MarkovModule(MarkovService service) => Markov = service;
-    #pragma warning restore CS8618
+#pragma warning restore CS8618
 
     public override async Task BeforeExecutionAsync(CommandContext ctx)
     {
@@ -54,6 +52,19 @@ public class MarkovModule : BaseCommandModule
         Data.IsEnabled = true; 
         Data.UpdateEnabledFlag();
         await ctx.RespondAsync($"Markov service is now enabled");
+    }
+
+    [Command("global"), Description("Allows markov to share string to the global string pool")]
+    public async Task GlobalSetCommand(CommandContext ctx, bool? enabled = null) 
+    {
+        if (enabled is null)
+            Data.ResponseEnabled = !Data.ResponseEnabled;
+        else Data.ResponseEnabled = enabled.Value;
+        Data.UpdateGlobalFlag();
+
+        await ctx.RespondAsync(
+            $"Sharing between all guilds is now set to: `{Data.ResponseEnabled}`"
+        );
     }
 
     [Command("autoresponse"), Description("Sets markov autoresponse (input nothing to switch it)")]

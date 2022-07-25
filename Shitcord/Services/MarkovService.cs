@@ -8,6 +8,7 @@ using Shitcord.Database.Queries;
 
 namespace Shitcord.Services;
 
+// TODO: Implement guilds + global
 public class MarkovService
 {
     private DiscordClient Client { get; }

@@ -5,16 +5,15 @@ using Shitcord.Database.Queries;
 
 namespace Shitcord.Data;
 
-// NOTE: Privacy
-// I could easily add an option to store markov strings separete for each guild.
-// That being said, this is not a widely used bot, so there is no need for that.
 public class GuildMarkovData
 {
     public DiscordGuild Guild { get; }
     public DatabaseService Database { get; } 
 
     public bool IsEnabled { get; set; } = false;
-    //public bool IsGlobal { get; set; } = false;
+    // NOTE: If the flag is set to true, BOTH retrieving and feeding markov is enabled.
+    //       I could split those two into GlobalFeed and GlobalRetrieve.
+    public bool IsGlobal { get; set; } = false;
 
     // NOTE: Adding channel blocks either auto response and data gathering
     public List<ulong> ExcludedChannelIDs { get; set; } = new();
@@ -61,7 +60,7 @@ public class GuildMarkovData
             Database.executeUpdate(QueryBuilder
                 .New().Insert().Into(GuildMarkovTable.TABLE_NAME)
                 .Values(
-                    Guild.Id, IsEnabled, ResponseEnabled, ResponseChance, 
+                    Guild.Id, IsEnabled, IsGlobal, ResponseEnabled, ResponseChance,
                     ResponseTimeout.Ticks, MinChainLength, MaxChainLength
                 ).Build()
             );
@@ -69,11 +68,12 @@ public class GuildMarkovData
         }
 
         IsEnabled       = (long)(data[1][0] ?? 0) == 1;
-        ResponseEnabled = (long)(data[2][0] ?? 0) == 1;
-        ResponseChance  = (int)(long)(data[3][0] ?? 100);
-        ResponseTimeout = TimeSpan.FromTicks((long)(data[4][0] ?? TimeSpan.TicksPerHour / 2)); 
-        MinChainLength  = (int)(long)(data[5][0] ?? MinChainLength);
-        MaxChainLength  = (int)(long)(data[6][0] ?? MaxChainLength);
+        IsGlobal        = (long)(data[2][0] ?? 0) == 1;
+        ResponseEnabled = (long)(data[3][0] ?? 0) == 1;
+        ResponseChance  = (int)(long)(data[4][0] ?? 100);
+        ResponseTimeout = TimeSpan.FromTicks((long)(data[5][0] ?? TimeSpan.TicksPerHour / 2)); 
+        MinChainLength  = (int)(long)(data[6][0] ?? MinChainLength);
+        MaxChainLength  = (int)(long)(data[7][0] ?? MaxChainLength);
     }
 
     public void UpdateEnabledFlag() {
@@ -81,6 +81,15 @@ public class GuildMarkovData
             .New().Update(GuildMarkovTable.TABLE_NAME)
             .WhereEquals(GuildMarkovTable.GUILD_ID, Guild.Id)
             .Set(GuildMarkovTable.ENABLED, IsEnabled)
+            .Build()
+        );
+    }
+
+    public void UpdateGlobalFlag() {
+        Database.executeUpdate(QueryBuilder
+            .New().Update(GuildMarkovTable.TABLE_NAME)
+            .WhereEquals(GuildMarkovTable.GUILD_ID, Guild.Id)
+            .Set(GuildMarkovTable.GLOBAL, IsGlobal)
             .Build()
         );
     }
