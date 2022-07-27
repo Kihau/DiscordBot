@@ -45,7 +45,6 @@ public class UtilityModule : BaseCommandModule
         await channel.DeleteMessagesAsync(messeges);
     }
 
-    // TODO: Add matching options (agressive, whole string, startswith, any, etc.)
     [Group("reply")] 
     [Description("Set of commands allowing to set automatic response to certain messages")]
     public class ReplyModule : BaseCommandModule
