@@ -13,6 +13,7 @@ using Shitcord.Services;
 using Shitcord.Database;
 using Shitcord.Database.Queries;
 using DSharpPlus.Interactivity.Enums;
+using Microsoft.Data.Sqlite;
 
 namespace Shitcord.Modules;
 
@@ -339,6 +340,19 @@ public class AuthModule : BaseCommandModule
         }
         string tables = Db.QueryResultToString(cols, table);
         await ctx.RespondAsync($"```\n{tables}```\n");
+    }
+    [Command("sql"), Description("Executes sql update query against db")]
+    public async Task ExecuteSQLQuery(CommandContext ctx, string query, bool console = true)
+    {
+        int rowsAffected;
+        try {
+            rowsAffected = Db.executeUpdate(query);
+        }
+        catch (SqliteException sqlExc) {
+            await ctx.RespondAsync($"\n{sqlExc.Message}\n");
+            return;
+        }
+        await ctx.RespondAsync($"\nSuccessfully executed, affected {rowsAffected} rows\n");
     }
 
     [Command("eval")]
