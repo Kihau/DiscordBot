@@ -17,14 +17,59 @@ public class MarkovService
     private Random Rng { get; }
     private char[] _excludeCharacters = { '.', ',', ':', ';', '?', '!' }; 
 
+    private List<ulong> AuthorizedGuilds = new();
+
     public MarkovService(DiscordBot bot, DatabaseService database)
     {
         Config = bot.Config;
         Client = bot.Client;
         DatabaseContext = database;
         Rng = new Random();
+        LoadAuthorizedGuils();
 
         Client.MessageCreated += MarkovMessageHandler;
+    }
+
+    public void AddAuthorizedGuild(DiscordGuild guild) {
+        if (AuthorizedGuilds.Contains(guild.Id))
+            throw new CommandException("Guild is already in the authorized list");
+
+        AuthorizedGuilds.Add(guild.Id);
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New().Insert()
+            .Into(AuthMarkovTable.TABLE_NAME)
+            .Values(guild.Id)
+            .Build()
+        );
+    }
+
+    public void RemoveAuthorizedGuild(DiscordGuild guild) {
+        if (!AuthorizedGuilds.Contains(guild.Id))
+            throw new CommandException("Specified guild doesn't exists in the list");
+
+        AuthorizedGuilds.Remove(guild.Id);
+        DatabaseContext.executeUpdate(QueryBuilder
+            .New().Delete()
+            .From(AuthMarkovTable.TABLE_NAME)
+            .WhereEquals(AuthMarkovTable.CHANNEL_ID, guild.Id)
+            .Build()
+        );
+    }
+
+    public void LoadAuthorizedGuils() {
+        var guilds = DatabaseContext.RetrieveColumns(QueryBuilder
+            .New().Retrieve(AuthMarkovTable.CHANNEL_ID)
+            .From(GuildMarkovTable.TABLE_NAME)
+            .Build()
+        );
+
+        if (guilds == null)
+            return;
+
+        foreach (var id in guilds[0]) {
+            if (id != null)
+                AuthorizedGuilds.Add((ulong)(long)id);
+        }
     }
 
     public void ClearCoruptedStrings() 
@@ -258,7 +303,7 @@ public class MarkovService
     private Task MarkovMessageHandler(DiscordClient client, MessageCreateEventArgs e)
     {
         Task.Run(async () => {
-            if (e.Author.IsBot)
+            if (e.Author.IsBot || !AuthorizedGuilds.Contains(e.Guild.Id))
                 return;
 
             var data = GetOrAddData(e.Guild);

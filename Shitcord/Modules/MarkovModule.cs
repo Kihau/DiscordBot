@@ -11,7 +11,9 @@ using Shitcord.Services;
 namespace Shitcord.Modules;
 
 [Group("markov")]
-[Description("Markov. Must. Consume.")]
+[Description(
+    "**Markov. Must. Consume.**\n Only users in authorized guilds can execute markov commands"
+)]
 public class MarkovModule : BaseCommandModule 
 {
     private MarkovService Markov { get; }
@@ -32,6 +34,20 @@ public class MarkovModule : BaseCommandModule
     public async Task ClearCoruptedCommand(CommandContext ctx) { 
         Markov.ClearCoruptedStrings();
         await ctx.RespondAsync($"Corupted strings cleared");
+    }
+
+    [RequireAuthorized]
+    [Command("addguild"), Aliases("ag"), Description("Adds guild to authorized list.")]
+    public async Task AddAuthGuildCommand(CommandContext ctx, DiscordGuild guild) {
+        Markov.AddAuthorizedGuild(guild);
+        await ctx.RespondAsync("Guild added to the authorized list");
+    }
+
+    [RequireAuthorized]
+    [Command("removeguild"), Aliases("rg"), Description("Removes guild from authorized list.")]
+    public async Task RemoveAuthGuildCommand(CommandContext ctx, DiscordGuild guild) {
+        Markov.RemoveAuthorizedGuild(guild);
+        await ctx.RespondAsync("Guild removed from the authorized list");
     }
 
 

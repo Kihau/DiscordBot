@@ -84,6 +84,7 @@ public class DiscordBot
             Console.WriteLine(
                 $"[{e.Guild.Name}] {e.Author.Username}@{e.Channel.Name}: {message_content}"
             );
+            var num = new HttpClient();
         }
 
         return Task.CompletedTask;

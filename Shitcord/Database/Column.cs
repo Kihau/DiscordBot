@@ -16,8 +16,9 @@ public class Column
     {
         this.nullable = nullable;
     }
-    public Column(string name, string type, bool nullable = true, bool primaryKey = false) : this (name, type, nullable)
-    {
+    public Column(
+        string name, string type, bool nullable = true, bool primaryKey = false
+    ) : this (name, type, nullable) {
         this.primaryKey = primaryKey;
     }
 }
