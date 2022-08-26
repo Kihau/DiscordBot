@@ -17,7 +17,7 @@ public class MarkovService
     private Random Rng { get; }
     private char[] _excludeCharacters = { '.', ',', ':', ';', '?', '!' }; 
 
-    private List<ulong> AuthorizedGuilds = new();
+    public List<ulong> AuthorizedGuilds = new();
 
     public MarkovService(DiscordBot bot, DatabaseService database)
     {
@@ -30,7 +30,8 @@ public class MarkovService
         Client.MessageCreated += MarkovMessageHandler;
     }
 
-    public void AddAuthorizedGuild(DiscordGuild guild) {
+    public void AddAuthorizedGuild(DiscordGuild guild) 
+    {
         if (AuthorizedGuilds.Contains(guild.Id))
             throw new CommandException("Guild is already in the authorized list");
 
@@ -43,7 +44,8 @@ public class MarkovService
         );
     }
 
-    public void RemoveAuthorizedGuild(DiscordGuild guild) {
+    public void RemoveAuthorizedGuild(DiscordGuild guild) 
+    {
         if (!AuthorizedGuilds.Contains(guild.Id))
             throw new CommandException("Specified guild doesn't exists in the list");
 
@@ -58,7 +60,7 @@ public class MarkovService
 
     public void LoadAuthorizedGuils() {
         var guilds = DatabaseContext.RetrieveColumns(QueryBuilder
-            .New().Retrieve(AuthMarkovTable.CHANNEL_ID)
+            .New().Retrieve("*")
             .From(GuildMarkovTable.TABLE_NAME)
             .Build()
         );

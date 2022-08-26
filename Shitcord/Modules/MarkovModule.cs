@@ -5,6 +5,8 @@ using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
 using DSharpPlus.Lavalink.Entities;
 using Shitcord.Data;
+using Shitcord.Database;
+using Shitcord.Database.Queries;
 using Shitcord.Extensions;
 using Shitcord.Services;
 
@@ -18,13 +20,27 @@ public class MarkovModule : BaseCommandModule
 {
     private MarkovService Markov { get; }
     private GuildMarkovData Data { get; set; }
+    private DatabaseService Database { get; }
 
     #pragma warning disable CS8618
-    public MarkovModule(MarkovService service) => Markov = service;
+    public MarkovModule(MarkovService service, DatabaseService database) {
+        Markov = service;
+        Database = database;
+    }
     #pragma warning restore CS8618
 
     public override async Task BeforeExecutionAsync(CommandContext ctx)
     {
+        var user_is_auth = Database.ExistsInTable(AuthUsersTable.TABLE_NAME, 
+            Condition.New(AuthUsersTable.USER_ID).Equals(ctx.User.Id)
+        );
+
+        if (!user_is_auth && !Markov.AuthorizedGuilds.Contains(ctx.Guild.Id)) {
+            throw new CommandException(
+                "Members of this guild are not authorized to execute markov commands"
+            );
+        }
+
         Data = Markov.GetOrAddData(ctx.Guild);
         await base.BeforeExecutionAsync(ctx);
     }

@@ -1,4 +1,3 @@
-
 namespace Shitcord.Database;
 
 public class AuthMarkovTable 
