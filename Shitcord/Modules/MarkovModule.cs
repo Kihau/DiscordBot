@@ -1,9 +1,6 @@
-using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using DSharpPlus.Lavalink;
-using DSharpPlus.Lavalink.Entities;
 using Shitcord.Data;
 using Shitcord.Database;
 using Shitcord.Database.Queries;

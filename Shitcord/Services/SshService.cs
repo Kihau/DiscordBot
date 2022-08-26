@@ -3,7 +3,6 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Renci.SshNet;
-using Shitcord.Data;
 
 namespace Shitcord.Services;
 

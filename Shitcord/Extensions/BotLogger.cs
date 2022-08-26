@@ -1,6 +1,5 @@
 using System.Text;
 using System.IO.Compression;
-using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace Shitcord.Extensions;
