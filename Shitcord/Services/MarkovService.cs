@@ -305,7 +305,7 @@ public class MarkovService
     private Task MarkovMessageHandler(DiscordClient client, MessageCreateEventArgs e)
     {
         Task.Run(async () => {
-            if (e.Author.IsBot && !AuthorizedGuilds.Contains(e.Guild.Id))
+            if (e.Author.IsBot || !AuthorizedGuilds.Contains(e.Guild.Id))
                 return;
 
             var data = GetOrAddData(e.Guild);
