@@ -30,7 +30,7 @@ public class FunModule : BaseCommandModule
     public async Task MCSeedCommand(CommandContext ctx) 
         => await ctx.RespondAsync(new Random().NextInt64().ToString());
 
-    [Command("solarlesson"), Aliases("solar")] 
+    [Command("solarlesson"), Aliases("solar", "lesson")] 
     public async Task SolarLessonCommand(CommandContext ctx) {
         int index = new Random().Next(FunModule.solarlessons.Length);
         await ctx.RespondAsync(FunModule.solarlessons[index]);

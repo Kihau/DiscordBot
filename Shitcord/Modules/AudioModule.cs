@@ -10,6 +10,8 @@ using Shitcord.Services;
 
 namespace Shitcord.Modules;
 
+// TODO: savequque, loadqueue (number) and listqueues commands
+
 [Description("Audio and music commands")]
 public class AudioModule : BaseCommandModule
 {
