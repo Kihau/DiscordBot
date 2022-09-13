@@ -740,12 +740,12 @@ public class GuildAudioData
         this.Enqueue(qlist);
     }
 
-    public async Task SkipAsync(int num, bool enqueue = true)
+    public async Task SkipAsync(int num, bool skip_enqueue = false)
     {
         if (Player is not {IsConnected: true})
             return;
 
-        SkipEnqueue = enqueue;
+        SkipEnqueue = skip_enqueue;
 
         var tracks = new List<LavalinkTrack>();
         while (--num > 0) {
@@ -757,7 +757,7 @@ public class GuildAudioData
                 
         await Player.StopAsync();
 
-        if (!enqueue) return;
+        if (skip_enqueue) return;
 
         switch (Looping) {
             case LoopingMode.None:
