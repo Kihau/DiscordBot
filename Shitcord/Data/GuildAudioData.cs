@@ -33,6 +33,7 @@ public class GuildAudioData
     public LavalinkTrack? CurrentTrack { get; private set; }
     public DiscordChannel? Channel => this.Player?.Channel;
     public bool SkipEventFire { get; set; } = false;
+    public bool SkipEnqueue { get; set; } = false;
 
     private LoopingMode _looping;
     public LoopingMode Looping { 
@@ -534,21 +535,23 @@ public class GuildAudioData
 
     private async Task PlaybackFinished(LavalinkGuildConnection con, TrackFinishEventArgs e)
     {
-        switch (Looping) {
-            case LoopingMode.None: break;
+        if (!SkipEnqueue) {
+            switch (Looping) {
+                case LoopingMode.None: break;
 
-            case LoopingMode.Queue: {
-                Enqueue(e.Track);
-            } break;
+                case LoopingMode.Queue: {
+                    Enqueue(e.Track);
+                } break;
 
-            case LoopingMode.Song: { 
-                EnqueueFirst(e.Track);
-            } break;
+                case LoopingMode.Song: { 
+                    EnqueueFirst(e.Track);
+                } break;
 
-            case LoopingMode.Shuffle: { 
-                EnqueueRandom(e.Track);
-            } break;
-        }
+                case LoopingMode.Shuffle: { 
+                    EnqueueRandom(e.Track);
+                } break;
+            }
+        } else SkipEnqueue = false;
 
         if (this.SkipEventFire) {
             this.SkipEventFire = false;
@@ -737,10 +740,12 @@ public class GuildAudioData
         this.Enqueue(qlist);
     }
 
-    public async Task SkipAsync(int num, bool enque = true)
+    public async Task SkipAsync(int num, bool enqueue = true)
     {
         if (Player is not {IsConnected: true})
             return;
+
+        SkipEnqueue = enqueue;
 
         var tracks = new List<LavalinkTrack>();
         while (--num > 0) {
@@ -752,7 +757,7 @@ public class GuildAudioData
                 
         await Player.StopAsync();
 
-        if (!enque) return;
+        if (!enqueue) return;
 
         switch (Looping) {
             case LoopingMode.None:
