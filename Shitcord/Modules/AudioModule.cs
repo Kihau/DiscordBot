@@ -356,7 +356,7 @@ public class AudioModule : BaseCommandModule
     [Description("Removes a song from the queue")]
     public async Task RemoveCommand(CommandContext ctx,
         [Description("Index of an enqueued song (see >>lq to list songs and their indexes)")]
-        int index = 0, [Description("Number of tracks to be removed")] int count = 1)
+        int index = 1, [Description("Number of tracks to be removed")] int count = 0)
     {
         switch (count)
         {
