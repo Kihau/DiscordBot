@@ -362,8 +362,7 @@ public class GuildAudioData
         if (this.QueueUpdateMessage == null || this.QueueUpdateChannel == null)
             return Task.CompletedTask;
 
-        Task.Run(async () =>
-        {
+        Task.Run(async () => {
             var message = this.GenerateQueueMessage();
             if (DateTime.Now - this.QueueUpdateMessage.Timestamp < TimeSpan.FromHours(1)) {
                 await this.QueueUpdateMessage.ModifyAsync(message);
@@ -381,16 +380,14 @@ public class GuildAudioData
     {
         TimeSpan length;
         string current_song, state, state_btn, author;
-        if (this.IsStopped)
-        {
+        if (this.IsStopped) {
             current_song = "Nothing is playing";
             author = "N/A";
             state = "Stopped";
             state_btn = "Play";
             length = TimeSpan.Zero;
         }
-        else
-        {
+        else {
             #pragma warning disable CS8602
             author = this.CurrentTrack.Author;
             #pragma warning restore CS8602
@@ -401,26 +398,28 @@ public class GuildAudioData
             length = this.CurrentTrack.Length;
         }
 
-        var next_song = !this.Queue.TryPeek(out var next) ? "Queue is empty" : $"[{next.Title}]({next.Uri})";
+        var next_song = !this.Queue.TryPeek(out var next) 
+            ? "Queue is empty" : $"[{next.Title}]({next.Uri})";
 
         var embed = new DiscordEmbedBuilder()
             .WithTitle(":question:  |  Song Info: ")
-            .WithDescription($":musical_note: **Now playing:** {current_song}\n" +
-                             $":play_pause: **Song length:** {length}\n" +
-                             $":cinema: **Song Author:** {author}\n" +
-                             $":track_next: **Next Song:** {next_song}\n" +
-                             $":arrow_right: **Songs in queue:** {Queue.Count}\n" +
-                             $":information_source: **Song state:** {state}\n" +
-                             $":arrows_clockwise: **Song looping mode:** {Looping}")
-            .WithColor(DiscordColor.Purple);
+            .WithDescription(
+                $":musical_note: **Now playing:** {current_song}\n" +
+                $":play_pause: **Song length:** {length}\n" +
+                $":cinema: **Song Author:** {author}\n" +
+                $":track_next: **Next Song:** {next_song}\n" +
+                $":arrow_right: **Songs in queue:** {Queue.Count}\n" +
+                $":information_source: **Song state:** {state}\n" +
+                $":arrows_clockwise: **Song looping mode:** {Looping}"
+            ).WithColor(DiscordColor.Purple);
 
-        var builder = new DiscordMessageBuilder()
-        {
+        var builder = new DiscordMessageBuilder() {
             Embed = embed.Build(),
         };
 
         builder.AddComponents(
             new DiscordButtonComponent(ButtonStyle.Primary, "skip_btn", "Skip"),
+            new DiscordButtonComponent(ButtonStyle.Primary, "remove_btn", "Remove"),
             new DiscordButtonComponent(ButtonStyle.Secondary, "loop_btn", "Loop"),
             new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn)
         );
@@ -439,8 +438,7 @@ public class GuildAudioData
         if (this.SongUpdateMessage == null || this.SongUpdateChannel == null)
             return Task.CompletedTask;
 
-        Task.Run(async () =>
-        {
+        Task.Run(async () => {
             var message = this.GenerateSongMessage();
             if (DateTime.Now - this.SongUpdateMessage.Timestamp < TimeSpan.FromHours(1))
                 await this.SongUpdateMessage.ModifyAsync(message);

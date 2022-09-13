@@ -353,7 +353,7 @@ public class AudioModule : BaseCommandModule
         TimeSpan timestamp) => await this.Data.SeekAsync(timestamp);
 
     [Command("remove"), Aliases("r")] [Description(
-        "Removes a song from the queue (input nothing to skip and remove currently playing song")]
+        "Removes a song from the queue (input nothing to skip and remove currently playing song)")]
     public async Task RemoveCommand(CommandContext ctx,
         [Description("Index of an enqueued song (see >>lq to list songs and their indexes)")]
         int index = 0, [Description("Number of tracks to be removed")] int count = 1)

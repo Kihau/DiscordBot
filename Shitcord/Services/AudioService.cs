@@ -61,6 +61,11 @@ public class AudioService
                 data.SongRequiresUpdate = true;
                 data.QueueRequiresUpdate = true;
             } break;
+            case "remove_btn": {
+                await data.SkipAsync(1, true);
+                data.SongRequiresUpdate = true;
+                data.QueueRequiresUpdate = true;
+            } break;
             case "loop_btn": {
                 if (data.Looping == LoopingMode.Shuffle)
                     data.Looping = 0;
