@@ -374,7 +374,7 @@ public class AudioModule : BaseCommandModule
                 await ctx.Channel.SendMessageAsync(embed.Build());
             } break;
             case 0: {
-                await Data.SkipAsync(1, false);
+                await Data.SkipAsync(1, true);
             } break; 
             case < 0:
                 throw new CommandException("Count must be greater than 0");
