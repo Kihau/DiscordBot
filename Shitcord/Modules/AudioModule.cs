@@ -356,8 +356,14 @@ public class AudioModule : BaseCommandModule
     [Description("Removes a song from the queue")]
     public async Task RemoveCommand(CommandContext ctx,
         [Description("Index of an enqueued song (see >>lq to list songs and their indexes)")]
-        int index = 1, [Description("Number of tracks to be removed")] int count = 0)
+        int index = 0, [Description("Number of tracks to be removed")] int count = 1)
     {
+        // Skip and remove current song when index is zero
+        if (index == 0) {
+            await Data.SkipAsync(1, true);
+            return;
+        }
+
         switch (count)
         {
             case 1: {
@@ -373,10 +379,7 @@ public class AudioModule : BaseCommandModule
 
                 await ctx.Channel.SendMessageAsync(embed.Build());
             } break;
-            case 0: {
-                await Data.SkipAsync(1, true);
-            } break; 
-            case < 0:
+            case <= 0:
                 throw new CommandException("Count must be greater than 0");
             default: {
                 var tracks = this.Data.RemoveRange(--index, count).Count();
