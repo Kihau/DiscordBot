@@ -285,8 +285,14 @@ public class AudioModule : BaseCommandModule
 
     [Command("loop")]
     [Description("Sets the looping mode")]
-    public async Task LoopCommand(CommandContext ctx, int? mode = null)
-    {
+    public async Task LoopCommand(
+        CommandContext ctx, [Description(
+            "0 - None (looping disabled), " +
+            "1 - Queue (repeat song queue), " +
+            "2 - Song (repeat currently playing song), " +
+            "3 - Shuffle (suffle song randomly into the queue after it ends)"
+        )] int? mode = null
+    ) {
         if (mode is null) {
             Data.Looping = Data.Looping switch {
                 LoopingMode.None => LoopingMode.Queue,
@@ -299,7 +305,7 @@ public class AudioModule : BaseCommandModule
             "` None - 0 `, ` Queue - 1 `, ` Song - 2 `, ` Shuffle - 3 `"
         );
 
-        await ctx.RespondAsync($"Loopig mode set to: `{Data.Looping}`");
+        await ctx.RespondAsync($"Looping mode set to: `{Data.Looping}`");
     }
 
     [Command("shuffle")]
@@ -339,19 +345,18 @@ public class AudioModule : BaseCommandModule
     [Command("skip"), Aliases("s")]
     [Description("Skips tracks")]
     public async Task SkipCommand(CommandContext ctx, [Description("Number of tracks to skip")] 
-            int count = 1) => await this.Data.SkipAsync(count);
-
+        int count = 1) => await this.Data.SkipAsync(count);
 
     [Command("seek")]
     [Description("Seeks track to specified position")]
     public async Task SeekCommand(CommandContext ctx, [Description("Song timestap")]
-            TimeSpan timestamp) => await this.Data.SeekAsync(timestamp);
+        TimeSpan timestamp) => await this.Data.SeekAsync(timestamp);
 
     [Command("remove"), Aliases("r")]
     [Description("Removes a song from the queue")]
     public async Task RemoveCommand(CommandContext ctx,
         [Description("Index of an enqueued song (see >>lq to list songs and their indexes)")]
-        int index = 1, [Description("Number of tracks to be removed")] int count = 1)
+        int index = 0, [Description("Number of tracks to be removed")] int count = 1)
     {
         switch (count)
         {
@@ -368,7 +373,10 @@ public class AudioModule : BaseCommandModule
 
                 await ctx.Channel.SendMessageAsync(embed.Build());
             } break;
-            case <= 0:
+            case 0: {
+                await Data.SkipAsync(1, false);
+            } break; 
+            case < 0:
                 throw new CommandException("Count must be greater than 0");
             default: {
                 var tracks = this.Data.RemoveRange(--index, count).Count();

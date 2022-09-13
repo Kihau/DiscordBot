@@ -59,14 +59,14 @@ public class MarkovModule : BaseCommandModule
 
     [RequireAuthorized]
     [Command("listguilds"), Aliases("lg"), Description("Lists all authorized guilds.")]
-    public async Task ListAuthGuildCommand(CommandContext ctx, DiscordGuild guild) {
+    public async Task ListAuthGuildCommand(CommandContext ctx) {
         StringBuilder builder = new();
 
         builder.Append("```\n");
 
         for (int i = 0; i < Markov.AuthorizedGuilds.Count; i++) {
             var id = Markov.AuthorizedGuilds[i];
-            builder.Append($"{i}. {id}");
+            builder.Append($"{i}. {id}\n");
         }
 
         builder.Append("```\n");

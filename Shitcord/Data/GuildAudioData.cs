@@ -737,7 +737,7 @@ public class GuildAudioData
         this.Enqueue(qlist);
     }
 
-    public async Task SkipAsync(int num)
+    public async Task SkipAsync(int num, bool enque = true)
     {
         if (Player is not {IsConnected: true})
             return;
@@ -751,6 +751,8 @@ public class GuildAudioData
         }
                 
         await Player.StopAsync();
+
+        if (!enque) return;
 
         switch (Looping) {
             case LoopingMode.None:
