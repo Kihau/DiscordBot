@@ -80,6 +80,9 @@ public class AutoReplyService
 
     private async Task ReplyMessageHandler(DiscordClient client, MessageCreateEventArgs args)
     {
+        if (args.Message.Author.IsBot) 
+            return;
+
         if (!ReplyDataSet.ContainsKey(args.Guild.Id))
             return;
 
