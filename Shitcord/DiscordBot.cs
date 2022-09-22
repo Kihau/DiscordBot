@@ -202,7 +202,7 @@ public class DiscordBot
             .AddSingleton<DatabaseService>()
             .AddSingleton<SshService>()
             .AddSingleton<WeatherService>()
-            .AddSingleton<AutoReplyService>()
+            .AddSingleton<ReplyService>()
             .AddSingleton<MarkovService>()
             .AddSingleton<ModerationService>()
             .AddSingleton(this);

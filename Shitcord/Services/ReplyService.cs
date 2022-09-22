@@ -11,14 +11,14 @@ public enum MatchMode : int {
     Any = 0, First = 1, Exact = 2
 }
 
-public class AutoReplyData
+public class ReplyData
 {
     public string match;
     public string reply;
     public MatchMode mode;
     public bool match_case;
 
-    public AutoReplyData(string m, string r, MatchMode md, bool mc)
+    public ReplyData(string m, string r, MatchMode md, bool mc)
     {
         match = m;
         reply = r;
@@ -27,17 +27,17 @@ public class AutoReplyData
     }
 }
 
-public class AutoReplyService
+public class ReplyService
 {
     public DiscordClient Client { get; init; }
     public DatabaseService Database { get; }
-    private Dictionary<ulong, List<AutoReplyData>> ReplyDataSet { get; }
+    private Dictionary<ulong, List<ReplyData>> ReplyDataSet { get; }
 
-    public AutoReplyService(DiscordBot bot, DatabaseService database)
+    public ReplyService(DiscordBot bot, DatabaseService database)
     {
         Client = bot.Client;
         Database = database;
-        ReplyDataSet = new Dictionary<ulong, List<AutoReplyData>>();
+        ReplyDataSet = new Dictionary<ulong, List<ReplyData>>();
 
         Client.MessageCreated += ReplyMessageHandler;
         Client.GuildDownloadCompleted += (_, _) => {
@@ -70,9 +70,9 @@ public class AutoReplyService
             var match_case = (long)data[4][i]! == 1;
 
             if (!ReplyDataSet.ContainsKey(guild_id))
-                ReplyDataSet.Add(guild_id, new List<AutoReplyData>());
+                ReplyDataSet.Add(guild_id, new List<ReplyData>());
 
-            var auto_reply_data = new AutoReplyData(match, reply, mode, match_case);
+            var auto_reply_data = new ReplyData(match, reply, mode, match_case);
             var item = ReplyDataSet[guild_id];
             item.Add(auto_reply_data);
         }
@@ -108,10 +108,10 @@ public class AutoReplyService
         }
     }
 
-    public void AddReplyData(DiscordGuild guild, AutoReplyData data)
+    public void AddReplyData(DiscordGuild guild, ReplyData data)
     {
         if (!ReplyDataSet.ContainsKey(guild.Id))
-            ReplyDataSet.Add(guild.Id, new List<AutoReplyData>());
+            ReplyDataSet.Add(guild.Id, new List<ReplyData>());
 
         var item = ReplyDataSet[guild.Id];
         if (!item.Any(x => x.match == data.match)) {
@@ -146,7 +146,7 @@ public class AutoReplyService
             throw new CommandException("Reply list is empty");
 
         var dataset = ReplyDataSet[guild.Id];
-        AutoReplyData? found = null;
+        ReplyData? found = null;
 
         foreach (var data in dataset)
             if (data.match == match)
@@ -184,6 +184,6 @@ public class AutoReplyService
         else throw new CommandException("Given index is incorrect");
     }
 
-    public IReadOnlyList<AutoReplyData>? GetReplyData(DiscordGuild guild)
+    public IReadOnlyList<ReplyData>? GetReplyData(DiscordGuild guild)
         => ReplyDataSet.GetValueOrDefault(guild.Id);
 }

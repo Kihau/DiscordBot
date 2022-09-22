@@ -49,8 +49,8 @@ public class UtilityModule : BaseCommandModule
     [Description("Set of commands allowing to set automatic response to certain messages")]
     public class ReplyModule : BaseCommandModule
     {
-        public AutoReplyService Reply { get; }
-        public ReplyModule(AutoReplyService reply) => Reply = reply;
+        public ReplyService Reply { get; }
+        public ReplyModule(ReplyService reply) => Reply = reply;
 
         [Command("addany")]
         [Description("Adds auto reply that responds to messages." +
@@ -59,7 +59,7 @@ public class UtilityModule : BaseCommandModule
             CommandContext ctx, string match, string reply, bool match_case = false
         ) { 
             this.Reply.AddReplyData(
-                ctx.Guild, new AutoReplyData(match.ToLower(), reply, MatchMode.Any, match_case)
+                ctx.Guild, new ReplyData(match.ToLower(), reply, MatchMode.Any, match_case)
             ); 
             await ctx.RespondAsync("Successfully added to the reply list 👍");
         }
@@ -71,7 +71,7 @@ public class UtilityModule : BaseCommandModule
             CommandContext ctx, string match, string reply, bool match_case = false
         ) { 
             this.Reply.AddReplyData(
-                ctx.Guild, new AutoReplyData(match.ToLower(), reply, MatchMode.First, match_case)
+                ctx.Guild, new ReplyData(match.ToLower(), reply, MatchMode.First, match_case)
             ); 
             await ctx.RespondAsync("Successfully added to the reply list 👍");
         }
@@ -83,7 +83,7 @@ public class UtilityModule : BaseCommandModule
             CommandContext ctx, string match, string reply, bool match_case = true
         ) { 
             this.Reply.AddReplyData(
-                ctx.Guild, new AutoReplyData(match.ToLower(), reply, MatchMode.Exact, match_case)
+                ctx.Guild, new ReplyData(match.ToLower(), reply, MatchMode.Exact, match_case)
             ); 
             await ctx.RespondAsync("Successfully added to the reply list 👍");
         }
@@ -121,7 +121,7 @@ public class UtilityModule : BaseCommandModule
 
             if (data is not null) {
                 for (int i = 0; i < data.Count; i++)
-                    string_builder.Append($"{i + 1}. {data[i].match} - {data[i].reply}");
+                    string_builder.Append($"{i + 1}. {data[i].match} - {data[i].reply}\n");
             } else string_builder.Append("Autoreply list is empty");
 
             var interactivity = ctx.Client.GetInteractivity();

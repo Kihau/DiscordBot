@@ -347,6 +347,11 @@ public class AudioModule : BaseCommandModule
     public async Task SkipCommand(CommandContext ctx, [Description("Number of tracks to skip")] 
         int count = 1) => await this.Data.SkipAsync(count);
 
+    [Command("prev"), Aliases("previous")]
+    [Description("Plays previous track")]
+    public async Task PreviousCommand(CommandContext ctx)
+        => await this.Data.PreviousAsync();
+
     [Command("seek")]
     [Description("Seeks track to specified position")]
     public async Task SeekCommand(CommandContext ctx, [Description("Song timestap")]

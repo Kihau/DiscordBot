@@ -738,6 +738,23 @@ public class GuildAudioData
         this.Enqueue(qlist);
     }
 
+    public async Task PreviousAsync() {
+        if (Player is not {IsConnected: true})
+            return;
+
+        if (Queue.IsEmpty)
+            return;
+
+        var tracks = Queue.ToList();
+        var last = tracks.Last();
+        tracks.RemoveAt(tracks.Count - 1);
+        Queue.Clear();
+        Enqueue(last);
+        Enqueue(tracks);
+        
+        await Player.StopAsync();
+    }
+
     public async Task SkipAsync(int num, bool skip_enqueue = false)
     {
         if (Player is not {IsConnected: true})
@@ -752,7 +769,7 @@ public class GuildAudioData
             if (track != null && Looping != LoopingMode.None)
                 tracks.Add(track);
         }
-                
+
         await Player.StopAsync();
 
         if (skip_enqueue) return;
