@@ -31,6 +31,7 @@ public class GuildAudioData
     private ConcurrentQueue<LavalinkTrack> Queue { get; }
     private LavalinkGuildConnection? Player { get; set; }
     public LavalinkTrack? CurrentTrack { get; private set; }
+    public LavalinkTrack? PreviousTrack { get; private set; }
     public DiscordChannel? Channel => this.Player?.Channel;
     public bool SkipEventFire { get; set; } = false;
     public bool SkipEnqueue { get; set; } = false;
@@ -388,6 +389,7 @@ public class GuildAudioData
             length = TimeSpan.Zero;
         }
         else {
+            // TODO: FIX: What is this??????
             #pragma warning disable CS8602
             author = this.CurrentTrack.Author;
             #pragma warning restore CS8602
@@ -568,13 +570,14 @@ public class GuildAudioData
 
     private async Task PlayerHandlerAsync()
     {
-        this.CurrentTrack = this.Dequeue();
-        if (this.CurrentTrack == null || this.Player == null)
+        PreviousTrack = CurrentTrack;
+        CurrentTrack = Dequeue();
+        if (CurrentTrack == null || Player == null)
             return;
 
-        await this.Player.PlayAsync(this.CurrentTrack);
-        await this.Player.SeekAsync(TimeSpan.Zero);
-        this.IsPaused = false;
+        await Player.PlayAsync(CurrentTrack);
+        await Player.SeekAsync(TimeSpan.Zero);
+        IsPaused = false;
 
         SongRequiresUpdate = true;
         QueueRequiresUpdate = true;
@@ -742,16 +745,12 @@ public class GuildAudioData
         if (Player is not {IsConnected: true})
             return;
 
-        if (Queue.IsEmpty)
+        if (PreviousTrack == null)
             return;
-
-        var tracks = Queue.ToList();
-        var last = tracks.Last();
-        tracks.RemoveAt(tracks.Count - 1);
-        Queue.Clear();
-        Enqueue(last);
-        Enqueue(tracks);
         
+        if (CurrentTrack != null)
+            EnqueueFirst(CurrentTrack);
+        EnqueueFirst(PreviousTrack);
         await Player.StopAsync();
     }
 
