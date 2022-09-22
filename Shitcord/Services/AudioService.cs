@@ -61,8 +61,8 @@ public class AudioService
                 data.SongRequiresUpdate = true;
                 data.QueueRequiresUpdate = true;
             } break;
-            case "remove_btn": {
-                await data.SkipAsync(1, true);
+            case "prev_btn": {
+                await data.PreviousAsync();
                 data.SongRequiresUpdate = true;
                 data.QueueRequiresUpdate = true;
             } break;
@@ -78,6 +78,11 @@ public class AudioService
                 else if (data.IsPaused)
                     await data.ResumeAsync();
                 else await data.PauseAsync();
+                data.SongRequiresUpdate = true;
+                data.QueueRequiresUpdate = true;
+            } break;
+            case "remove_btn": {
+                await data.SkipAsync(1, true);
                 data.SongRequiresUpdate = true;
                 data.QueueRequiresUpdate = true;
             } break;

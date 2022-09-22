@@ -421,12 +421,13 @@ public class GuildAudioData
 
         builder.AddComponents(
             new DiscordButtonComponent(ButtonStyle.Primary, "skip_btn", "Skip"),
-            new DiscordButtonComponent(ButtonStyle.Primary, "remove_btn", "Remove"),
+            new DiscordButtonComponent(ButtonStyle.Primary, "prev_btn", "Prev"),
             new DiscordButtonComponent(ButtonStyle.Secondary, "loop_btn", "Loop"),
             new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn)
         );
 
         builder.AddComponents(
+            new DiscordButtonComponent(ButtonStyle.Danger, "remove_btn", "Remove"),
             new DiscordButtonComponent(ButtonStyle.Danger, "join_btn", "Join"),
             new DiscordButtonComponent(ButtonStyle.Danger, "stop_btn", "Stop"),
             new DiscordButtonComponent(ButtonStyle.Danger, "leave_btn", "Leave")
@@ -750,7 +751,10 @@ public class GuildAudioData
         
         if (CurrentTrack != null)
             EnqueueFirst(CurrentTrack);
+
         EnqueueFirst(PreviousTrack);
+        PreviousTrack = null;
+
         await Player.StopAsync();
     }
 
