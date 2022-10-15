@@ -47,7 +47,13 @@ public class TimestampArgumentConverter : IArgumentConverter<SeekStamp>
             '+' => SeekSign.Plus,
             _   => SeekSign.None
         };
-        int seconds = parseSeconds(time, 1);
+
+        int seconds;
+        if (sign == SeekSign.None)
+            seconds = parseSeconds(time, 0);
+        else seconds = parseSeconds(time, 1);
+
+        // TODO(?): Throw CommandException instead ???
         if (seconds == -1) 
             return Task.FromResult(Optional.FromNoValue<SeekStamp>());
         
@@ -104,9 +110,9 @@ public class TimestampArgumentConverter : IArgumentConverter<SeekStamp>
                         awaitDigit = false;
                         if (i != 0) {
                             char prvs = time[i - 1];
-                            if (awaitUnit && prvs == ' ') {
-                                throw new CommandException($"Unit was expected, current index: {i}");
-                            }
+                            if (awaitUnit && prvs == ' ') throw new CommandException(
+                                $"Unit was expected, current index: {i}"
+                            );
                         }
                         
                         awaitUnit = true;

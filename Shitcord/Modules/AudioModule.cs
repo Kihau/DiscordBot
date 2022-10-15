@@ -4,6 +4,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
 using DSharpPlus.Lavalink.Entities;
+using Microsoft.Extensions.Logging;
 using Shitcord.Data;
 using Shitcord.Extensions;
 using Shitcord.Services;
@@ -352,11 +353,36 @@ public class AudioModule : BaseCommandModule
     public async Task PreviousCommand(CommandContext ctx)
         => await this.Data.PreviousAsync();
 
+    // [Command("seek")]
+    // [Description("Seeks track to specified position")]
+    // public async Task SeekCommand(
+    //     CommandContext ctx, [Description("Song timestap")] TimeSpan timestamp
+    // ) => await this.Data.SeekAsync(timestamp);
+
+    // TODO: Fine-tune this
     [Command("seek")]
     [Description("Seeks track to specified position")]
     public async Task SeekCommand(
-        CommandContext ctx, [Description("Song timestap")] TimeSpan timestamp
-    ) => await this.Data.SeekAsync(timestamp);
+        CommandContext ctx, [Description("TODO: Improve this description")]
+        [RemainingText] SeekStamp stamp
+    ) {
+        var track_pos = Data.GetTimestamp();
+        if (track_pos is null)
+            throw new CommandException("Cannot seek - nothing is playing");
+
+        switch (stamp.sign) {
+            case SeekSign.Plus:
+                await Data.SeekAsync(track_pos.Value + stamp.seek_time);
+                break;
+            case SeekSign.Minus:
+                // TODO(?): Check if track position is greater than than 0
+                await Data.SeekAsync(track_pos.Value - stamp.seek_time);
+                break;
+            case SeekSign.None:
+                await Data.SeekAsync(stamp.seek_time);
+                break;
+        }
+    }
 
     [Command("remove"), Aliases("r")] [Description(
         "Removes a song from the queue (input nothing to skip and remove currently playing song)")]

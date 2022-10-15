@@ -52,6 +52,8 @@ public class DiscordBot
             Token = botConf.Token,
             TokenType = TokenType.Bot,
             Intents = DiscordIntents.AllUnprivileged,
+            // TODO: Change(?) it vvvvvvvvvvv
+            // NOTE: This does nothing - the log level is set in the BotLogger class
             MinimumLogLevel = LogLevel.Information,
             AutoReconnect = true,
             MessageCacheSize = botConf.CacheSize,
@@ -165,8 +167,7 @@ public class DiscordBot
         var commands = Client.UseCommandsNext(cmdConfig);
 
         // Timestamp parser for the seek command (in AudioModule)
-        // TODO: Uncomment when parser is complete
-        // commands.RegisterConverter(new TimestampArgumentConverter());
+        commands.RegisterConverter(new TimestampArgumentConverter());
 
         if (Config.Lava.IsEnabled)
             commands.RegisterCommands<AudioModule>();
@@ -222,6 +223,7 @@ public class DiscordBot
 
     public async Task RunAsync()
     {
+        // TODO: lavalink jar file is not found - throw exception and exit the program
         if (Config.Lava.IsEnabled && Config.Lava.AutoStart) {
             var startInfo = new ProcessStartInfo {
                 CreateNoWindow = true,
