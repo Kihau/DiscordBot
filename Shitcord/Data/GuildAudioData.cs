@@ -380,24 +380,20 @@ public class GuildAudioData
     public DiscordMessageBuilder GenerateSongMessage()
     {
         TimeSpan length;
-        string current_song, state, state_btn, author;
+        string current_song, state, state_btn;
+        string? author;
         if (this.IsStopped) {
             current_song = "Nothing is playing";
             author = "N/A";
             state = "Stopped";
             state_btn = "Play";
             length = TimeSpan.Zero;
-        }
-        else {
-            // TODO: FIX: What is this??????
-            #pragma warning disable CS8602
-            author = this.CurrentTrack.Author;
-            #pragma warning restore CS8602
-            
+        } else {
+            author = this.CurrentTrack?.Author;
             state = this.IsPaused ? "Paused" : "Playing";
             state_btn = this.IsPaused ? "Resume" : "Pause";
-            current_song = $"[{this.CurrentTrack.Title}]({this.CurrentTrack.Uri})";
-            length = this.CurrentTrack.Length;
+            current_song = $"[{this.CurrentTrack?.Title}]({this.CurrentTrack?.Uri})";
+            length = this.CurrentTrack?.Length ?? TimeSpan.Zero;
         }
 
         var next_song = !this.Queue.TryPeek(out var next) 
