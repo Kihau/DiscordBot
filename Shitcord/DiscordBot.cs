@@ -164,6 +164,10 @@ public class DiscordBot
 
         var commands = Client.UseCommandsNext(cmdConfig);
 
+        // Timestamp parser for the seek command (in AudioModule)
+        // TODO: Uncomment when parser is complete
+        // commands.RegisterConverter(new TimestampArgumentConverter());
+
         if (Config.Lava.IsEnabled)
             commands.RegisterCommands<AudioModule>();
         commands.RegisterCommands<UtilityModule>();
