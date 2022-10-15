@@ -356,41 +356,13 @@ public class AudioModule : BaseCommandModule
     [Description("Seeks track to specified position")]
     public async Task SeekCommand(
         CommandContext ctx, [Description("Song timestap")] TimeSpan timestamp
-    ) { 
-        await this.Data.SeekAsync(timestamp);
-    }
-
-    /* Parsing the timestamp:
-     * d, h, m, s - time tokens (day, hour, minute, secons)
-     * +, -, (nothing) - operation tokens
-     * 12, 42, 65 - value tokens
-     * xx:xx - special timestamps
-     *
-     * Example strings:
-     *     +12m - skip by 12 minutes
-     *     - 2s - go back 2 seconds
-     *     1m 2 s - seek to 1 minute 2 second
-     *     + 01:00 - skip by one minute
-     *     - 1 - go back by one secons
-     *     2:00:01 - seek to 2 hour 1 second
-     */ 
-    [Command("seek")]
-    [Description("Seeks track to specified position")]
-    async Task TODOSeekCommand(
-        CommandContext ctx, [Description("Song timestap")] string timestamp
-    ) { 
-        // await this.Data.SeekAsync(timestamp);
-        // string[] tokens = timestamp.Split(' ');
-        // timestamp.Trim();
-    }
-
+    ) => await this.Data.SeekAsync(timestamp);
 
     [Command("remove"), Aliases("r")] [Description(
         "Removes a song from the queue (input nothing to skip and remove currently playing song)")]
     public async Task RemoveCommand(CommandContext ctx,
         [Description("Index of an enqueued song (see >>lq to list songs and their indexes)")]
-        int index = 0, [Description("Number of tracks to be removed")] int count = 1)
-    {
+        int index = 0, [Description("Number of tracks to be removed")] int count = 1) {
         // Skip and remove current song when index is zero
         if (index == 0) {
             await Data.SkipAsync(1, true);
