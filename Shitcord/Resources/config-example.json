@@ -1,31 +1,31 @@
 {
-  "discord": {
-    "token": "<your-bot-token>"
-    "prefix": "/",
-    "cache": 100,
-    "status": "bot discord status"
-    "startdelay": 0
-  },
-  "logging": {
-    "enabled": true,
-    "min-loglevel": 2,
-    "save-to-file": true,
-    "directory": "botlogs",
-    "max-history": 30
-  },
-  "ssh": {
-    "hostname": "localhost",
-    "port": 1111,
-    "username": "derp",
-    "key": "/my/epic/keyfile",    
-    "enabled": false
-  },
-  "lavalink": {
-    "hostname": "127.0.0.1",
-    "port": 2333,
-    "password": "<lavlink-password>"
-    "enabled": false,
-    "autostart": false,
-    "javapath": "/path/to/java (or just java as env var)"
-  }
+    "discord": {
+        "token": "<your-bot-token>",
+        "prefix": "/",
+        "cache": 100,
+        "status": "bot discord status",
+        "startdelay": 0
+    },
+    "logging": {
+        "enabled": true,
+        "min-loglevel": 2,
+        "save-to-file": true,
+        "directory": "botlogs",
+        "max-history": 30
+    },
+    "ssh": {
+        "hostname": "localhost",
+        "port": 1111,
+        "username": "derp",
+        "key": "/my/epic/keyfile",
+        "enabled": false
+    },
+    "lavalink": {
+        "hostname": "127.0.0.1",
+        "port": 2333,
+        "password": "<lavlink-password>",
+        "enabled": false,
+        "autostart": false,
+        "javapath": "/path/to/java (or just java as env var)"
+    }
 }
