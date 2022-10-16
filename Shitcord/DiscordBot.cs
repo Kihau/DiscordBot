@@ -191,8 +191,9 @@ public class DiscordBot
         commands.CommandErrored += async (sender, e) => {
             Client.Logger.LogError(new EventId(0, "Exception"), $"{e.Exception}"); 
                 
-            if (!DebugEnabled && e.Exception is CommandException)
-                return;
+            // TODO: Improve this and don't catch obvious exceptions?
+            // if (!DebugEnabled && e.Exception is not CommandException)
+            //     return;
 
             var embed = new DiscordEmbedBuilder();
             embed.WithTitle("<:angerysad:690223823936684052>  |  A Wild Error Occurred: ")
