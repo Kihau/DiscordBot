@@ -33,7 +33,7 @@ public struct SeekStamp {
  *     - 1 - go back by one second
  *     2:00:01 - seek to 2 hour 1 second
  */ 
-public class TimestampArgumentConverter : IArgumentConverter<SeekStamp>
+public class SeekstampArgumentConverter : IArgumentConverter<SeekStamp>
 {
     // Referance: https://dsharpplus.github.io/articles/commands/argument_converters.html
     public Task<Optional<SeekStamp>> ConvertAsync(string time, CommandContext ctx)

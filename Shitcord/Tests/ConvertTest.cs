@@ -1,4 +1,4 @@
-﻿using static Shitcord.Extensions.TimestampArgumentConverter;
+﻿using static Shitcord.Extensions.SeekstampArgumentConverter;
 namespace Shitcord.Tests;
 
 public class ConvertTest

@@ -167,8 +167,9 @@ public class DiscordBot
         var commands = Client.UseCommandsNext(cmdConfig);
 
         // Timestamp parser for the seek command (in AudioModule)
-        commands.RegisterConverter(new TimestampArgumentConverter());
+        commands.RegisterConverter(new SeekstampArgumentConverter());
 
+        // Registering all bot commands
         if (Config.Lava.IsEnabled)
             commands.RegisterCommands<AudioModule>();
         commands.RegisterCommands<UtilityModule>();
@@ -223,8 +224,14 @@ public class DiscordBot
 
     public async Task RunAsync()
     {
-        // TODO: lavalink jar file is not found - throw exception and exit the program
         if (Config.Lava.IsEnabled && Config.Lava.AutoStart) {
+            if (!File.Exists("lavalink.jar")) {
+                throw new FileNotFoundException(
+                    "Cannot autostart lavalink - please place lavalink.jar file in the same " +
+                    "directory as the bot executable file"
+                );
+            }
+
             var startInfo = new ProcessStartInfo {
                 CreateNoWindow = true,
                 FileName = Config.Lava.JavaPath,
