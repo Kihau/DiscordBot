@@ -4,10 +4,10 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Lavalink;
 using DSharpPlus.Lavalink.Entities;
-using Microsoft.Extensions.Logging;
 using Shitcord.Data;
 using Shitcord.Extensions;
 using Shitcord.Services;
+using ExtensionMethods = Shitcord.Extensions.ExtensionMethods;
 
 namespace Shitcord.Modules;
 
@@ -439,11 +439,15 @@ public class AudioModule : BaseCommandModule
     {
         if (this.Data.CurrentTrack != null)
         {
+            var timestamp = ExtensionMethods.StripMilliseconds(
+                this.Data.GetTimestamp() ?? TimeSpan.Zero
+            );
+
             var embed = new DiscordEmbedBuilder()
                 .WithTitle(":musical_note:  |  Now playing: ")
                 .WithDescription(
                     $"[{this.Data.CurrentTrack.Title}]({this.Data.CurrentTrack.Uri})\n" +
-                    $":play_pause: Current timestamp: {this.Data.GetTimestamp()}\n" +
+                    $":play_pause: Current timestamp: {timestamp}\n" +
                     $":play_pause: Song length: {this.Data.CurrentTrack.Length}\n" +
                     $":play_pause: Song Author: {this.Data.CurrentTrack.Author}\n"
                 )

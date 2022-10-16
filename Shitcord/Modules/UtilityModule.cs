@@ -211,10 +211,12 @@ public class UtilityModule : BaseCommandModule
     [Description("Displays bot uptime")]
     public async Task UptimeCommand(CommandContext ctx)
     {
+        // TODO: Make this an extension method "HumanizeTimespan" that returns string
         var uptime = DateTime.Now - this.Bot.StartTime;
         var d = uptime.Days > 0 ? uptime.Days + "d " : "";
         var h = uptime.Hours > 0 ? uptime.Hours + "h " : "";
         var m = uptime.Minutes > 0 ? uptime.Minutes + "m " : "";
+        //                              vvvvvvvvvvvvvvvvvvvvvvvvv this should be returned string
         var bot_uptime = $"Bot uptime: `{d}{h}{m}{uptime.Seconds}s`\n";
 
         string system_uptime = "";

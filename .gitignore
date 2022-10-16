@@ -6,7 +6,8 @@ botlogs/
 
 DSharpPlus/
 Software/**
-External/**
+External/application.yml
+External/logs/
 
 *.user
 
