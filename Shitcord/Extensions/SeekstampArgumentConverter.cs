@@ -65,12 +65,23 @@ public class SeekstampArgumentConverter : IArgumentConverter<SeekStamp>
 
     public static int parseSeconds(String time, int index)
     {
-        int t1 = tryParseSeparatorToken(time, index);
-        int t2 = tryParseSuffixUnit(time, index);
-        if (t1 == -1 && t2 == -1) {
+        bool exc = false;
+        int seconds = -1;
+        try {
+            seconds = tryParseSuffixUnit(time, index);
+        }catch{ 
+            exc = true;
+        }
+
+        if (!exc)
+            return seconds;
+        
+        try {
+            seconds = tryParseSeparatorToken(time, index);
+        }catch{ 
             throw new CommandException("No appropriate format could be found");
         }
-        return t1 == -1 ? t2 : t1;
+        return seconds;
     }
 
     public static int tryParseSuffixUnit(string time, int index)
@@ -152,36 +163,86 @@ public class SeekstampArgumentConverter : IArgumentConverter<SeekStamp>
         return value;
     }
 
-    private static int tryParseSeparatorToken(string time, int index)
+    public static int tryParseSeparatorToken(string time, int indexInclusive)
     {
-        return -1;
-        /*
         StringBuilder num = new StringBuilder();
+        int separators = 0;
         int seconds = 0;
         bool awaitSep = false;
-        bool awaitDigit = false;
-        for (int i = time.Length-1; i > 0; i++) {
-            switch (time[i]) {
+        for (int i = time.Length-1; indexInclusive <= i; i--) {
+            char ch = time[i];
+            switch (ch) {
                 case ':':
                 case '.':
-                case '/':
-                    
+                    if(!awaitSep)
+                        throw new CommandException("Separator wasn't expected");
+
+                    separators++;
+                    awaitSep = false;
+                    seconds += secondsFrom(num, separators);
+                    num.Clear();
                     break;
-                
                 case ' ':
-                    
-                    break;
+                    throw new CommandException("Whitespace is forbidden");
                 default:
-                    if (char.IsDigit(time[i])) {
+                    if (char.IsDigit(ch)) {
+                        if (num.Length == 2) {
+                            throw new CommandException("Three digits in a row");
+                        }
                         awaitSep = true;
-                        num.Append(time[i]);
-                        //append unit
-                    }
-                    throw new CommandException("Unrecognized character");
+                        num.Append(ch);
+                    }else
+                        throw new CommandException("Unrecognized character");
+                    break;
             }
         }
+
+        if (num.Length > 0)
+            seconds += secondsFrom(num, separators+1);
+
         return seconds;
-        */
-        //TODO to implement
+    }
+
+    private static int secondsFrom(StringBuilder num, int separators)
+    {
+        bool alwaysSuccess = int.TryParse(reverse(num), out var val);
+        switch (separators) {
+            case 1:
+                if (val > 59){
+                    throw new CommandException("Second value exceeds 59");
+                }
+                return val;
+            case 2:
+                if (val > 59){
+                    throw new CommandException("Minute value exceeds 59");
+                }
+                return val * 60;
+            case 3:
+                if (val > 23){
+                    throw new CommandException("Hours specified exceed 23");
+                }
+                return val * 3600;
+            case 4:
+                if (val > 6){
+                    throw new CommandException("Days specified exceed 6");
+                }
+                return val * 86400;
+            default:
+                throw new CommandException("Too many separators");
+        }
+    }
+
+    private static string reverse(StringBuilder num)
+    {
+        switch (num.Length) {
+            case 1:
+                return num.ToString();
+            case 2:
+                //python moment
+                (num[0], num[1]) = (num[1], num[0]);
+                return num.ToString();
+            default:
+                throw new CommandException("Three digits reverse");
+        }
     }
 }
