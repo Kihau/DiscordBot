@@ -9,6 +9,7 @@ using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using Shitcord.Extensions;
 using Shitcord.Services;
+using ExtensionMethods = Shitcord.Extensions.ExtensionMethods;
 
 namespace Shitcord.Modules;
 
@@ -164,9 +165,10 @@ public class UtilityModule : BaseCommandModule
 
     [RequireAuthorized]
     [Command("nuke"), Description("Complitely nukes a channel")]
-    async Task NukeChannelAsync(CommandContext ctx,
-        [Description("Channel name (ex. `#channel`)")] DiscordChannel? req_channel = null)
-    {
+    async Task NukeChannelAsync(
+        CommandContext ctx,
+        [Description("Channel name (ex. `#channel`)")] DiscordChannel? req_channel = null
+    ) {
         var member = ctx.Member;
         if ((member?.Permissions & Permissions.ManageChannels) == 0)
             return;
@@ -211,13 +213,8 @@ public class UtilityModule : BaseCommandModule
     [Description("Displays bot uptime")]
     public async Task UptimeCommand(CommandContext ctx)
     {
-        // TODO: Make this an extension method "HumanizeTimespan" that returns string
-        var uptime = DateTime.Now - this.Bot.StartTime;
-        var d = uptime.Days > 0 ? uptime.Days + "d " : "";
-        var h = uptime.Hours > 0 ? uptime.Hours + "h " : "";
-        var m = uptime.Minutes > 0 ? uptime.Minutes + "m " : "";
-        //                              vvvvvvvvvvvvvvvvvvvvvvvvv this should be returned string
-        var bot_uptime = $"Bot uptime: `{d}{h}{m}{uptime.Seconds}s`\n";
+        var uptime = ExtensionMethods.HumanizeSpan(DateTime.Now - Bot.StartTime);
+        var bot_uptime = $"Bot uptime: `{uptime}`\n";
 
         string system_uptime = "";
         if (System.OperatingSystem.IsLinux()) {
@@ -230,27 +227,25 @@ public class UtilityModule : BaseCommandModule
             sys.Start();
             await sys.WaitForExitAsync();
             
-            var sys_uptime = DateTime.Now - DateTime.ParseExact(
+            var sys_uptime_span = DateTime.Now - DateTime.ParseExact(
                 (await sys.StandardOutput.ReadLineAsync())!,
                 "yyyy-MM-dd HH:mm:ss",
-                CultureInfo.InvariantCulture);
-            
-            var sd = sys_uptime.Days > 0 ? sys_uptime.Days + "d " : "";
-            var sh = sys_uptime.Hours > 0 ? sys_uptime.Hours + "h " : "";
-            var sm = sys_uptime.Minutes > 0 ? sys_uptime.Minutes + "m " : "";
+                CultureInfo.InvariantCulture
+            );
 
-            system_uptime = $"System uptime: `{sd}{sh}{sm}{sys_uptime.Seconds}s`\n";
+            var sys_uptime = ExtensionMethods.HumanizeSpan(sys_uptime_span);
+            system_uptime = $"System uptime: `{sys_uptime}s`\n";
         } 
 
         await ctx.RespondAsync(bot_uptime + system_uptime);
     }
 
     [Command("avatar"), Description("Displays user avatar")]
-    public async Task DisplayAvatarCommand(CommandContext ctx,
-        [Description("User name (ex. `@Kihau` or `Kihau#3428`)")]
-        DiscordUser? reqUser = null,
-        [Description("Size in pixels")] ushort? reqSize = null)
-    {
+    public async Task DisplayAvatarCommand(
+        CommandContext ctx, 
+        [Description("User name (ex. `@Kihau` or `Kihau#3428`)")] DiscordUser? reqUser = null,
+        [Description("Size in pixels")] ushort? reqSize = null
+    ) {
         var user = reqUser ?? ctx.User;
         var size = reqSize ?? 2048;
         var embed = new DiscordEmbedBuilder()

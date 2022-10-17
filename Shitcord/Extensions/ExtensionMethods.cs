@@ -27,6 +27,13 @@ public static class ExtensionMethods
         }
     }
 
+    public static string HumanizeSpan(TimeSpan span) {
+        var d = span.Days > 0 ? span.Days + "d " : "";
+        var h = span.Hours > 0 ? span.Hours + "h " : "";
+        var m = span.Minutes > 0 ? span.Minutes + "m " : "";
+        return $"{d}{h}{m}{span.Seconds}s";
+    }
+
     public static TimeSpan StripMilliseconds(this TimeSpan time)
         => new TimeSpan(time.Days, time.Hours, time.Minutes, time.Seconds);
 }
