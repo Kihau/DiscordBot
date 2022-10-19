@@ -190,7 +190,7 @@ public class DiscordBot
 
         commands.CommandErrored += async (sender, e) => {
             Client.Logger.LogError(new EventId(0, "Exception"), $"{e.Exception}"); 
-                
+               
             // TODO: Improve this and don't catch obvious exceptions?
             // if (!DebugEnabled && e.Exception is not CommandException)
             //     return;

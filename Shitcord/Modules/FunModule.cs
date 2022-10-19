@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -35,7 +36,14 @@ public class FunModule : BaseCommandModule
         int index = new Random().Next(FunModule.solarlessons.Length);
         await ctx.RespondAsync(FunModule.solarlessons[index]);
     }
-    
+
+
+    [Command("runscript"), Aliases("script", "python")]
+    public async Task RunSciptCommand(
+        CommandContext ctx, string scipt_name, [RemainingText] string? input_args = null
+    ) {
+    }
+
     [Command("shakeuser"), Aliases("shake")]
     public async Task ShakeUserCommand(CommandContext ctx, DiscordMember member) 
     {
