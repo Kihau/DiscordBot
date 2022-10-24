@@ -409,7 +409,7 @@ public class AudioModule : BaseCommandModule
 
                 await ctx.Channel.SendMessageAsync(embed.Build());
             } break;
-            case <= 0:
+            case <= 0: 
                 throw new CommandException("Count must be greater than 0");
             default: {
                 var tracks = this.Data.RemoveRange(--index, count).Count();

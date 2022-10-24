@@ -234,7 +234,7 @@ public class UtilityModule : BaseCommandModule
             );
 
             var sys_uptime = ExtensionMethods.HumanizeSpan(sys_uptime_span);
-            system_uptime = $"System uptime: `{sys_uptime}s`\n";
+            system_uptime = $"System uptime: `{sys_uptime}`\n";
         } 
 
         await ctx.RespondAsync(bot_uptime + system_uptime);
