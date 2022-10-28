@@ -51,10 +51,10 @@ public class FunModule : BaseCommandModule
     public async Task McWhitelistCommand(CommandContext ctx, string username) {
         const ulong temp_id = 506589747033145364; // dj
         if (ctx.Channel.Id != temp_id)
-            throw new CommandException("Whitelisting here is not allowed");
+            throw new CommandException("Whitelisting here is not allowed.");
 
-        if (!GlobalData.mc_whitelist.Where(x => x.username == username).Any())
-            throw new CommandException("Username like this is already whitelisted");
+        if (GlobalData.mc_whitelist.Any(x => x.username == username))
+            throw new CommandException("Username like this is already whitelisted.");
 
         var server = new Process();
         server.StartInfo = new ProcessStartInfo {
@@ -64,13 +64,13 @@ public class FunModule : BaseCommandModule
             RedirectStandardOutput = true,
         };
 
-        var predic = GlobalData.mc_whitelist.Where(x => x.userid == ctx.User.Id);
-        if (!predic.Any()) {
-            var previous = predic.Single();
-            server.StartInfo.Arguments = $"whitelist change {previous.username} {username}";
+        string output = "";
+        var first = GlobalData.mc_whitelist.Where(x => x.userid == ctx.User.Id).FirstOrDefault();
+        if (first != null) {
+            server.StartInfo.Arguments = $"whitelist change {first.username} {username}";
 
-            previous.username = username;
-            await ctx.RespondAsync("Username changed");
+            first.username = username;
+            output = "Username changed";
             
         } else {
             GlobalData.mc_whitelist.Add(new WhilelistEntry {
@@ -79,7 +79,7 @@ public class FunModule : BaseCommandModule
             });
 
             server.StartInfo.Arguments = $"whitelist add {username}";
-            await ctx.RespondAsync("Added to whitelist");
+            output = "Added to whitelist";
         }
 
         server.Start();
@@ -87,6 +87,7 @@ public class FunModule : BaseCommandModule
 
         string json = JsonSerializer.Serialize(GlobalData.mc_whitelist);
         File.WriteAllText(GlobalData.whitelist_path, json);
+        await ctx.RespondAsync(output);
     }
 
     [Command("mcstart"), Description("Starts the minecraft server")]
