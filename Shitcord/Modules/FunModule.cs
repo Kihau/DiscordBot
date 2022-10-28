@@ -58,7 +58,7 @@ public class FunModule : BaseCommandModule
 
         var server = new Process();
         server.StartInfo = new ProcessStartInfo {
-            FileName = $"{GlobalData.mcserver_path}/startup.sh",
+            FileName = $"bash",
             CreateNoWindow = true,
             UseShellExecute = false,
             RedirectStandardOutput = true,
@@ -67,7 +67,8 @@ public class FunModule : BaseCommandModule
         string output = "";
         var first = GlobalData.mc_whitelist.Where(x => x.userid == ctx.User.Id).FirstOrDefault();
         if (first != null) {
-            server.StartInfo.Arguments = $"whitelist change {first.username} {username}";
+            server.StartInfo.Arguments =
+                $"-c {GlobalData.mcserver_path}/startup.sh whitelist change {first.username} {username}";
 
             first.username = username;
             output = "Username changed";
@@ -78,7 +79,8 @@ public class FunModule : BaseCommandModule
                 username = username,
             });
 
-            server.StartInfo.Arguments = $"whitelist add {username}";
+            server.StartInfo.Arguments =
+                $"-c {GlobalData.mcserver_path}/startup.sh whitelist add {username}";
             output = "Added to whitelist";
         }
 
