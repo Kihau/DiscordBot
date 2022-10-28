@@ -49,7 +49,7 @@ public class FunModule : BaseCommandModule
     // NODE: This command is temporary - whitelisting will be disabled when everyone is in.
     [Command("mcwhitelist"), Aliases("whitelist")]
     public async Task McWhitelistCommand(CommandContext ctx, string username) {
-        const ulong temp_id = 506589747033145364; // dj
+        const ulong temp_id = 983896238879559693; // spafirskabotatestsafroskspamtest
         if (ctx.Channel.Id != temp_id)
             throw new CommandException("Whitelisting here is not allowed.");
 
@@ -87,7 +87,8 @@ public class FunModule : BaseCommandModule
         server.Start();
         await server.WaitForExitAsync();
 
-        string json = JsonSerializer.Serialize(GlobalData.mc_whitelist);
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        string json = JsonSerializer.Serialize(GlobalData.mc_whitelist, options);
         File.WriteAllText(GlobalData.whitelist_path, json);
         await ctx.RespondAsync(output);
     }

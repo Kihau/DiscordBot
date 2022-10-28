@@ -5,9 +5,9 @@ namespace Shitcord.Data;
 
 public class WhilelistEntry {
     [JsonPropertyName("userid")] 
-    public ulong userid;
+    public ulong userid { get; set; }
     [JsonPropertyName("username")] 
-    public string? username;
+    public string? username { get; set; }
 
     public WhilelistEntry() { }
 }
@@ -15,16 +15,15 @@ public class WhilelistEntry {
 // Mostly used for storing random/temporary stuff
 public static class GlobalData {
     public static void StaticInitalize() {
-        if (!File.Exists(whitelist_path))
-            File.Create(whitelist_path);
-
-        string json = File.ReadAllText(whitelist_path);
         try {
+            if (!File.Exists(whitelist_path))
+                File.Create(whitelist_path);
+
+            string json = File.ReadAllText(whitelist_path);
             mc_whitelist = JsonSerializer.Deserialize<List<WhilelistEntry>>(json) ?? new();
         } catch { /* Ignored for now */ }
     }
 
-    [JsonPropertyName("whitelist")] 
     public static List<WhilelistEntry> mc_whitelist = new();
 
     public const string whitelist_path = "Resources/botwhitelist.json";

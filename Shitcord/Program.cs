@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
 using Shitcord;
+using Shitcord.Data;
 
 // TODO: Create one discord message (a terminal) and print actual terminal output (add interaction button)
 //
@@ -23,6 +25,17 @@ static class Program
             // Save stuff to file (logging)
             throw;
         }
+    }
+
+    static void Main1(string[] args) {
+        GlobalData.StaticInitalize();
+        var data = new List<WhilelistEntry>();
+        data.Add(new WhilelistEntry {
+            userid = 123123,
+            username = "Michal"
+        });
+        string json = JsonSerializer.Serialize(data);
+        File.WriteAllText(GlobalData.whitelist_path, json);
     }
 
     static void Main2(string[] args) 
