@@ -48,7 +48,7 @@ public class FunModule : BaseCommandModule
 
     // NODE: This command is temporary - whitelisting will be disabled when everyone is in.
     [Command("mcwhitelist"), Aliases("whitelist")]
-    async Task McWhitelistCommand(CommandContext ctx, string username) {
+    public async Task McWhitelistCommand(CommandContext ctx, string username) {
         const ulong temp_id = 506589747033145364; // dj
         if (ctx.Channel.Id != temp_id)
             throw new CommandException("Whitelisting here is not allowed");
@@ -90,7 +90,7 @@ public class FunModule : BaseCommandModule
     }
 
     [Command("mcstart"), Description("Starts the minecraft server")]
-    async Task McStartCommand(CommandContext ctx, string username) {
+    public async Task McStartCommand(CommandContext ctx, string username) {
         if (!GlobalData.mc_whitelist.Where(x => x.userid == ctx.User.Id).Any())
             throw new CommandException("You are not whitelisted. Unlucky...");
         
