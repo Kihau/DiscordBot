@@ -60,7 +60,7 @@ public class FunModule : BaseCommandModule
         server.StartInfo = new ProcessStartInfo {
             FileName = $"{GlobalData.mcserver_path}/startup.sh",
             CreateNoWindow = true,
-            UseShellExecute = true,
+            UseShellExecute = false,
             RedirectStandardOutput = true,
         };
 
@@ -101,7 +101,7 @@ public class FunModule : BaseCommandModule
             FileName = $"{GlobalData.mcserver_path}/startup.sh",
             Arguments = "start",
             CreateNoWindow = true,
-            UseShellExecute = true,
+            UseShellExecute = false,
             RedirectStandardOutput = true,
         };
 
