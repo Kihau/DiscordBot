@@ -102,7 +102,7 @@ public class FunModule : BaseCommandModule
         server.StartInfo = new ProcessStartInfo {
             FileName = $"bash",
             WorkingDirectory = GlobalData.mcserver_path,
-            Arguments = "-c \"./startup start\"",
+            Arguments = "-c \"./startup.sh start\"",
             CreateNoWindow = true,
             UseShellExecute = false,
             RedirectStandardOutput = true,
