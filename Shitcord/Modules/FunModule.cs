@@ -69,7 +69,7 @@ public class FunModule : BaseCommandModule
         var first = GlobalData.mc_whitelist.Where(x => x.userid == ctx.User.Id).FirstOrDefault();
         if (first != null) {
             server.StartInfo.Arguments =
-                $"-c \"./startup.sh whitelist change {first.username} {username}\"";
+                $"-c './startup.sh whitelist change {first.username} {username}'";
 
             first.username = username;
             output = "Username changed";
@@ -80,7 +80,7 @@ public class FunModule : BaseCommandModule
                 username = username,
             });
 
-            server.StartInfo.Arguments = $"-c \"./startup.sh whitelist add {username}\"";
+            server.StartInfo.Arguments = $"-c './startup.sh whitelist add {username}'";
             output = "Added to whitelist";
         }
 
@@ -93,13 +93,32 @@ public class FunModule : BaseCommandModule
         await ctx.RespondAsync(output);
     }
 
+    [Command("mcexec"), RequireAuthorized]
+    public async Task McExecCommand(CommandContext ctx, [RemainingText] string command) {
+        var server = new Process();
+        server.StartInfo = new ProcessStartInfo {
+            FileName = $"bash",
+            WorkingDirectory = GlobalData.mcserver_path,
+            Arguments = $"-c './startup.sh mcexec \"{command}\"'",
+            CreateNoWindow = true,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+        };
+
+        server.Start();
+        await server.WaitForExitAsync();
+
+        var output = await server.StandardOutput.ReadLineAsync() 
+            ?? throw new CommandException("Failed to read from the process.");
+        await ctx.RespondAsync(output);
+    }
+
     [Command("mcstart"), Description("Starts the minecraft server")]
     public async Task McStartCommand(CommandContext ctx) {
         if (!GlobalData.mc_whitelist.Any(x => x.userid == ctx.User.Id))
             throw new CommandException("You are not whitelisted. Unlucky...");
         
         var server = new Process();
-
         server.StartInfo = new ProcessStartInfo {
             FileName = $"bash",
             WorkingDirectory = GlobalData.mcserver_path,
@@ -110,7 +129,6 @@ public class FunModule : BaseCommandModule
         };
 
         server.Start();
-
         await server.WaitForExitAsync();
 
         var output = await server.StandardOutput.ReadLineAsync() 
