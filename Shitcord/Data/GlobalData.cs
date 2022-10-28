@@ -1,10 +1,15 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Shitcord.Data;
 
 public class WhilelistEntry {
+    [JsonPropertyName("userid")] 
     public ulong userid;
+    [JsonPropertyName("username")] 
     public string? username;
+
+    public WhilelistEntry() { }
 }
 
 // Mostly used for storing random/temporary stuff
