@@ -14,7 +14,9 @@ public static class GlobalData {
             File.Create(whitelist_path);
 
         string json = File.ReadAllText(whitelist_path);
-        mc_whitelist = JsonSerializer.Deserialize<List<WhilelistEntry>>(json) ?? new();
+        try {
+            mc_whitelist = JsonSerializer.Deserialize<List<WhilelistEntry>>(json) ?? new();
+        } catch { /* Ignored for now */ }
     }
 
     public static List<WhilelistEntry> mc_whitelist = new();
