@@ -24,7 +24,9 @@ public static class GlobalData {
         } catch { /* Ignored for now */ }
     }
 
+    [JsonPropertyName("whitelist")] 
     public static List<WhilelistEntry> mc_whitelist = new();
+
     public const string whitelist_path = "Resources/botwhitelist.json";
     public const string mcserver_path = "/home/kihau/Servers/Minecraft";
 }
