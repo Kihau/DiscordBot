@@ -10,7 +10,7 @@ public class WhilelistEntry {
 // Mostly used for storing random/temporary stuff
 public static class GlobalData {
     public static void StaticInitalize() {
-        if (File.Exists(whitelist_path))
+        if (!File.Exists(whitelist_path))
             File.Create(whitelist_path);
 
         string json = File.ReadAllText(whitelist_path);
