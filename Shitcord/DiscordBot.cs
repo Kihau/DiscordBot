@@ -15,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Shitcord.Modules;
 using Shitcord.Services;
 using Shitcord.Extensions;
+using Shitcord.Data;
 
 namespace Shitcord;
 
@@ -35,12 +36,12 @@ public class DiscordBot
 #endif
 
 #pragma warning disable CS8618
-    public DiscordBot(BotConfig config)
+    public DiscordBot(BotConfig config) {
 #pragma warning restore CS8618
-    {
         StartTime = DateTime.Now;
         Config = config;
 
+        GlobalData.StaticInitalize();
         ConfigureClient();
         ConfigureCommands();
     }

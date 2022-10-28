@@ -1,8 +1,10 @@
 using System.Diagnostics;
+using System.Text.Json;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using Shitcord.Data;
 using Shitcord.Extensions;
 using ExtensionMethods = Shitcord.Extensions.ExtensionMethods;
 
@@ -38,10 +40,77 @@ public class FunModule : BaseCommandModule
     }
 
 
-    [Command("runscript"), Aliases("script", "python")]
-    public async Task RunSciptCommand(
-        CommandContext ctx, string scipt_name, [RemainingText] string? input_args = null
-    ) {
+    // [Command("runscript"), Aliases("script", "python")]
+    // async Task RunSciptCommand(
+    //     CommandContext ctx, string scipt_name, [RemainingText] string? input_args = null
+    // ) {
+    // }
+
+    // NODE: This command is temporary - whitelisting will be disabled when everyone is in.
+    [Command("mcwhitelist"), Aliases("whitelist")]
+    async Task McWhitelistCommand(CommandContext ctx, string username) {
+        const ulong temp_id = 506589747033145364; // dj
+        if (ctx.Channel.Id != temp_id)
+            throw new CommandException("Whitelisting here is not allowed");
+
+        if (!GlobalData.mc_whitelist.Where(x => x.username == username).Any())
+            throw new CommandException("Username like this is already whitelisted");
+
+        var server = new Process();
+        server.StartInfo = new ProcessStartInfo {
+            FileName = $"{GlobalData.mcserver_path}/startup.sh",
+            CreateNoWindow = true,
+            UseShellExecute = true,
+            RedirectStandardOutput = true,
+        };
+
+        var predic = GlobalData.mc_whitelist.Where(x => x.userid == ctx.User.Id);
+        if (!predic.Any()) {
+            var previous = predic.Single();
+            server.StartInfo.Arguments = $"whitelist change {previous.username} {username}";
+
+            previous.username = username;
+            await ctx.RespondAsync("Username changed");
+            
+        } else {
+            GlobalData.mc_whitelist.Add(new WhilelistEntry {
+                userid = ctx.User.Id,
+                username = username,
+            });
+
+            server.StartInfo.Arguments = $"whitelist add {username}";
+            await ctx.RespondAsync("Added to whitelist");
+        }
+
+        server.Start();
+        await server.WaitForExitAsync();
+
+        string json = JsonSerializer.Serialize(GlobalData.mc_whitelist);
+        File.WriteAllText(GlobalData.whitelist_path, json);
+    }
+
+    [Command("mcstart"), Description("Starts the minecraft server")]
+    async Task McStartCommand(CommandContext ctx, string username) {
+        if (!GlobalData.mc_whitelist.Where(x => x.userid == ctx.User.Id).Any())
+            throw new CommandException("You are not whitelisted. Unlucky...");
+        
+        var server = new Process();
+
+        server.StartInfo = new ProcessStartInfo {
+            FileName = $"{GlobalData.mcserver_path}/startup.sh",
+            Arguments = "start",
+            CreateNoWindow = true,
+            UseShellExecute = true,
+            RedirectStandardOutput = true,
+        };
+
+        server.Start();
+
+        await server.WaitForExitAsync();
+
+        var output = await server.StandardOutput.ReadLineAsync() 
+            ?? throw new CommandException("Failed to read from the process.");
+        await ctx.RespondAsync(output);
     }
 
     [Command("shakeuser"), Aliases("shake")]
