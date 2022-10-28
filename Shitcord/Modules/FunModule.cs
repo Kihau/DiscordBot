@@ -94,7 +94,7 @@ public class FunModule : BaseCommandModule
 
     [Command("mcstart"), Description("Starts the minecraft server")]
     public async Task McStartCommand(CommandContext ctx) {
-        if (!GlobalData.mc_whitelist.Where(x => x.userid == ctx.User.Id).Any())
+        if (!GlobalData.mc_whitelist.Any(x => x.userid == ctx.User.Id))
             throw new CommandException("You are not whitelisted. Unlucky...");
         
         var server = new Process();
