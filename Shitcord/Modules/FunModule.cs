@@ -49,7 +49,7 @@ public class FunModule : BaseCommandModule
     // NODE: This command is temporary - whitelisting will be disabled when everyone is in.
     [Command("mcwhitelist"), Aliases("whitelist")]
     public async Task McWhitelistCommand(CommandContext ctx, string username) {
-        const ulong temp_id = 983896238879559693; // spafirskabotatestsafroskspamtest
+        const ulong temp_id = 1035654547659554919; // mcwhitelist
         if (ctx.Channel.Id != temp_id)
             throw new CommandException("Whitelisting here is not allowed.");
 
