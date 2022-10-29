@@ -29,8 +29,8 @@ static class Program
 
     static void Main1(string[] args) {
         GlobalData.StaticInitalize();
-        var data = new List<WhilelistEntry>();
-        data.Add(new WhilelistEntry {
+        var data = new List<WhitelistEntry>();
+        data.Add(new WhitelistEntry {
             userid = 123123,
             username = "Michal"
         });

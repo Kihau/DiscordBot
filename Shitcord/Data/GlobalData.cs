@@ -3,13 +3,13 @@ using System.Text.Json.Serialization;
 
 namespace Shitcord.Data;
 
-public class WhilelistEntry {
+public class WhitelistEntry {
     [JsonPropertyName("userid")] 
     public ulong userid { get; set; }
     [JsonPropertyName("username")] 
     public string? username { get; set; }
 
-    public WhilelistEntry() { }
+    public WhitelistEntry() { }
 }
 
 // Mostly used for storing random/temporary stuff
@@ -20,11 +20,11 @@ public static class GlobalData {
                 File.Create(whitelist_path);
 
             string json = File.ReadAllText(whitelist_path);
-            mc_whitelist = JsonSerializer.Deserialize<List<WhilelistEntry>>(json) ?? new();
+            mc_whitelist = JsonSerializer.Deserialize<List<WhitelistEntry>>(json) ?? new();
         } catch { /* Ignored for now */ }
     }
 
-    public static List<WhilelistEntry> mc_whitelist = new();
+    public static List<WhitelistEntry> mc_whitelist = new();
 
     public const string whitelist_path = "Resources/botwhitelist.json";
     public const string mcserver_path = "/home/kihau/Servers/Minecraft";

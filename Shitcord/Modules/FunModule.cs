@@ -75,7 +75,7 @@ public class FunModule : BaseCommandModule
             output = "Username changed";
             
         } else {
-            GlobalData.mc_whitelist.Add(new WhilelistEntry {
+            GlobalData.mc_whitelist.Add(new WhitelistEntry {
                 userid = ctx.User.Id,
                 username = username,
             });
