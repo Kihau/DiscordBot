@@ -49,6 +49,7 @@ public class FunModule : BaseCommandModule
     // NODE: This command is temporary - whitelisting will be disabled when everyone is in.
     [Command("mcwhitelist"), Aliases("whitelist")]
     public async Task McWhitelistCommand(CommandContext ctx, string username) {
+        // await ctx.Message.DeleteAsync();
         const ulong temp_id = 1035654547659554919; // mcwhitelist
         if (ctx.Channel.Id != temp_id)
             throw new CommandException("Whitelisting here is not allowed.");
@@ -65,14 +66,15 @@ public class FunModule : BaseCommandModule
             RedirectStandardOutput = true,
         };
 
+        // TODO: Embed
         string output = "";
         var first = GlobalData.mc_whitelist.Where(x => x.userid == ctx.User.Id).FirstOrDefault();
         if (first != null) {
             server.StartInfo.Arguments =
-                $"-c './startup.sh whitelist change {first.username} {username}'";
+                $"./startup.sh whitelist change {first.username} {username}";
 
             first.username = username;
-            output = "Username changed";
+            output = "Account changed";
             
         } else {
             GlobalData.mc_whitelist.Add(new WhitelistEntry {
@@ -80,7 +82,7 @@ public class FunModule : BaseCommandModule
                 username = username,
             });
 
-            server.StartInfo.Arguments = $"-c './startup.sh whitelist add {username}'";
+            server.StartInfo.Arguments = $"./startup.sh whitelist add {username}";
             output = "Added to whitelist";
         }
 
@@ -90,7 +92,17 @@ public class FunModule : BaseCommandModule
         var options = new JsonSerializerOptions { WriteIndented = true };
         string json = JsonSerializer.Serialize(GlobalData.mc_whitelist, options);
         File.WriteAllText(GlobalData.whitelist_path, json);
-        await ctx.RespondAsync(output);
+
+        var embed = new DiscordEmbedBuilder();
+        embed.WithTitle("Command executed");
+        embed.WithDescription(output);
+        embed.WithColor(DiscordColor.Blue);
+
+        // var message = await ctx.RespondAsync(output);
+        var message = await ctx.RespondAsync(embed.Build());
+
+        // await Task.Delay(3000);
+        // await message.DeleteAsync();
     }
 
     [Command("mcexec"), RequireAuthorized]
@@ -99,7 +111,7 @@ public class FunModule : BaseCommandModule
         server.StartInfo = new ProcessStartInfo {
             FileName = $"bash",
             WorkingDirectory = GlobalData.mcserver_path,
-            Arguments = $"-c './startup.sh mcexec \"{command}\"'",
+            Arguments = $"./startup.sh mcexec \"{command}\"",
             CreateNoWindow = true,
             UseShellExecute = false,
             RedirectStandardOutput = true,
