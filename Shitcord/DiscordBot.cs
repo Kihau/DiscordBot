@@ -53,7 +53,8 @@ public class DiscordBot
             Token = botConf.Token,
             TokenType = TokenType.Bot,
             // TokenType = TokenType.User,
-            Intents = DiscordIntents.AllUnprivileged,
+            Intents = DiscordIntents.All,
+            // Intents = DiscordIntents.AllUnprivileged,
             // TODO: Change(?) it vvvvvvvvvvv
             // NOTE: This does nothing - the log level is set in the BotLogger class
             MinimumLogLevel = LogLevel.Information,
