@@ -57,7 +57,7 @@ function build {
 
     dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true --self-contained false
 
-    cd "${SCRIPT_DIR}/Shitcord/bin/Release/net6.0/linux-x64/publish/"
+    cd "${SCRIPT_DIR}/Shitcord/bin/Release/net7.0/linux-x64/publish/"
     mv Shitcord "${SHITCORD_DIR}/"
     find *.so -type f -print -exec mv -v {} "${SHITCORD_DIR}" \;
 
