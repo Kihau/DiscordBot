@@ -19,6 +19,9 @@ public class BotConfig
     [JsonPropertyName("lavalink")] 
     public LavalinkConfig Lava { get; set; } = new();
 
+    [JsonPropertyName("openai")] 
+    public OpenAIConfig OpenAI { get; set; } = new();
+
     public BotConfig() { }
 
     public BotConfig(string? path = null)
@@ -137,4 +140,14 @@ public class LavalinkConfig
     [JsonPropertyName("javapath")]
     public string JavaPath { get; set; } 
         = "path/to/java.exe (or just java if set as enviroment veriable)";
+}
+
+[Serializable]
+public class OpenAIConfig 
+{
+    [JsonPropertyName("token")] 
+    public string Token { get; set; } = "discord token";
+
+    [JsonPropertyName("users")]
+    public List<ulong> AllowedUsers { get; set; } = new();
 }

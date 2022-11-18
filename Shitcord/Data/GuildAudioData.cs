@@ -131,7 +131,7 @@ public class GuildAudioData
             Condition.New(GuildAudioTable.GUILD_ID).Equals(Guild.Id)
         );
 
-        //  0        1           2           3       4       5       6
+        //  0         1           2           3       4       5       6
         //  GUILD_ID, QU_CHANNEL, SU_CHANNEL, QU_MSG, SU_MSG, VOLUME, LOOPING 
         if (!exists_in_table) {
             DatabaseContext.executeUpdate(QueryBuilder

@@ -46,7 +46,7 @@ public class FunModule : BaseCommandModule
     // ) {
     // }
 
-    // NODE: This command is temporary - whitelisting will be disabled when everyone is in.
+    // NOTE: This command is temporary - whitelisting will be disabled when everyone is in.
     [Command("mcwhitelist"), Aliases("whitelist")]
     public async Task McWhitelistCommand(CommandContext ctx, string username) {
         // await ctx.Message.DeleteAsync();

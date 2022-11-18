@@ -1,8 +1,9 @@
 ﻿using System.Diagnostics;
-using System.Text.Json;
 using Shitcord;
 using Shitcord.Data;
 
+// TODO: Add a way to create global commands at runtime (might require custom help handler)
+// TODO: Custom help handler
 // TODO: Create one discord message (a terminal) and print actual terminal output (add interaction button)
 //
 // NOTE: We could store custom prefix for each guild and use Config.Prefix
@@ -29,13 +30,13 @@ static class Program
 
     static void Main1(string[] args) {
         GlobalData.StaticInitalize();
-        var data = new List<WhitelistEntry>();
-        data.Add(new WhitelistEntry {
-            userid = 123123,
-            username = "Michal"
-        });
-        string json = JsonSerializer.Serialize(data);
-        File.WriteAllText(GlobalData.whitelist_path, json);
+        // var data = new List<WhitelistEntry>();
+        // data.Add(new WhitelistEntry {
+        //     userid = 123123,
+        //     username = "Michal"
+        // });
+        // string json = JsonSerializer.Serialize(data);
+        // File.WriteAllText(GlobalData.whitelist_path, json);
     }
 
     static void Main2(string[] args) 

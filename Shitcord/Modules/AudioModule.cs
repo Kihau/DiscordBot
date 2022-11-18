@@ -306,7 +306,9 @@ public class AudioModule : BaseCommandModule
             "` None - 0 `, ` Queue - 1 `, ` Song - 2 `, ` Shuffle - 3 `"
         );
 
-        await ctx.RespondAsync($"Looping mode set to: `{Data.Looping}`");
+        if (Data.Looping is LoopingMode.None)
+            await ctx.RespondAsync($"Looping is now disabled (mode: `{Data.Looping}`)");
+        else await ctx.RespondAsync($"Looping is now enabled (mode: `{Data.Looping}`)");
     }
 
     [Command("shuffle")]

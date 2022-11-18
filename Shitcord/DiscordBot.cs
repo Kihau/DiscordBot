@@ -52,6 +52,7 @@ public class DiscordBot
         var clientConfig = new DiscordConfiguration {
             Token = botConf.Token,
             TokenType = TokenType.Bot,
+            // TokenType = TokenType.User,
             Intents = DiscordIntents.AllUnprivileged,
             // TODO: Change(?) it vvvvvvvvvvv
             // NOTE: This does nothing - the log level is set in the BotLogger class
@@ -183,7 +184,8 @@ public class DiscordBot
 
         commands.CommandExecuted += (sender, e) => {
             Client.Logger.LogInformation(new EventId(2, "Executed"),
-                $"Called: {e.Command.Name} by {e.Context.User.Id} in " +
+                // TODO: Check: Changed this to print entire command (does this work?)
+                $"Called: {e.Command.Name} with {e.Context.RawArgumentString} by {e.Context.User.Id} in " +
                 $"{e.Context.Guild.Id}@{e.Context.Channel.Id}"
             ); 
             return Task.CompletedTask;
@@ -191,6 +193,8 @@ public class DiscordBot
 
         commands.CommandErrored += async (sender, e) => {
             Client.Logger.LogError(new EventId(0, "Exception"), $"{e.Exception}"); 
+               
+            // When Could not find suitable overload - print required arguments
             // TODO: Improve this and don't catch obvious exceptions?
             // if (!DebugEnabled && e.Exception is not CommandException)
             //     return;
