@@ -48,18 +48,17 @@ public class DiscordBot
 
     private void ConfigureClient()
     {
-        var botConf = Config.Discord;
         var clientConfig = new DiscordConfiguration {
-            Token = botConf.Token,
+            Token = Config.Discord.Token,
             TokenType = TokenType.Bot,
             // TokenType = TokenType.User,
             Intents = DiscordIntents.All,
             // Intents = DiscordIntents.AllUnprivileged,
             // TODO: Change(?) it vvvvvvvvvvv
             // NOTE: This does nothing - the log level is set in the BotLogger class
-            MinimumLogLevel = LogLevel.Information,
+            MinimumLogLevel = Config.Logging.MinLogLevel,
             AutoReconnect = true,
-            MessageCacheSize = botConf.CacheSize,
+            MessageCacheSize = Config.Discord.CacheSize,
             LoggerFactory = new BotLoggerFactory(Config),
         };
 
@@ -89,7 +88,6 @@ public class DiscordBot
             Console.WriteLine(
                 $"[{e.Guild.Name}] {e.Author.Username}@{e.Channel.Name}: {message_content}"
             );
-            var num = new HttpClient();
         }
 
         return Task.CompletedTask;
