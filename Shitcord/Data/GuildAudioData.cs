@@ -77,6 +77,7 @@ public class GuildAudioData
     // Change it later (maybe not?)
     public int page = 0;
 
+
     public GuildAudioData(DiscordGuild guild, LavalinkNodeConnection lavalink,
         DiscordClient client, DatabaseService database)
     {
@@ -121,6 +122,12 @@ public class GuildAudioData
         Player = await Lavalink.ConnectAsync(vchannel);
         await Player.SetVolumeAsync(Volume);
         await Player.SetAudiofiltersAsync(Filters);
+
+        // NOTE: Frisk wanted this feature
+        const string join_sound = "Resources/sound.mp3";
+        var track = await this.Lavalink.Rest.GetTracksAsync(new FileInfo(join_sound));
+        await Player.PlayAsync(track.Tracks.First());
+
         Player.PlaybackFinished += PlaybackFinished;
     }
 

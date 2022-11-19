@@ -69,7 +69,7 @@ public class SeekstampArgumentConverter : IArgumentConverter<SeekStamp>
         int seconds = -1;
         try {
             seconds = tryParseSuffixUnit(time, index);
-        }catch{ 
+        } catch { 
             exc = true;
         }
 
@@ -208,24 +208,16 @@ public class SeekstampArgumentConverter : IArgumentConverter<SeekStamp>
         bool alwaysSuccess = int.TryParse(reverse(num), out var val);
         switch (separators) {
             case 1:
-                if (val > 59){
-                    throw new CommandException("Second value exceeds 59");
-                }
+                if (val > 59) throw new CommandException("Second value exceeds 59");
                 return val;
             case 2:
-                if (val > 59){
-                    throw new CommandException("Minute value exceeds 59");
-                }
+                if (val > 59) throw new CommandException("Minute value exceeds 59");
                 return val * 60;
             case 3:
-                if (val > 23){
-                    throw new CommandException("Hours specified exceed 23");
-                }
+                if (val > 23) throw new CommandException("Hours specified exceed 23");
                 return val * 3600;
             case 4:
-                if (val > 6){
-                    throw new CommandException("Days specified exceed 6");
-                }
+                if (val > 6) throw new CommandException("Days specified exceed 6");
                 return val * 86400;
             default:
                 throw new CommandException("Too many separators");

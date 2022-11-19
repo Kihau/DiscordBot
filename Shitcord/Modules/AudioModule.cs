@@ -361,7 +361,6 @@ public class AudioModule : BaseCommandModule
     //     CommandContext ctx, [Description("Song timestap")] TimeSpan timestamp
     // ) => await this.Data.SeekAsync(timestamp);
 
-    // TODO: Fine-tune this
     [Command("seek")]
     [Description("Seeks track to specified position")]
     public async Task SeekCommand(

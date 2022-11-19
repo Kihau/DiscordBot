@@ -55,7 +55,7 @@ public static class GlobalData {
     }
 
     public static List<WhitelistEntry> mc_whitelist = new();
-    // TODO: This this more robust(but still hacky) way?
+    // TODO: Do this more robust(but still hacky) way?
     // public static McWhitelist mc_whitelist = new();
 
     public const string whitelist_path = "Resources/mcwhitelist.json";

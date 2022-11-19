@@ -139,14 +139,17 @@ public class LavalinkConfig
 
     [JsonPropertyName("javapath")]
     public string JavaPath { get; set; } 
-        = "path/to/java.exe (or just java if set as enviroment veriable)";
+        = "path/to/java.exe (or just java if set as an enviroment veriable)";
 }
 
 [Serializable]
 public class OpenAIConfig 
 {
+    [JsonPropertyName("enabled")] 
+    public bool Enabled { get; set; } = false;
+
     [JsonPropertyName("token")] 
-    public string Token { get; set; } = "discord token";
+    public string Token { get; set; } = "openai api key";
 
     [JsonPropertyName("users")]
     public List<ulong> AllowedUsers { get; set; } = new();

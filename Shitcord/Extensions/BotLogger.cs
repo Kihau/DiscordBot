@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Shitcord.Extensions;
 
-// NODE: This is garbage, but the DSharpPlus requires this crap to set up custom logging
+// NOTE: This is garbage, but the DSharpPlus requires this crap to set up custom logging
 public class BotLoggerFactory : ILoggerFactory
 {
     private BotConfig Config { get; }

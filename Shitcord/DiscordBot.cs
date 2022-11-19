@@ -54,8 +54,6 @@ public class DiscordBot
             // TokenType = TokenType.User,
             Intents = DiscordIntents.All,
             // Intents = DiscordIntents.AllUnprivileged,
-            // TODO: Change(?) it vvvvvvvvvvv
-            // NOTE: This does nothing - the log level is set in the BotLogger class
             MinimumLogLevel = Config.Logging.MinLogLevel,
             AutoReconnect = true,
             MessageCacheSize = Config.Discord.CacheSize,
@@ -182,9 +180,11 @@ public class DiscordBot
             commands.RegisterCommands<TestingModule>();
 
         commands.CommandExecuted += (sender, e) => {
+            string ctx_args = e.Context.RawArguments.Count != 0 ?
+                $" with {e.Context.RawArgumentString}" : ""; 
+
             Client.Logger.LogInformation(new EventId(2, "Executed"),
-                // TODO: Check: Changed this to print entire command (does this work?)
-                $"Called: {e.Command.Name} with {e.Context.RawArgumentString} by {e.Context.User.Id} in " +
+                $"Called: {e.Command.Name}{ctx_args} by {e.Context.User.Id} in " +
                 $"{e.Context.Guild.Id}@{e.Context.Channel.Id}"
             ); 
             return Task.CompletedTask;
@@ -193,11 +193,10 @@ public class DiscordBot
         commands.CommandErrored += async (sender, e) => {
             Client.Logger.LogError(new EventId(0, "Exception"), $"{e.Exception}"); 
                
-            // When Could not find suitable overload - print required arguments
-            // TODO: Improve this and don't catch obvious exceptions?
             // if (!DebugEnabled && e.Exception is not CommandException)
             //     return;
             
+            // TODO: Improve this and don't catch obvious exceptions?
             var embed = new DiscordEmbedBuilder();
             switch (e.Exception) {
                 // TODO: When Cound not find suitable overload - print required arguments

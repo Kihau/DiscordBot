@@ -27,5 +27,10 @@
         "enabled": false,
         "autostart": false,
         "javapath": "/path/to/java (or just java as env var)"
+    },
+    "openai": {
+        "enabled": false,
+        "token": "openai api token",
+        "users": []
     }
 }

@@ -302,6 +302,11 @@ public class MarkovService
         return data;
     }
     
+    // TODO: Remove and do this the dumb way bruh
+    // NOTE: When OpenAI service is enabled and the bot is tagged do not send markov message when
+    //       the following requirements are met:
+    //           - The message contains something more than just a bot mention
+    //           - User that mentioned the bot is whitelisted to use openai
     private Task MarkovMessageHandler(DiscordClient client, MessageCreateEventArgs e)
     {
         Task.Run(async () => {
