@@ -123,13 +123,14 @@ public class GuildAudioData
         await Player.SetVolumeAsync(Volume);
         await Player.SetAudiofiltersAsync(Filters);
 
+        Player.PlaybackFinished += PlaybackFinished;
+
         // NOTE: Frisk wanted this feature
         const string join_sound = "Resources/sound.mp3";
         var track = await this.Lavalink.Rest.GetTracksAsync(new FileInfo(join_sound));
-        await Player.PlayAsync(track.Tracks.First());
+        EnqueueFirst(track.Tracks.First());
         SkipEnqueue = true;
-
-        Player.PlaybackFinished += PlaybackFinished;
+        await PlayAsync();
     }
 
     private void InitializeDatabase() 
