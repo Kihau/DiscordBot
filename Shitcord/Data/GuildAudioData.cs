@@ -332,8 +332,7 @@ public class GuildAudioData
         else if (this.page > page_count)
             this.page = page_count;
 
-        for (var i = this.page * page_size; 
-                i < tracks.Length && i < (this.page + 1) * page_size; i++)
+        for (var i = this.page * page_size; i < tracks.Length && i < (this.page + 1) * page_size; i++)
             description += $"{i + 1}. [{tracks[i].Title}]({tracks[i].Uri})\n";
 
         // if (tracks.Length - this.page * page_size > page_size)
@@ -362,14 +361,14 @@ public class GuildAudioData
             new DiscordButtonComponent(ButtonStyle.Primary, "lastpage_btn", null, false,
                 new DiscordComponentEmoji("\u23e9"))
         );
-        
+
         builder.AddComponents(
-            new DiscordButtonComponent(ButtonStyle.Secondary, "e1_btn", " ", true),
+            new DiscordButtonComponent(ButtonStyle.Primary, "empty1_btn", " ", true),
             new DiscordButtonComponent(ButtonStyle.Success, "shuffle_btn", null, false,
                 new DiscordComponentEmoji("\U0001f3b2")),
             new DiscordButtonComponent(ButtonStyle.Danger, "clear_btn", null, false,
                 new DiscordComponentEmoji("\U0001f5d1\ufe0f")),
-            new DiscordButtonComponent(ButtonStyle.Secondary, "e2_btn", " ", true)
+            new DiscordButtonComponent(ButtonStyle.Primary, "empty2_btn", " ", true)
         );
 
         return builder;
