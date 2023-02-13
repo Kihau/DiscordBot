@@ -37,7 +37,7 @@ public class GuildAudioData
     public bool SkipEventFire { get; set; } = false;
     public bool SkipEnqueue { get; set; } = false;
     // TODO: Use this in all sorts of stuff
-    public bool InvokedPlayIntro { get; set; } = false;
+    // public bool InvokedPlayIntro { get; set; } = false;
 
     private LoopingMode _looping;
     public LoopingMode Looping { 
@@ -134,11 +134,12 @@ public class GuildAudioData
 
         Player.PlaybackFinished += PlaybackFinished;
         
-        var tracks = await Lavalink.Rest.GetTracksAsync(new FileInfo("Resources/join-sound.mp3"));
-        var track = tracks.Tracks.First();
-        if (track != null) {
-            await PlayIntroAsync(track);
-        }
+        // Intro song is broken
+        // var tracks = await Lavalink.Rest.GetTracksAsync(new FileInfo("Resources/join-sound.mp3"));
+        // var track = tracks.Tracks.First();
+        // if (track != null) {
+        //     await PlayIntroAsync(track);
+        // }
     }
 
     private void InitializeDatabase() {
@@ -437,10 +438,10 @@ public class GuildAudioData
             new DiscordButtonComponent(ButtonStyle.Primary, "prev_btn", "Prev"),
             new DiscordButtonComponent(ButtonStyle.Secondary, "loop_btn", "Loop"),
             // TODO: MAYBE:
-            // IsConnected 
-            //     ? new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn) 
-            //     : new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn, true) 
-            new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn, true) 
+            IsConnected 
+                ? new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn) 
+                : new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn, true) 
+            // new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn, true) 
                 
         );
 
@@ -723,18 +724,18 @@ public class GuildAudioData
         await this.PlayerHandlerAsync();
     }
 
-    public async Task PlayIntroAsync(LavalinkTrack track)
-    {
-        if (Player is not {IsConnected: true})
-            return;
-
-        SkipEventFire = true;
-        SkipEnqueue = true;
-
-        await Player.PlayAsync(track);
-        await Player.SeekAsync(TimeSpan.Zero);
-        await Task.Delay(track.Length);
-    }
+    // public async Task PlayIntroAsync(LavalinkTrack track)
+    // {
+    //     if (Player is not {IsConnected: true})
+    //         return;
+    //
+    //     SkipEventFire = true;
+    //     SkipEnqueue = true;
+    //
+    //     await Player.PlayAsync(track);
+    //     await Player.SeekAsync(TimeSpan.Zero);
+    //     await Task.Delay(track.Length);
+    // }
 
     public async Task StopAsync()
     {

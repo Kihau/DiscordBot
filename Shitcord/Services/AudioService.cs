@@ -87,6 +87,7 @@ public class AudioService
                 var member = await args.Guild.GetMemberAsync(args.User.Id);
                 if (member.VoiceState != null)
                     await data.CreateConnectionAsync(member.VoiceState.Channel);
+                data.SongRequiresUpdate = true;
             } break;
             case "stop_btn": {
                 await data.StopAsync();
