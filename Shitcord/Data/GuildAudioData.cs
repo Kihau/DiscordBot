@@ -363,12 +363,12 @@ public class GuildAudioData
         );
 
         builder.AddComponents(
-            new DiscordButtonComponent(ButtonStyle.Secondary, "empty1_btn", "-", true),
+            new DiscordButtonComponent(ButtonStyle.Secondary, "empty1_btn", "\u200E", true),
             new DiscordButtonComponent(ButtonStyle.Success, "shuffle_btn", null, false,
                 new DiscordComponentEmoji("\U0001f3b2")),
             new DiscordButtonComponent(ButtonStyle.Danger, "clear_btn", null, false,
                 new DiscordComponentEmoji("\U0001f5d1\ufe0f")),
-            new DiscordButtonComponent(ButtonStyle.Secondary, "empty2_btn", "-" , true)
+            new DiscordButtonComponent(ButtonStyle.Secondary, "empty2_btn", "\u200E" , true)
         );
 
         return builder;
