@@ -25,6 +25,7 @@ public class GuildAudioData
     // I really don't need to store those two referances but whatever
     // It's not that this bot is going to be in hundreds of thousands of guilds
     private LavalinkNodeConnection Lavalink { get; }
+    private DiscordClient Client { get; }
     private DatabaseService DatabaseContext { get; }
     private DiscordGuild Guild { get; }
 
@@ -35,6 +36,8 @@ public class GuildAudioData
     public DiscordChannel? Channel => this.Player?.Channel;
     public bool SkipEventFire { get; set; } = false;
     public bool SkipEnqueue { get; set; } = false;
+    // TODO: Use this in all sorts of stuff
+    public bool InvokedPlayIntro { get; set; } = false;
 
     private LoopingMode _looping;
     public LoopingMode Looping { 
@@ -78,25 +81,26 @@ public class GuildAudioData
     public int page = 0;
 
 
-    public GuildAudioData(DiscordGuild guild, LavalinkNodeConnection lavalink,
-        DiscordClient client, DatabaseService database)
-    {
-        this.Guild = guild;
-        this.Lavalink = lavalink;
-        this.DatabaseContext = database;
+    public GuildAudioData(
+        DiscordGuild guild, LavalinkNodeConnection lavalink, DiscordClient client, 
+        DatabaseService database
+    ) {
+        Client = client;
+        Guild = guild;
+        Lavalink = lavalink;
+        DatabaseContext = database;
 
         // Try to load UpdateMessages here
         InitializeDatabase();
 
-        this.Queue = new ConcurrentQueue<LavalinkTrack>();
-        this.Filters = new AudioFilters();
+        Queue = new ConcurrentQueue<LavalinkTrack>();
+        Filters = new AudioFilters();
 
         //Task.Run(AutoMessageUpdater);
         MessageUpdaterTimer = new Timer(AutoMessageUpdater, null, 1000, 1000);
     }
 
-    private async void AutoMessageUpdater(object? state_info)
-    {
+    private async void AutoMessageUpdater(object? state_info) {
         if (SongRequiresUpdate) {
             SongRequiresUpdate = false;
             await UpdateSongMessage();
@@ -117,6 +121,11 @@ public class GuildAudioData
                 await DestroyConnectionAsync();
             else return;
         }
+        
+        // NOTE: Cannot self deafen the bot?
+        // var member = await Guild.GetMemberAsync(Client.CurrentUser.Id, true);
+        // if (member != null)
+        //     await member.SetDeafAsync(true, "Bots have no ears");
 
         // TODO: FIX: For some reason ConnectAsync can block the bot - check why
         Player = await Lavalink.ConnectAsync(vchannel);
@@ -124,10 +133,15 @@ public class GuildAudioData
         await Player.SetAudiofiltersAsync(Filters);
 
         Player.PlaybackFinished += PlaybackFinished;
+        
+        var tracks = await Lavalink.Rest.GetTracksAsync(new FileInfo("Resources/join-sound.mp3"));
+        var track = tracks.Tracks.First();
+        if (track != null) {
+            await PlayIntroAsync(track);
+        }
     }
 
-    private void InitializeDatabase() 
-    {
+    private void InitializeDatabase() {
         bool exists_in_table = DatabaseContext.ExistsInTable(
             GuildAudioTable.TABLE_NAME, 
             Condition.New(GuildAudioTable.GUILD_ID).Equals(Guild.Id)
@@ -417,11 +431,17 @@ public class GuildAudioData
             Embed = embed.Build(),
         };
 
+
         builder.AddComponents(
             new DiscordButtonComponent(ButtonStyle.Primary, "skip_btn", "Skip"),
             new DiscordButtonComponent(ButtonStyle.Primary, "prev_btn", "Prev"),
             new DiscordButtonComponent(ButtonStyle.Secondary, "loop_btn", "Loop"),
-            new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn)
+            // TODO: MAYBE:
+            // IsConnected 
+            //     ? new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn) 
+            //     : new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn, true) 
+            new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn, true) 
+                
         );
 
         builder.AddComponents(
@@ -552,21 +572,22 @@ public class GuildAudioData
             }
         } else SkipEnqueue = false;
 
-        if (this.SkipEventFire) {
-            this.SkipEventFire = false;
+        if (SkipEventFire) {
+            SkipEventFire = false;
             return;
         }
 
-        await this.PlayerHandlerAsync();
+        await PlayerHandlerAsync();
     }
 
     public int ClearQueue()
     {
-        var count = this.Queue.Count;
-        this.Queue.Clear();
+        var count = Queue.Count;
+        Queue.Clear();
         return count;
     }
 
+    // TODO: Do not start the next song if PlayIntro was invoked?
     private async Task PlayerHandlerAsync()
     {
         PreviousTrack = CurrentTrack;
@@ -702,6 +723,19 @@ public class GuildAudioData
         await this.PlayerHandlerAsync();
     }
 
+    public async Task PlayIntroAsync(LavalinkTrack track)
+    {
+        if (Player is not {IsConnected: true})
+            return;
+
+        SkipEventFire = true;
+        SkipEnqueue = true;
+
+        await Player.PlayAsync(track);
+        await Player.SeekAsync(TimeSpan.Zero);
+        await Task.Delay(track.Length);
+    }
+
     public async Task StopAsync()
     {
         if (this.Player is not {IsConnected: true})
@@ -737,6 +771,30 @@ public class GuildAudioData
         var qlist = this.Queue.ToList().OrderBy(_ => rng.Next());
         this.Queue.Clear();
 
+        this.Enqueue(qlist);
+    }
+
+    public void SortByTitle(bool ascending) {
+        IOrderedEnumerable<LavalinkTrack> qlist;
+        // if (ascending)
+        //     qlist = this.Queue.OrderByDescending(x => String.Concat(x.Title.OrderBy(c => c)));
+        // else qlist = this.Queue.OrderByDescending(x => String.Concat(x.Title.OrderBy(c => c)));
+
+        if (ascending)
+            qlist = this.Queue.ToList().OrderBy(x => x.Title);
+        else qlist = this.Queue.ToList().OrderByDescending(x => x.Title);
+
+        this.Queue.Clear();
+        this.Enqueue(qlist);
+    }
+
+    public void SortByLenght(bool ascending) {
+        IOrderedEnumerable<LavalinkTrack> qlist;
+        if (ascending)
+            qlist = this.Queue.ToList().OrderBy(x => x.Length);
+        else qlist = this.Queue.ToList(). OrderByDescending(x => x.Length);
+
+        this.Queue.Clear();
         this.Enqueue(qlist);
     }
 

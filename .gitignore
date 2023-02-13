@@ -3,12 +3,14 @@ obj/
 logs/
 Resources/
 botlogs/
+temp/
 
 Software/**
 External/application.yml
 External/logs/
 
 *.user
+*.jar
 
 .idea/
 .fleet/

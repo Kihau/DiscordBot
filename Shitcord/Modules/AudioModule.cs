@@ -80,8 +80,7 @@ public class AudioModule : BaseCommandModule
 
         var msgBuilder = new DiscordMessageBuilder();
 
-        if (!String.IsNullOrWhiteSpace(message))
-        {
+        if (!String.IsNullOrWhiteSpace(message)) {
             IEnumerable<LavalinkTrack> tracks;
             if (Uri.TryCreate(message, UriKind.Absolute, out var uri))
                 tracks = await this.Audio.GetTracksAsync(uri);
@@ -91,8 +90,7 @@ public class AudioModule : BaseCommandModule
             if (lavalinkTracks.Length == 0)
                 throw new CommandException("Could not find requested song");
 
-            if (lavalinkTracks.Length > 1)
-            {
+            if (lavalinkTracks.Length > 1) {
                 msgBuilder.AddEmbed(new DiscordEmbedBuilder()
                     .WithTitle(":thumbsup:  |  Enqueued: ")
                     .WithDescription($"Enqueued {lavalinkTracks.Length} songs")
@@ -154,9 +152,13 @@ public class AudioModule : BaseCommandModule
 
     [Command("queue"), Aliases("q")]
     [Description("Enqueues specified track or playlist")]
-    public async Task QueueCommand(CommandContext ctx,
-        [RemainingText, Description("Name of the song, song uri or playlist uri")] string message)
-    {
+    public async Task QueueCommand(
+        CommandContext ctx,
+        [RemainingText, Description("Name of the song, song uri or playlist uri")] string message
+    ) {
+        if (String.IsNullOrWhiteSpace(message))
+            throw new CommandException("Name of song cannot be an empty string");
+
         IEnumerable<LavalinkTrack> tracks;
         if (Uri.TryCreate(message, UriKind.Absolute, out var uri))
             tracks = await this.Audio.GetTracksAsync(uri);
@@ -241,6 +243,30 @@ public class AudioModule : BaseCommandModule
         }
         else throw new CommandException("Failed to enqueue");
 
+        await ctx.Channel.SendMessageAsync(embed.Build());
+    }
+
+    [Command("queuesort"), Aliases("qs")]
+    [Description("Sorts the queue")]
+    public async Task QueueSortCommand(
+        CommandContext ctx, 
+        [Description("0 to sort by song title, 1 to sort by song length")] int mode = 0, 
+        [Description("true or false, ascending sort by default")] bool ascending = true
+    ) {
+        switch (mode) {
+            case 0: {
+                Data.SortByTitle(ascending);
+            } break;
+            case 1: {
+                Data.SortByLenght(ascending);
+            } break;
+            default: throw new CommandException(
+                "Incorrect mode selected. Type >>help mode for more info");
+        }
+
+        var embed = new DiscordEmbedBuilder();
+        embed.WithTitle(":thumbsup:  |  Queue Sorted");
+        embed.WithColor(DiscordColor.Purple);
         await ctx.Channel.SendMessageAsync(embed.Build());
     }
 
@@ -355,17 +381,13 @@ public class AudioModule : BaseCommandModule
     public async Task PreviousCommand(CommandContext ctx)
         => await this.Data.PreviousAsync();
 
-    // [Command("seek")]
-    // [Description("Seeks track to specified position")]
-    // public async Task SeekCommand(
-    //     CommandContext ctx, [Description("Song timestap")] TimeSpan timestamp
-    // ) => await this.Data.SeekAsync(timestamp);
-
     [Command("seek")]
     [Description("Seeks track to specified position")]
     public async Task SeekCommand(
-        CommandContext ctx, [Description("TODO: Improve this description")]
-        [RemainingText] SeekStamp stamp
+        CommandContext ctx, [Description(
+            "Accepted formats: <+/->d:h:m:s, <+/->d.h.m.s, <+/-><number><suffix>\n" + 
+            "Example inputs: +0:23, -00:59:59, +30h, -40m, +2s, 9s, +2d (days), -3m 40s, 2h 30s"
+        )] [RemainingText] SeekStamp stamp
     ) {
         var track_pos = Data.GetTimestamp();
         if (track_pos is null)
@@ -376,7 +398,6 @@ public class AudioModule : BaseCommandModule
                 await Data.SeekAsync(track_pos.Value + stamp.seek_time);
                 break;
             case SeekSign.Minus:
-                // TODO(?): Check if track position is greater than than 0
                 await Data.SeekAsync(track_pos.Value - stamp.seek_time);
                 break;
             case SeekSign.None:

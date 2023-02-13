@@ -65,7 +65,6 @@ public class FunModule : BaseCommandModule
             RedirectStandardOutput = true,
         };
 
-        // TODO: Embed
         string output = "";
         var first = GlobalData.mc_whitelist.Where(x => x.userid == ctx.User.Id).FirstOrDefault();
         if (first != null) {

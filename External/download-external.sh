@@ -1,3 +1,3 @@
 #!/bin/bash
-# Lavalink server - (broken link)
-wget https://github.com/freyacodes/Lavalink/releases/latest/Lavalink.jar
+# Download lavalink server
+wget https://github.com/freyacodes/Lavalink/releases/latest/download/lavalink.jar

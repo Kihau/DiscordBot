@@ -46,8 +46,7 @@ public class DiscordBot
         ConfigureCommands();
     }
 
-    private void ConfigureClient()
-    {
+    private void ConfigureClient() {
         var clientConfig = new DiscordConfiguration {
             Token = Config.Discord.Token,
             TokenType = TokenType.Bot,
@@ -77,8 +76,7 @@ public class DiscordBot
         });
     }
 
-    private Task PrintMessage(DiscordClient client, MessageCreateEventArgs e)
-    {
+    private Task PrintMessage(DiscordClient client, MessageCreateEventArgs e) {
         if (DebugEnabled || e.Author == client.CurrentUser) {
             string message_content = String.IsNullOrWhiteSpace(e.Message.Content) 
                 ? "<Empty message>" : e.Message.Content;
@@ -91,8 +89,7 @@ public class DiscordBot
         return Task.CompletedTask;
     }
 
-    private async Task StartBotConsoleInput() 
-    {
+    private async Task StartBotConsoleInput() {
         ulong debug_channel = 928054033741152307;
         
         try {
@@ -244,7 +241,7 @@ public class DiscordBot
             var startInfo = new ProcessStartInfo {
                 CreateNoWindow = true,
                 FileName = Config.Lava.JavaPath,
-                Arguments = "-jar -Djava.io.tmpdir=temp/ lavalink.jar"
+                Arguments = $"-jar -Djava.io.tmpdir=temp/ lavalink.jar"
             };
 
             Directory.CreateDirectory("temp");

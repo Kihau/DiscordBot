@@ -16,8 +16,7 @@ public class AudioService
     private DatabaseService DatabaseContext { get; }
     private Random Rng { get; }
     
-    public AudioService(DiscordBot bot, LavalinkService lavalink, DatabaseService dbctx)
-    {
+    public AudioService(DiscordBot bot, LavalinkService lavalink, DatabaseService dbctx) {
         Lavalink = lavalink;
         AudioData = new Dictionary<ulong, GuildAudioData>();
         Client = bot.Client;
@@ -31,8 +30,7 @@ public class AudioService
         Client.GuildDownloadCompleted += (_, _) => Task.Run(LoadAllDataFromDatabase);
     }
 
-    private void LoadAllDataFromDatabase()
-    {
+    private void LoadAllDataFromDatabase() {
         foreach (var (id, guild) in Client.Guilds) {
             bool exists_in_table = DatabaseContext.ExistsInTable(
                 GuildAudioTable.TABLE_NAME, 
@@ -54,7 +52,6 @@ public class AudioService
             bool deferred = true;
             switch (args.Id)
             {
-
             // Song Info
             case "skip_btn": {
                 await data.SkipAsync(1);
@@ -141,8 +138,7 @@ public class AudioService
         return Task.CompletedTask;
     }
 
-    private Task BotVoiceAutoJoin(DiscordClient sender, VoiceStateUpdateEventArgs args)
-    {
+    private Task BotVoiceAutoJoin(DiscordClient sender, VoiceStateUpdateEventArgs args) {
         Task.Run(async () => {
             AudioData.TryGetValue(args.Guild.Id, out var data);
             if (data == null || data.IsConnected || !data.AutoJoinChannel) 
@@ -162,8 +158,7 @@ public class AudioService
         return Task.CompletedTask;
     }
     
-    private Task BotVoiceTimeout(DiscordClient sender, VoiceStateUpdateEventArgs args)
-    {
+    private Task BotVoiceTimeout(DiscordClient sender, VoiceStateUpdateEventArgs args) {
         AudioData.TryGetValue(args.Guild.Id, out var data);
         if (data is not {IsConnected: true}) 
             return Task.CompletedTask;
