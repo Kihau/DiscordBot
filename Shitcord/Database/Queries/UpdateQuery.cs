@@ -102,6 +102,9 @@ public class UpdateQuery
             str = ModifyStringForSQL(str);
             queryBuilder.Append($"'{str}'");
         }
+        else if (value is null) {
+            queryBuilder.Append("null");
+        }
         else {
             queryBuilder.Append(value);
         }

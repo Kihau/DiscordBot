@@ -147,11 +147,18 @@ class QueryTests
             .And("targetNumber").IsMoreThan("51")
             .Get();
         
+        const string expected5 = "targetNumber IS NULL AND targetNumber IS NOT NULL OR smth > 5";
+        string condition5 = Condition.New("targetNumber").Equals(null)
+            .And("targetNumber").IsDiffFrom(null)
+            .Or("smth").IsMoreThan(5)
+            .Get();
+        
         Console.WriteLine("Conditions:");
         compareStartsWith(condition1, expected1);
         compareStartsWith(condition2, expected2);
         compareStartsWith(condition3, expected3);
         compareStartsWith(condition4, expected4);
+        compareStartsWith(condition5, expected5);
     }
     static void insertTests()
     {
@@ -224,6 +231,13 @@ class QueryTests
             .SetIncrementBy("f", 2)
             .SetIncrementBy("g", -3)
             .Build();
+        
+        const string expectedNull = "UPDATE aTable SET f = null, x = x+1 WHERE f IS NULL OR z IS NOT NULL";
+        string nullSituation = QueryBuilder.New().Update("aTable")
+            .Where(Condition.New("f").Equals(null).Or("z").IsDiffFrom(null))
+            .Set("f", null)
+            .SetIncrementBy("x", 1)
+            .Build();
 
         Console.WriteLine("Updates:");
         compareStartsWith(update1, expected1);
@@ -233,6 +247,7 @@ class QueryTests
         compareStartsWith(bunchOfIncrements, expectedBunchOfIncrements);
         compareStartsWith(singleIncrement, expectedSingleIncrement);
         compareStartsWith(twoIncrements, expectedTwoIncrements);
+        compareStartsWith(nullSituation, expectedNull);
     }
     
     private static void escapeCharactersTests()

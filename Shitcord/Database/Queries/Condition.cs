@@ -47,23 +47,31 @@ public class Condition
         return Or(column.name);
     }
     //hides the method from the object class
-    public new Condition Equals(object value)
+    public new Condition Equals(object? value)
     {
         if (!operatorExpected) {
             throw new QueryException("Syntax error");
         }
         operatorExpected = false;
+        if (value is null) {
+            condition.Append("IS NULL ");
+            return this;
+        }
         condition.Append('=').Append(' ');
         AppendValue(value);
         condition.Append(' ');
         return this;
     }
-    public Condition IsDiffFrom(object value)
+    public Condition IsDiffFrom(object? value)
     {
         if (!operatorExpected) {
             throw new QueryException("Syntax error");
         }
         operatorExpected = false;
+        if (value is null) {
+            condition.Append("IS NOT NULL ");
+            return this;
+        }
         condition.Append("<>").Append(' ');
         AppendValue(value);
         condition.Append(' ');
