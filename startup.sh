@@ -56,6 +56,7 @@ function build {
     git pull
 
     dotnet publish -c Release -r linux-x64 -p:PublishSingleFile=true --self-contained false
+    # dotnet publish -c Release -r linux-x64
 
     cd "${SCRIPT_DIR}/Shitcord/bin/Release/net7.0/linux-x64/publish/"
     mv Shitcord "${SHITCORD_DIR}/"
