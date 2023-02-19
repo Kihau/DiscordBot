@@ -19,6 +19,11 @@ public enum LoopingMode : int
     Shuffle = 3,
 }
 
+// TODO: Add a button to resend queue and message updates
+// TODO: Command to display length of the current queue (also show page length and queue length
+//       for the queueupdate embed)
+// TODO: Delete songs by link, name, author, length
+
 /// This data is stored inside a hashmap (in AudioService) and mapped to each guild
 public class GuildAudioData
 {
@@ -369,16 +374,14 @@ public class GuildAudioData
         );
 
         builder.AddComponents(
-            new DiscordButtonComponent(ButtonStyle.Secondary, "revertqueue_btn", null, false,
-                new DiscordComponentEmoji("🔄")),
+            new DiscordButtonComponent(ButtonStyle.Success, "resendqueue_btn", null, false,
+                new DiscordComponentEmoji("🔁")),
             new DiscordButtonComponent(ButtonStyle.Success, "shuffle_btn", null, false,
                 new DiscordComponentEmoji("🎲")),
             new DiscordButtonComponent(ButtonStyle.Danger, "clear_btn", null, false,
                 new DiscordComponentEmoji("🗑️")),
-            // Empty character (thanks frisk) because discord broke their stuff and now you cannot 
-            // set single space as a button component text.
-            // TODO: Replace this with something.
-            new DiscordButtonComponent(ButtonStyle.Primary, "empty2_btn", "\u200E" , true)
+            new DiscordButtonComponent(ButtonStyle.Danger, "revertqueue_btn", null, false,
+                new DiscordComponentEmoji("↩️"))
         );
 
         return builder;
@@ -394,6 +397,7 @@ public class GuildAudioData
             if (DateTime.Now - this.QueueUpdateMessage.Timestamp < TimeSpan.FromHours(1)) {
                 await this.QueueUpdateMessage.ModifyAsync(message);
             } else {
+                // TODO(?): if a simple resend is required, the database does not have to be involved
                 await this.QueueUpdateMessage.DeleteAsync();
                 this.QueueUpdateMessage = await this.QueueUpdateChannel.SendMessageAsync(message);
                 DatabaseUpdateQU();
@@ -406,23 +410,20 @@ public class GuildAudioData
     public DiscordMessageBuilder GenerateSongMessage()
     {
         TimeSpan length;
-        string current_song, state, state_btn;
-        string? author;
-        if (this.IsStopped) {
+        string current_song, state, author;
+        if (IsStopped) {
             current_song = "Nothing is playing";
             author = "N/A";
             state = "Stopped";
-            state_btn = "Play";
             length = TimeSpan.Zero;
         } else {
-            author = this.CurrentTrack?.Author;
-            state = this.IsPaused ? "Paused" : "Playing";
-            state_btn = this.IsPaused ? "Resume" : "Pause";
-            current_song = $"[{this.CurrentTrack?.Title}]({this.CurrentTrack?.Uri})";
-            length = this.CurrentTrack?.Length ?? TimeSpan.Zero;
+            author = CurrentTrack?.Author ?? "N/A";
+            state = IsPaused ? "Paused" : "Playing";
+            current_song = $"[{CurrentTrack?.Title}]({CurrentTrack?.Uri})";
+            length = CurrentTrack?.Length ?? TimeSpan.Zero;
         }
 
-        var next_song = !this.Queue.TryPeek(out var next) 
+        var next_song = !Queue.TryPeek(out var next) 
             ? "Queue is empty" : $"[{next.Title}]({next.Uri})";
 
         var embed = new DiscordEmbedBuilder()
@@ -441,23 +442,27 @@ public class GuildAudioData
             Embed = embed.Build(),
         };
 
-
+        string pause_button = IsPaused ? "Resume" : "Pause";
+        bool enabled = !IsConnected || IsStopped;
         builder.AddComponents(
-            new DiscordButtonComponent(ButtonStyle.Primary, "skip_btn", "Skip"),
-            new DiscordButtonComponent(ButtonStyle.Primary, "prev_btn", "Prev"),
-            new DiscordButtonComponent(ButtonStyle.Secondary, "loop_btn", "Loop"),
-            IsConnected 
-                ? new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn) 
-                : new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn, true) 
-            // new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn, true) 
-                
+            new DiscordButtonComponent(ButtonStyle.Primary, "skip_btn", "Skip", enabled),
+            new DiscordButtonComponent(ButtonStyle.Primary, "prev_btn", "Prev", enabled),
+            new DiscordButtonComponent(ButtonStyle.Primary, "remove_btn", "Remove", enabled),
+            new DiscordButtonComponent(ButtonStyle.Primary, "pause_btn", pause_button, enabled)
         );
 
+        string state_button;
+        if (!IsConnected)
+            state_button = "Join";
+        else if (IsStopped)
+            state_button = "Play";
+        else state_button = "Stop";
+
         builder.AddComponents(
-            new DiscordButtonComponent(ButtonStyle.Danger, "remove_btn", "Remove"),
-            new DiscordButtonComponent(ButtonStyle.Danger, "join_btn", "Join"),
-            new DiscordButtonComponent(ButtonStyle.Danger, "stop_btn", "Stop"),
-            new DiscordButtonComponent(ButtonStyle.Danger, "leave_btn", "Leave")
+            new DiscordButtonComponent(ButtonStyle.Danger, "state_btn", state_button),
+            new DiscordButtonComponent(ButtonStyle.Danger, "leave_btn", "Leave", !IsConnected),
+            new DiscordButtonComponent(ButtonStyle.Secondary, "loop_btn", "Loop"),
+            new DiscordButtonComponent(ButtonStyle.Success, "resendsong_btn", "Resend")
         );
 
         return builder;
