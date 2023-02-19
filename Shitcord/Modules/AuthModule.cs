@@ -17,8 +17,6 @@ using Microsoft.Data.Sqlite;
 
 namespace Shitcord.Modules;
 
-// TODO: Add a restart command that restarts the bot (?)
-
 [RequireAuthorized]
 public class AuthModule : BaseCommandModule
 {

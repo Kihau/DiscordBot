@@ -277,13 +277,13 @@ public class AudioModule : BaseCommandModule
         CommandContext ctx, 
         [Description("Page number (single page is 10 songs)")] int page = 1
     ) {
-        // TODO: Fix this. See other todo mark in GuildAudioData.cs:324 GenerateQueueMessage()
         page -= 1;
 
         var tracks = this.Data.GetNextTracks();
 
         const int page_size = 10;
-        int page_count = tracks.Length / page_size;
+        // int page_count = tracks.Length / page_size;
+        int page_count = ((int)Math.Ceiling(tracks.Length / (float)page_size)) - 1;
 
         if (page < 0) page = 0;
         else if (page > page_count)
@@ -300,10 +300,10 @@ public class AudioModule : BaseCommandModule
                 if (tracks.Length - page * page_size > page_size) {
                     embed.WithFooter(
                         $". . . and {tracks.Length - page_size * (page + 1)} more " + 
-                        $"(page {page + 1} / {page_count + 1})"
+                        $"| Page {page + 1} / {page_count + 1}"
                     );
                     // embed.WithFooter($". . . and {tracks.Length - page * page_size} more");
-                }
+                } else embed.WithFooter($"Page {page + 1} / {page_count + 1}");
                 } break;
             case 0: {
                 description = "Queue is empty";

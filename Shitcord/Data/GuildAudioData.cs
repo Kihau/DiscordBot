@@ -19,7 +19,6 @@ public enum LoopingMode : int
     Shuffle = 3,
 }
 
-// TODO: Add a button to resend queue and message updates
 // TODO: Command to display length of the current queue (also show page length and queue length
 //       for the queueupdate embed)
 // TODO: Delete songs by link, name, author, length
@@ -39,14 +38,14 @@ public class GuildAudioData
     private ConcurrentQueue<LavalinkTrack> PrevQueue { get; set; }
     private ConcurrentQueue<LavalinkTrack> Queue { get; set; }
     private LavalinkGuildConnection? Player { get; set; }
-    public LavalinkTrack? CurrentTrack { get; private set; }
+
     // TODO: When in other looping mode than None, previous track is not removed from bottom of the queue
     public LavalinkTrack? PreviousTrack { get; private set; }
+    public LavalinkTrack? CurrentTrack { get; private set; }
+
     public DiscordChannel? Channel => this.Player?.Channel;
     public bool SkipEventFire { get; set; } = false;
     public bool SkipEnqueue { get; set; } = false;
-    // TODO: Use this in all sorts of stuff
-    // public bool InvokedPlayIntro { get; set; } = false;
 
     private LoopingMode _looping;
     public LoopingMode Looping { 
@@ -143,13 +142,6 @@ public class GuildAudioData
         await Player.SetAudiofiltersAsync(Filters);
 
         Player.PlaybackFinished += PlaybackFinished;
-        
-        // Intro song is broken
-        // var tracks = await Lavalink.Rest.GetTracksAsync(new FileInfo("Resources/join-sound.mp3"));
-        // var track = tracks.Tracks.First();
-        // if (track != null) {
-        //     await PlayIntroAsync(track);
-        // }
     }
 
     private void InitializeDatabase() {
@@ -327,8 +319,6 @@ public class GuildAudioData
         DatabaseUpdateSU();
     }
 
-    // TODO: FIX: This logic is a little broken track.lengths that are multiples of pace_size
-    //            (for example 180 tracks in the queue)
     public DiscordMessageBuilder GenerateQueueMessage()
     {
         var tracks = this.GetNextTracks();
@@ -337,25 +327,25 @@ public class GuildAudioData
         string description = "";
 
         const int page_size = 20;
-        var page_count = tracks.Length / page_size;
+        // int page_count = tracks.Length / page_size;
+        int page_count = ((int)Math.Ceiling(tracks.Length / (float)page_size)) - 1;
 
-        if (this.page < 0)
-            this.page = 0;
-        else if (this.page > page_count)
-            this.page = page_count;
+        if (page < 0) page = 0;
+        else if (page > page_count)
+            page = page_count;
 
-        for (var i = this.page * page_size; i < tracks.Length && i < (this.page + 1) * page_size; i++)
+        for (var i = page * page_size; i < tracks.Length && i < (page + 1) * page_size; i++)
             description += $"{i + 1}. [{tracks[i].Title}]({tracks[i].Uri})\n";
 
-        // if (tracks.Length - this.page * page_size > page_size)
-        //     description += $". . . and {tracks.Length - page_size * (this.page + 1)} more";
+        // if (tracks.Length - page * page_size > page_size)
+        //     description += $". . . and {tracks.Length - page_size * (page + 1)} more";
 
         if (tracks.Length == 0)
             description = "Queue is empty";
 
         embed.WithTitle(":question:  |  Queue Info: ")
             .WithDescription(description)
-            .WithFooter($"Page {this.page + 1} / {page_count + 1}")
+            .WithFooter($"Page {page + 1} / {page_count + 1}")
             .WithColor(DiscordColor.Purple);
 
         var builder = new DiscordMessageBuilder() {
@@ -609,7 +599,6 @@ public class GuildAudioData
         Queue = new ConcurrentQueue<LavalinkTrack>(PrevQueue);
     }
 
-    // TODO: Do not start the next song if PlayIntro was invoked?
     private async Task PlayerHandlerAsync()
     {
         PreviousTrack = CurrentTrack;
@@ -738,19 +727,6 @@ public class GuildAudioData
 
         await this.PlayerHandlerAsync();
     }
-
-    // public async Task PlayIntroAsync(LavalinkTrack track)
-    // {
-    //     if (Player is not {IsConnected: true})
-    //         return;
-    //
-    //     SkipEventFire = true;
-    //     SkipEnqueue = true;
-    //
-    //     await Player.PlayAsync(track);
-    //     await Player.SeekAsync(TimeSpan.Zero);
-    //     await Task.Delay(track.Length);
-    // }
 
     public async Task StopAsync()
     {
