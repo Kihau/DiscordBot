@@ -54,6 +54,14 @@ public class TestingModule : BaseCommandModule
         throw new Exception("shit happened");
     }
 
+    [Command("exportlinks")]
+    public async Task ExportLinksCommand(CommandContext ctx, string path)
+    {
+        foreach (var line in File.ReadAllLines(path)) {
+            await ctx.Channel.SendMessageAsync($"`{line}`: {line}");
+        }
+    }
+
     [Command("throw")]
     [Description("YEEEEET")]
     public Task ThrowCommand(CommandContext ctx, [RemainingText] string message = "null")

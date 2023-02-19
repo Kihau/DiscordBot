@@ -107,6 +107,19 @@ public class AudioService
                 data.page++;
                 data.QueueRequiresUpdate = true;
             } break;
+            case "prevpage_btn": {
+                data.page--;
+                data.QueueRequiresUpdate = true;
+            } break;
+            case "lastpage_btn": {
+                data.page = Int32.MaxValue;
+                data.QueueRequiresUpdate = true;
+            } break;
+            case "revertqueue_btn": {
+                data.RevertQueue();
+                data.SongRequiresUpdate = true;
+                data.QueueRequiresUpdate = true;
+            } break;
             case "shuffle_btn": {
                 data.Shuffle();
                 data.SongRequiresUpdate = true;
@@ -115,14 +128,6 @@ public class AudioService
             case "clear_btn": {
                 data.ClearQueue();
                 data.SongRequiresUpdate = true;
-                data.QueueRequiresUpdate = true;
-            } break;
-            case "prevpage_btn": {
-                data.page--;
-                data.QueueRequiresUpdate = true;
-            } break;
-            case "lastpage_btn": {
-                data.page = Int32.MaxValue;
                 data.QueueRequiresUpdate = true;
             } break;
             default:

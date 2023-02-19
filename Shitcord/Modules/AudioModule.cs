@@ -11,7 +11,7 @@ using ExtensionMethods = Shitcord.Extensions.ExtensionMethods;
 
 namespace Shitcord.Modules;
 
-// TODO: savequque, loadqueue (number) and listqueues commands
+// TODO: savequque, loadqueue (number) and listqueues, markovqueue commands
 
 [Description("Audio and music commands")]
 public class AudioModule : BaseCommandModule
@@ -120,11 +120,8 @@ public class AudioModule : BaseCommandModule
         [Description("Channel in which the embed should be created")] 
         DiscordChannel? channel = null
     ) {
-        if (channel is null)
-            await ctx.Message.DeleteAsync();
-
-        channel ??= ctx.Channel;
-        await this.Data.SetSongUpdate(channel);
+        await ctx.Message.DeleteAsync();
+        await Data.SetSongUpdate(channel ?? ctx.Channel);
     }
 
     [Command("queueupdates"), Aliases("qu")]
@@ -133,22 +130,23 @@ public class AudioModule : BaseCommandModule
         [Description("Channel in which the embed should be created")] 
         DiscordChannel? channel = null
     ) {
-        if (channel is null)
-            await ctx.Message.DeleteAsync();
-
-        channel ??= ctx.Channel;
-        await this.Data.SetQueueUpdate(channel);
+        await ctx.Message.DeleteAsync();
+        await Data.SetQueueUpdate(channel ?? ctx.Channel);
     }
 
     [Command("destroysongupdates"), Aliases("dsu")]
     [Description("Removes the interactive embed that displays music info")]
-    public async Task DestroySongUpdatesCommand(CommandContext ctx)
-        => await this.Data.DestroySongUpdate();
+    public async Task DestroySongUpdatesCommand(CommandContext ctx) {
+        await ctx.Message.DeleteAsync();
+        await Data.DestroySongUpdate();
+    }
 
-    [Command("createqueueupdates"), Aliases("dqu")]
+    [Command("destroyqueueupdates"), Aliases("dqu")]
     [Description("Removes the interactive embed that displays song queue")]
-    public async Task DestroyQueueUpdatesCommand(CommandContext ctx)
-        => await this.Data.DestroyQueueUpdate();
+    public async Task DestroyQueueUpdatesCommand(CommandContext ctx) {
+        await ctx.Message.DeleteAsync();
+        await Data.DestroyQueueUpdate();
+    }
 
     [Command("queue"), Aliases("q")]
     [Description("Enqueues specified track or playlist")]
@@ -167,8 +165,7 @@ public class AudioModule : BaseCommandModule
         var lavalinkTracks = tracks.ToList();
 
         var embed = new DiscordEmbedBuilder();
-        if (lavalinkTracks.Any())
-        {
+        if (lavalinkTracks.Any()) {
             var description = lavalinkTracks.Count == 1
                 ? $"[{lavalinkTracks.First().Title}]({lavalinkTracks.First().Uri})"
                 : $"Enqueued {lavalinkTracks.Count} songs";
@@ -179,17 +176,17 @@ public class AudioModule : BaseCommandModule
 
             this.Data.Enqueue(lavalinkTracks);
         }
-        else throw new CommandException("Failed to enqueue");
+        else throw new CommandException("Failed to enqueue. Zero tracks found");
 
         await ctx.Channel.SendMessageAsync(embed.Build());
     }
 
     [Command("queuefirst"), Aliases("qf")]
     [Description("Enqueues a song (or playlist) on top of a current queue")]
-    public async Task QueueFirstCommand(CommandContext ctx,
-        [RemainingText, Description("Name of the song, song uri or playlist uri")]
-        string message)
-    {
+    public async Task QueueFirstCommand(
+        CommandContext ctx,
+        [RemainingText, Description("Name of the song, song uri or playlist uri")] string message
+    ) {
         IEnumerable<LavalinkTrack> tracks;
         if (Uri.TryCreate(message, UriKind.Absolute, out var uri))
             tracks = await this.Audio.GetTracksAsync(uri);
@@ -198,8 +195,7 @@ public class AudioModule : BaseCommandModule
         var lavalinkTracks = tracks.ToList();
 
         var embed = new DiscordEmbedBuilder();
-        if (lavalinkTracks.Any())
-        {
+        if (lavalinkTracks.Any()) {
             var description = lavalinkTracks.Count == 1
                 ? $"[{lavalinkTracks.First().Title}]({lavalinkTracks.First().Uri})"
                 : $"Enqueued {lavalinkTracks.Count} songs";
@@ -217,22 +213,20 @@ public class AudioModule : BaseCommandModule
 
     [Command("queuemany"), Aliases("qm")]
     [Description("Enqueues multiple songs")]
-    public async Task QueueManyCommand(CommandContext ctx,
-        [RemainingText, Description(
-            "Multiple song names (ex. >>qm \"Doin Your Mom\" \"Burning memories\")")]
-        params string[] message)
-    {
+    public async Task QueueManyCommand(
+        CommandContext ctx, [RemainingText, Description(
+            "Multiple song names (ex. >>qm \"Doin Your Mom\" \"Burning memories\")"
+        )] params string[] message
+    ) {
         var tracks = new List<LavalinkTrack>();
-        foreach (var s in message)
-        {
+        foreach (var s in message) {
             var foundTracks = (await this.Audio.GetTracksAsync(s)).ToList();
             if (foundTracks.Any())
                 tracks.Add(foundTracks.First());
         }
 
         var embed = new DiscordEmbedBuilder();
-        if (tracks.Any())
-        {
+        if (tracks.Any()) {
             string description = $"Enqueued {tracks.Count} songs";
 
             embed.WithTitle(":thumbsup:  |  Enqueued: ")
@@ -270,25 +264,50 @@ public class AudioModule : BaseCommandModule
         await ctx.Channel.SendMessageAsync(embed.Build());
     }
 
+    [Command("revertqueue"), Aliases("rq")]
+    [Description("Reverts queue to its previous stage")]
+    public Task RevertQueueCommand(CommandContext ctx) {
+        Data.RevertQueue();
+        return Task.CompletedTask;
+    }
+
     [Command("listqueue"), Aliases("lq")]
     [Description("Lists next 10 songs in the queue")]
-    public async Task QueueCommand(CommandContext ctx)
-    {
+    public async Task ListQueueCommand(
+        CommandContext ctx, 
+        [Description("Page number (single page is 10 songs)")] int page = 1
+    ) {
+        // TODO: Fix this. See other todo mark in GuildAudioData.cs:324 GenerateQueueMessage()
+        page -= 1;
+
         var tracks = this.Data.GetNextTracks();
 
-        var embed = new DiscordEmbedBuilder();
+        const int page_size = 10;
+        int page_count = tracks.Length / page_size;
+
+        if (page < 0) page = 0;
+        else if (page > page_count)
+            page = page_count;
+
         string description = "";
-        for (var i = 0; i < tracks.Length && i < 10; i++)
+
+        for (var i = page * page_size; i < tracks.Length && i < (page + 1) * page_size; i++)
             description += $"{i + 1}. [{tracks[i].Title}]({tracks[i].Uri})\n";
 
-        switch (tracks.Length)
-        {
-            case > 10:
-                embed.WithFooter($". . . and {tracks.Length - 10} more");
-                break;
-            case 0:
+        var embed = new DiscordEmbedBuilder();
+        switch (tracks.Length) {
+            case > page_size: {
+                if (tracks.Length - page * page_size > page_size) {
+                    embed.WithFooter(
+                        $". . . and {tracks.Length - page_size * (page + 1)} more " + 
+                        $"(page {page + 1} / {page_count + 1})"
+                    );
+                    // embed.WithFooter($". . . and {tracks.Length - page * page_size} more");
+                }
+                } break;
+            case 0: {
                 description = "Queue is empty";
-                break;
+            } break;
         }
 
         embed.WithTitle(":question:  |  Next tracks in the queue: ")
@@ -314,22 +333,23 @@ public class AudioModule : BaseCommandModule
     [Description("Sets the looping mode")]
     public async Task LoopCommand(
         CommandContext ctx, [Description(
-            "0 - None (looping disabled), " +
-            "1 - Queue (repeat song queue), " +
-            "2 - Song (repeat currently playing song), " +
-            "3 - Shuffle (suffle song randomly into the queue after it ends)"
-        )] int? mode = null
+            "None (looping disabled), " +
+            "Queue (repeat song queue), " +
+            "Song (repeat currently playing song), " +
+            "Shuffle (suffle song randomly into the queue after it ends)"
+        )] string? mode = null
     ) {
         if (mode is null) {
             Data.Looping = Data.Looping switch {
                 LoopingMode.None => LoopingMode.Queue,
                 _ => LoopingMode.None,
             };
-        } else if (Enum.IsDefined(typeof(LoopingMode), mode)) {
-            Data.Looping = (LoopingMode)mode;
+        } else if (Enum.TryParse(typeof(LoopingMode), mode, true, out var looping) && 
+                   Enum.IsDefined(typeof(LoopingMode), looping)) {
+            Data.Looping = (LoopingMode)looping;
         } else throw new CommandException(
             "Incorrect looping mode, correct modes are:\n" + 
-            "` None - 0 `, ` Queue - 1 `, ` Song - 2 `, ` Shuffle - 3 `"
+            "`None`, `Queue`, `Song`, `Shuffle`"
         );
 
         if (Data.Looping is LoopingMode.None)
@@ -364,7 +384,7 @@ public class AudioModule : BaseCommandModule
             break;
         default:
             throw new CommandException(
-                "Incorrect usage, please specify if nightcore state (ex. >>nightcore on)"
+                "Incorrect usage, please specify nightcore state (ex. >>nightcore on)"
             );
         }
 
@@ -373,8 +393,9 @@ public class AudioModule : BaseCommandModule
 
     [Command("skip"), Aliases("s")]
     [Description("Skips tracks")]
-    public async Task SkipCommand(CommandContext ctx, [Description("Number of tracks to skip")] 
-        int count = 1) => await this.Data.SkipAsync(count);
+    public async Task SkipCommand(
+        CommandContext ctx, [Description("Number of tracks to skip")] int count = 1
+    ) => await this.Data.SkipAsync(count);
 
     [Command("prev"), Aliases("previous")]
     [Description("Plays previous track")]

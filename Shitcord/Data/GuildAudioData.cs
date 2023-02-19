@@ -29,9 +29,13 @@ public class GuildAudioData
     private DatabaseService DatabaseContext { get; }
     private DiscordGuild Guild { get; }
 
-    private ConcurrentQueue<LavalinkTrack> Queue { get; }
+    // Keep previous state of the queue
+    // TODO: Only keep cache on big queue changes (clear, shuffle, remove, enqueue where count > 1)
+    private ConcurrentQueue<LavalinkTrack> PrevQueue { get; set; }
+    private ConcurrentQueue<LavalinkTrack> Queue { get; set; }
     private LavalinkGuildConnection? Player { get; set; }
     public LavalinkTrack? CurrentTrack { get; private set; }
+    // TODO: When in other looping mode than None, previous track is not removed from bottom of the queue
     public LavalinkTrack? PreviousTrack { get; private set; }
     public DiscordChannel? Channel => this.Player?.Channel;
     public bool SkipEventFire { get; set; } = false;
@@ -94,6 +98,7 @@ public class GuildAudioData
         InitializeDatabase();
 
         Queue = new ConcurrentQueue<LavalinkTrack>();
+        PrevQueue = new ConcurrentQueue<LavalinkTrack>();
         Filters = new AudioFilters();
 
         //Task.Run(AutoMessageUpdater);
@@ -317,6 +322,8 @@ public class GuildAudioData
         DatabaseUpdateSU();
     }
 
+    // TODO: FIX: This logic is a little broken track.lengths that are multiples of pace_size
+    //            (for example 180 tracks in the queue)
     public DiscordMessageBuilder GenerateQueueMessage()
     {
         var tracks = this.GetNextTracks();
@@ -346,29 +353,32 @@ public class GuildAudioData
             .WithFooter($"Page {this.page + 1} / {page_count + 1}")
             .WithColor(DiscordColor.Purple);
 
-        var builder = new DiscordMessageBuilder()
-        {
+        var builder = new DiscordMessageBuilder() {
             Embed = embed.Build(),
         };
 
         builder.AddComponents(
             new DiscordButtonComponent(ButtonStyle.Primary, "firstpage_btn", null, false,
-                new DiscordComponentEmoji("\u23ea")),
+                new DiscordComponentEmoji("⏪")),
             new DiscordButtonComponent(ButtonStyle.Primary, "prevpage_btn", null, false,
-                new DiscordComponentEmoji("\u25c0\ufe0f")),
+                new DiscordComponentEmoji("◀️")),
             new DiscordButtonComponent(ButtonStyle.Primary, "nextpage_btn", null, false,
-                new DiscordComponentEmoji("\u25b6\ufe0f")),
+                new DiscordComponentEmoji("▶️")),
             new DiscordButtonComponent(ButtonStyle.Primary, "lastpage_btn", null, false,
-                new DiscordComponentEmoji("\u23e9"))
+                new DiscordComponentEmoji("⏩"))
         );
 
         builder.AddComponents(
-            new DiscordButtonComponent(ButtonStyle.Secondary, "empty1_btn", "\u200E", true),
+            new DiscordButtonComponent(ButtonStyle.Secondary, "revertqueue_btn", null, false,
+                new DiscordComponentEmoji("🔄")),
             new DiscordButtonComponent(ButtonStyle.Success, "shuffle_btn", null, false,
-                new DiscordComponentEmoji("\U0001f3b2")),
+                new DiscordComponentEmoji("🎲")),
             new DiscordButtonComponent(ButtonStyle.Danger, "clear_btn", null, false,
-                new DiscordComponentEmoji("\U0001f5d1\ufe0f")),
-            new DiscordButtonComponent(ButtonStyle.Secondary, "empty2_btn", "\u200E" , true)
+                new DiscordComponentEmoji("🗑️")),
+            // Empty character (thanks frisk) because discord broke their stuff and now you cannot 
+            // set single space as a button component text.
+            // TODO: Replace this with something.
+            new DiscordButtonComponent(ButtonStyle.Primary, "empty2_btn", "\u200E" , true)
         );
 
         return builder;
@@ -436,7 +446,6 @@ public class GuildAudioData
             new DiscordButtonComponent(ButtonStyle.Primary, "skip_btn", "Skip"),
             new DiscordButtonComponent(ButtonStyle.Primary, "prev_btn", "Prev"),
             new DiscordButtonComponent(ButtonStyle.Secondary, "loop_btn", "Loop"),
-            // TODO: MAYBE:
             IsConnected 
                 ? new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn) 
                 : new DiscordButtonComponent(ButtonStyle.Success, "state_btn", state_btn, true) 
@@ -582,9 +591,17 @@ public class GuildAudioData
 
     public int ClearQueue()
     {
-        var count = Queue.Count;
-        Queue.Clear();
-        return count;
+        PrevQueue = new ConcurrentQueue<LavalinkTrack>(Queue);
+
+        var deleted_count = Queue.Count;
+        Queue = new ConcurrentQueue<LavalinkTrack>();
+
+        return deleted_count;
+    }
+
+    public void RevertQueue() {
+        // Previous queue is unchanged?
+        Queue = new ConcurrentQueue<LavalinkTrack>(PrevQueue);
     }
 
     // TODO: Do not start the next song if PlayIntro was invoked?
@@ -603,15 +620,20 @@ public class GuildAudioData
         QueueRequiresUpdate = true;
     }
 
-    public void Enqueue(LavalinkTrack track)
-        => Queue.Enqueue(track);
+    public void Enqueue(LavalinkTrack track) {
+        Queue.Enqueue(track);
+    }
+
+    // public void EnqueueCacheless(LavalinkTrack track) {
+    //     Queue.Enqueue(track);
+    // }
 
     public void EnqueueFirst(LavalinkTrack track)
     {
         var items = Queue.ToArray();
         Queue.Clear();
-        Queue.Enqueue(track);
 
+        Queue.Enqueue(track);
         foreach (var item in items)
             Queue.Enqueue(item);
     }
@@ -619,7 +641,7 @@ public class GuildAudioData
     public void EnqueueRandom(LavalinkTrack track)
     {
         var items = Queue.ToList();
-        this.Queue.Clear();
+        Queue.Clear();
 
         var rng = new Random();
         var index = rng.Next(items.Count);
@@ -638,19 +660,19 @@ public class GuildAudioData
     public void EnqueueFirst(IEnumerable<LavalinkTrack> tracks)
     {
         var items = Queue.ToArray();
-        this.Queue.Clear();
+        Queue.Clear();
 
         foreach (var track in tracks)
-            this.Queue.Enqueue(track);
+            Queue.Enqueue(track);
 
         foreach (var item in items)
-            this.Queue.Enqueue(item);
+            Queue.Enqueue(item);
     }
 
     public void EnqueueRandom(IEnumerable<LavalinkTrack> tracks)
     {
         var items = Queue.ToList();
-        this.Queue.Clear();
+        Queue.Clear();
 
         // Awful, horrible, disgusting
         // Also, don't care
@@ -661,36 +683,24 @@ public class GuildAudioData
         }
 
         foreach (var item in items)
-            this.Queue.Enqueue(item);
+            Queue.Enqueue(item);
     }
     
     public async Task SetAudioFiltersAsync(AudioFilters? filters = null)
     {
         if (filters != null)
-            this.Filters = filters;
+            Filters = filters;
         
-        if (this.Player is not {IsConnected: true})
+        if (Player is not {IsConnected: true})
             return;
         
-        await this.Player.SetAudiofiltersAsync(this.Filters);
+        await Player.SetAudiofiltersAsync(Filters);
     }
     
-    public LavalinkTrack? Dequeue() =>
-        this.Queue.TryDequeue(out var track) ? track : null;
-
-    //public LoopingMode ChangeLoopingState(LoopingMode looping)
-    //{
-    //    Looping = looping;
-
-    //    DatabaseContext.executeUpdate(QueryBuilder
-    //        .New().Update(GuildAudioTable.TABLE_NAME)
-    //        .WhereEquals(GuildAudioTable.GUILD_ID, Guild.Id)
-    //        .Set(GuildAudioTable.LOOPING, Looping)
-    //        .Build()
-    //    );
-
-    //    return Looping;
-    //}
+    public LavalinkTrack? Dequeue() {
+        // Lavalink track is ignored
+        return Queue.TryDequeue(out var track) ? track : null;
+    }
 
     public LavalinkTrack? Remove(int index)
         => this.RemoveRange(index, 1).FirstOrDefault();
@@ -706,8 +716,9 @@ public class GuildAudioData
         removed = qlist.GetRange(index, count);
         qlist.RemoveRange(index, count);
 
-        this.ClearQueue();
-        this.Enqueue(qlist);
+        // PrevQueue is handled in this method.
+        Queue.Clear();
+        Enqueue(qlist);
 
         return removed;
     }
@@ -767,14 +778,17 @@ public class GuildAudioData
 
     public void Shuffle()
     {
+        PrevQueue = new ConcurrentQueue<LavalinkTrack>(Queue);
+
         var rng = new Random();
         var qlist = this.Queue.ToList().OrderBy(_ => rng.Next());
-        this.Queue.Clear();
-
-        this.Enqueue(qlist);
+        Queue.Clear();
+        Enqueue(qlist);
     }
 
     public void SortByTitle(bool ascending) {
+        PrevQueue = new ConcurrentQueue<LavalinkTrack>(Queue);
+
         IOrderedEnumerable<LavalinkTrack> qlist;
         // if (ascending)
         //     qlist = this.Queue.OrderByDescending(x => String.Concat(x.Title.OrderBy(c => c)));
@@ -784,18 +798,20 @@ public class GuildAudioData
             qlist = this.Queue.ToList().OrderBy(x => x.Title);
         else qlist = this.Queue.ToList().OrderByDescending(x => x.Title);
 
-        this.Queue.Clear();
-        this.Enqueue(qlist);
+        Queue.Clear();
+        Enqueue(qlist);
     }
 
     public void SortByLenght(bool ascending) {
+        PrevQueue = new ConcurrentQueue<LavalinkTrack>(Queue);
+
         IOrderedEnumerable<LavalinkTrack> qlist;
         if (ascending)
             qlist = this.Queue.ToList().OrderBy(x => x.Length);
         else qlist = this.Queue.ToList(). OrderByDescending(x => x.Length);
 
-        this.Queue.Clear();
-        this.Enqueue(qlist);
+        Queue.Clear();
+        Enqueue(qlist);
     }
 
     public async Task PreviousAsync() {
