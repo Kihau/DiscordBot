@@ -1,5 +1,5 @@
 # External dependencies
 Some external dependencies are required to run the bot with all features:
-    - lavalink
+- [Lavalink](https://github.com/freyacodes/Lavalink)
 
-All links provided in the [download](download-external.sh) script
+You can automatically download the depndencies using the [download](download-external.sh) script
