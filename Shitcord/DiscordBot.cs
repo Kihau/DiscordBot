@@ -19,6 +19,10 @@ using Shitcord.Data;
 
 namespace Shitcord;
 
+// TODO: Slash commands
+// TODO: Markov meme - stores images when markov is enabled and generates random memes by adding top
+//       and bottom text as markov string
+
 public class DiscordBot
 {
     public DiscordClient Client { get; private set; }
@@ -72,7 +76,8 @@ public class DiscordBot
 
         Client.UseInteractivity(new InteractivityConfiguration { 
             PollBehaviour = PollBehaviour.KeepEmojis,
-            Timeout = TimeSpan.FromSeconds(30)
+            Timeout = TimeSpan.FromSeconds(300),
+            AckPaginationButtons = true,
         });
     }
 

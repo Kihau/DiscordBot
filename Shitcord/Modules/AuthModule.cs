@@ -36,7 +36,7 @@ public class AuthModule : BaseCommandModule
 
     [Command("shrinkdatabase"), Aliases("shrinkdb")]
     [Description("Shrinks sqlite database file")]
-    public Task ExecuteCommand(CommandContext ctx) {
+    public Task ShrinkDatabaseCommand(CommandContext ctx) {
         Db.ShrinkSqliteDBFile();
         return Task.CompletedTask;
     }
@@ -128,7 +128,10 @@ public class AuthModule : BaseCommandModule
             .WithEmbed(embed.Build())
             .AddComponents(
                 new DiscordButtonComponent(ButtonStyle.Primary, "stdoutput", "Standard Output"),
-                new DiscordButtonComponent(ButtonStyle.Danger, "stderror", "Standard Error")
+                new DiscordButtonComponent(ButtonStyle.Danger, "stderror", "Standard Error"),
+                new DiscordButtonComponent(
+                    ButtonStyle.Secondary, "clearexec", null, false, new DiscordComponentEmoji("🗑️")
+                )
             );
 
         await message.ModifyAsync(message_builder);
@@ -140,20 +143,26 @@ public class AuthModule : BaseCommandModule
         error = String.IsNullOrEmpty(error) ? "<No standard error>" : error;
 
         while (true) {
-            var result = await message.WaitForButtonAsync(ctx.User, TimeSpan.FromSeconds(10));
+            var interactivity = ctx.Client.GetInteractivity();
+            // var interaction = interactivity.WaitForButtonAsync(message, TimeSpan.FromSeconds(300)));
+            var result = await message.WaitForButtonAsync(ctx.User, TimeSpan.FromSeconds(300));
 
-            if (result.TimedOut) break;
+            if (result.TimedOut || result.Result.Id == "clearexec") {
+                // await result.Result.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+                await message.DeleteAsync();
+                break;
+            } 
 
             IEnumerable<Page>? pages = null;
-            var interactivity = ctx.Client.GetInteractivity();
             if (result.Result.Id == "stdoutput") 
                 pages = interactivity.GeneratePagesInEmbed(output);
             else if (result.Result.Id == "stderror")
                 pages = interactivity.GeneratePagesInEmbed(error);
 
-            result.Result.Handled = true;
+            await result.Result.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+
             await ctx.Channel.SendPaginatedMessageAsync(
-                ctx.Member, pages, PaginationBehaviour.Ignore, 
+                ctx.Member, pages, PaginationBehaviour.WrapAround, 
                 ButtonPaginationBehavior.DeleteMessage
             );
         }
