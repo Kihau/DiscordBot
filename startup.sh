@@ -10,7 +10,7 @@
 #   - .Net SDK
 #   - Lavalink
 #
-# by Kihau 2022 
+# by Kihau 2023 
 
 SHITCORD_DIR="${HOME}/Software/Shitcord"
 LAVALINK_DIR="${HOME}/Servers/Lavalink"
@@ -41,6 +41,10 @@ function stop {
     fi
 
     screen -wipe
+}
+
+function start_wm {
+
 }
 
 function restart {

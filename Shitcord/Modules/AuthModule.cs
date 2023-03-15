@@ -180,12 +180,17 @@ public class AuthModule : BaseCommandModule
         Environment.Exit(0);
     }
 
-    [Group("command")]
+    [Group("command"), Aliases("cmd")]
     [Description("Custom command management")]
     public class CustomCommandModule : BaseCommandModule {
         private CustomCommandService Custom { get; }
 
         public CustomCommandModule(CustomCommandService custom) => Custom = custom;
+
+        // [Command("addglobal")]
+        // public async Task AddGlobalCommand(
+        //     CommandContext ctx, string cmd_name, [RemainingText] string lua_script
+        // ) { }
 
         [Command("add")]
         public async Task AddCommand(
@@ -212,13 +217,13 @@ public class AuthModule : BaseCommandModule
             System.Console.WriteLine($"start: {code_start}, end: {code_end}");
             lua_script = lua_script.Substring(code_start, code_end - code_start);
             System.Console.WriteLine(lua_script);
-            Custom.AddCommand(ctx.Guild, cmd_name, lua_script);
+            Custom.AddCommand(cmd_name, lua_script);
 
             await ctx.RespondAsync("Successfully added custom command 👍");
         }
 
         [Command("edit")]
-        public async Task EditCommand(CommandContext ctx, string cmd_name, string lua_script) {
+        public async Task EditCommand(CommandContext ctx, string cmd_name, [RemainingText] string lua_script) {
             lua_script = lua_script.Trim();
 
             int code_start = lua_script.IndexOf("```");
@@ -240,7 +245,7 @@ public class AuthModule : BaseCommandModule
             System.Console.WriteLine($"start: {code_start}, end: {code_end}");
             lua_script = lua_script.Substring(code_start, code_end - code_start);
             System.Console.WriteLine(lua_script);
-            Custom.EditCommand(ctx.Guild, cmd_name, lua_script);
+            Custom.EditCommand(cmd_name, lua_script);
 
             await ctx.RespondAsync("Successfully edited the command 👍");   
         }

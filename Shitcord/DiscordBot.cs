@@ -262,7 +262,7 @@ public class DiscordBot
         var service = sender.Services.GetService(typeof(CustomCommandService)) as CustomCommandService;
         if (service != null && e.Command != null) {
             // Console.WriteLine($"{e.Command.Name}");
-            custom_command = service.CommandExist(e.Context.Guild, e.Command.Name);
+            custom_command = service.CommandExist(e.Command.Name);
         }
 
         // TODO: Fine tune
