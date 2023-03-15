@@ -13,12 +13,8 @@ namespace Shitcord.Modules;
 [Description("Fun and silly commands")]
 public class FunModule : BaseCommandModule 
 {
-    [Command("sex")]
-    public async Task SexCommand(CommandContext ctx) 
-        => await ctx.RespondAsync("Sex is not enabled on this server.");
-
     [Command("hlep")]
-    public async Task HlepCommand(CommandContext ctx) 
+    public async Task HlepCommand(CommandContext ctx, [RemainingText] string? ignored = null) 
         => await ctx.RespondAsync("https://tenor.com/view/falling-bread-bread-gif-19081960");
 
     [Command("httpcat"), Aliases("http")]
@@ -38,7 +34,6 @@ public class FunModule : BaseCommandModule
         int index = new Random().Next(FunModule.solarlessons.Length);
         await ctx.RespondAsync(FunModule.solarlessons[index]);
     }
-
 
     // [Command("runscript"), Aliases("script", "python")]
     // async Task RunSciptCommand(

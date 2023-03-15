@@ -28,33 +28,34 @@ public class BotConfig
     {
         path ??= "Resources/config.json";
         if (!File.Exists(path)) {
-            this.Save(path);
+            SaveConfig(path);
 
             throw new Exception(
                 "Example config file was generated. Edit it in order to start the bot"
             );
         }
         
-        this.Load(path);
+        LoadConfig(path);
     }
 
-    private void Load(string path)
+    private void LoadConfig(string path)
     {
         var json = File.ReadAllText(path);
         var config = JsonSerializer.Deserialize<BotConfig>(json);
 
-        if (config == null)
+        if (config == null) {
             throw new Exception(
-                "Invalid configuration file. Remove it and run" +
-                " the program again to generate example config"
+                "Invalid configuration file. Remove it and run " +
+                "the program again to generate new example config"
             );
+        }
         
         this.Discord = config.Discord;
         this.Ssh = config.Ssh;
         this.Lava = config.Lava;
     }
 
-    public void Save(string path)
+    public void SaveConfig(string path)
     {
         var options = new JsonSerializerOptions { WriteIndented = true };
         string output = JsonSerializer.Serialize(this, options);
@@ -140,6 +141,9 @@ public class LavalinkConfig
     [JsonPropertyName("javapath")]
     public string JavaPath { get; set; } 
         = "path/to/java.exe (or just java if set as an enviroment veriable)";
+
+    [JsonPropertyName("connectiontimeout")]
+    public int ConnectionTimeout { get; set; } = 3000;
 }
 
 [Serializable]

@@ -28,6 +28,7 @@ public class DatabaseService
         CreateTableIfNotExists(AuthUsersTable.TABLE_NAME, AuthUsersTable.COLUMNS);
         CreateTableIfNotExists(AutoReplyTable.TABLE_NAME, AutoReplyTable.COLUMNS);
         CreateTableIfNotExists(AuthMarkovTable.TABLE_NAME, AuthMarkovTable.COLUMNS);
+        CreateTableIfNotExists(CustomCommandTable.TABLE_NAME, CustomCommandTable.COLUMNS);
     }
 
     ~DatabaseService() => connection.Close();

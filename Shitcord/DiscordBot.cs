@@ -16,6 +16,7 @@ using Shitcord.Modules;
 using Shitcord.Services;
 using Shitcord.Extensions;
 using Shitcord.Data;
+using DSharpPlus.CommandsNext.Exceptions;
 
 namespace Shitcord;
 
@@ -66,6 +67,7 @@ public class DiscordBot
         Client = new DiscordClient(clientConfig);
 
         Client.MessageCreated += PrintMessage;
+        Client.MessageCreated += BotCommandHandler;
         Client.GuildDownloadCompleted += (_, _) => {
             Task.Run(StartBotConsoleInput);
             return Task.CompletedTask;
@@ -79,6 +81,63 @@ public class DiscordBot
             Timeout = TimeSpan.FromSeconds(300),
             AckPaginationButtons = true,
         });
+    }
+
+    private Task BotCommandHandler(DiscordClient sender, MessageCreateEventArgs e)
+    {
+        if (e.Author.IsBot)
+            return Task.CompletedTask;
+
+        // if (!this.Config.EnableDms && e.Channel.IsPrivate)
+        //     return;
+
+        var cnext = Client.GetCommandsNext();
+        var ccommand = cnext.Services.GetService<CustomCommandService>();
+        if (ccommand == null) {
+            // TODO: Log error and exit here?
+            return Task.CompletedTask;
+        }
+
+        var cmd_start = e.Message.GetStringPrefixLength(Config.Discord.Prefix);
+
+        if (cmd_start == -1)
+            return Task.CompletedTask;
+
+        string prefix = e.Message.Content.Substring(0, cmd_start);
+        string content = e.Message.Content.Substring(cmd_start);
+
+        int arg_pos = 0;
+        var cmd_name = content.ExtractNextArgument(ref arg_pos, cnext.Config.QuotationMarks);
+
+        var cmd_builtin = cnext.FindCommand(content, out var args);
+        var cmd_runtime = ccommand.FindCommand(e.Guild, cmd_name);
+
+        var context = cnext.CreateContext(e.Message, prefix, cmd_builtin, args);
+
+        if (cmd_builtin == null && cmd_runtime == null) {
+            cnext.Error.InvokeAsync(
+                cnext, new CommandErrorEventArgs {
+                    Context = context,
+                    Exception = new CommandNotFoundException(cmd_name ?? "UnknownCmd")
+                }
+            ).Wait();
+            return Task.CompletedTask;
+        }
+
+        if (cmd_builtin != null)
+            Task.Run(async () => await cnext.ExecuteCommandAsync(context));
+
+        var cmd_args = new List<string>();
+        string? arg = content.ExtractNextArgument(ref arg_pos, cnext.Config.QuotationMarks);;
+        while (arg != null) {
+            cmd_args.Add(arg);
+            arg = content.ExtractNextArgument(ref arg_pos, cnext.Config.QuotationMarks);
+        } 
+
+        if (cmd_runtime != null) 
+            Task.Run(() => ccommand.ExecuteCommand(context, cmd_runtime, cmd_args.ToArray()));
+
+        return Task.CompletedTask;
     }
 
     private Task PrintMessage(DiscordClient client, MessageCreateEventArgs e) {
@@ -139,12 +198,12 @@ public class DiscordBot
 
         args = msg.Substring(Config.Discord.Prefix.Length + cmd_name.Length).Trim();
         var ctx = cnext.CreateFakeContext(
-            Client.CurrentUser,
-            LastChannel,
-            msg,
-            Config.Discord.Prefix,
-            command,
-            args
+            actor: Client.CurrentUser,
+            channel: LastChannel,
+            messageContents: msg,
+            prefix: Config.Discord.Prefix,
+            cmd: command,
+            rawArguments: args
         );
 
         var _ = Task.Run(async () => await cnext.ExecuteCommandAsync(ctx));
@@ -161,7 +220,7 @@ public class DiscordBot
             CaseSensitive = false,
             EnableMentionPrefix = false,
             EnableDefaultHelp = true,
-            UseDefaultCommandHandler = true,
+            UseDefaultCommandHandler = false,
             Services = services
         };
 
@@ -192,25 +251,39 @@ public class DiscordBot
             return Task.CompletedTask;
         };
 
-        commands.CommandErrored += async (sender, e) => {
-            Client.Logger.LogError(new EventId(0, "Exception"), $"{e.Exception}"); 
-               
-            // if (!DebugEnabled && e.Exception is not CommandException)
-            //     return;
-            
-            // TODO: Improve this and don't catch obvious exceptions?
-            var embed = new DiscordEmbedBuilder();
-            switch (e.Exception) {
-                // TODO: When Cound not find suitable overload - print required arguments
-                default: 
-                    embed.WithTitle("<:angerysad:690223823936684052>  |  A Wild Error Occurred: ")
-                        .WithDescription(e.Exception.Message)
-                        .WithColor(DiscordColor.Red);
-                    break;
-            };
+        commands.CommandErrored += CommandErrorHandler;
+        // commands.CommandErrored += async (sender, e) => { };
+    }
 
-            await e.Context.Channel.SendMessageAsync(embed.Build());
+    private async Task CommandErrorHandler(CommandsNextExtension sender, CommandErrorEventArgs e) {
+        Client.Logger.LogError(new EventId(0, "Exception"), $"{e.Exception}"); 
+
+        bool custom_command = false;
+        var service = sender.Services.GetService(typeof(CustomCommandService)) as CustomCommandService;
+        if (service != null && e.Command != null) {
+            // Console.WriteLine($"{e.Command.Name}");
+            custom_command = service.CommandExist(e.Context.Guild, e.Command.Name);
+        }
+
+        // TODO: Fine tune
+        if (custom_command)
+            return;
+
+        // if (!DebugEnabled && e.Exception is not CommandException)
+        //     return;
+
+        // TODO: Improve this and don't catch obvious exceptions?
+        var embed = new DiscordEmbedBuilder();
+        switch (e.Exception) {
+            // TODO: When Cound not find suitable overload - print required arguments
+            default: 
+                embed.WithTitle("<:angerysad:690223823936684052>  |  A Wild Error Occurred: ")
+                    .WithDescription(e.Exception.Message)
+                    .WithColor(DiscordColor.Red);
+                break;
         };
+
+        await e.Context.Channel.SendMessageAsync(embed.Build());
     }
 
     private IServiceProvider CreateServices()
@@ -222,6 +295,7 @@ public class DiscordBot
             .AddSingleton<ReplyService>()
             .AddSingleton<MarkovService>()
             .AddSingleton<ModerationService>()
+            .AddSingleton<CustomCommandService>()
             .AddSingleton(this);
 
         if (Config.Lava.IsEnabled) {
@@ -251,6 +325,8 @@ public class DiscordBot
 
             Directory.CreateDirectory("temp");
             Process.Start(startInfo);
+
+            await Task.Delay(Config.Lava.ConnectionTimeout);
         }
 
         await Task.Delay(Config.Discord.StartDelay);

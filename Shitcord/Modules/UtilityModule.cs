@@ -271,6 +271,7 @@ public class UtilityModule : BaseCommandModule
         await clone.ModifyAsync(x => x.Name = name);
     }
 
+    // TODO: Also snipe images and videos (and other stuff)
     [Command("rmsnipe"), Description("Snipes last deleted message")]
     public async Task RemoveSnipeCommand(CommandContext ctx, int index = 0) 
     {
@@ -292,6 +293,7 @@ public class UtilityModule : BaseCommandModule
         await ctx.RespondAsync(embed);
     }
 
+    // TODO: Also snipe images and videos (and other stuff)
     [Command("editsnipe"), Description("Snipes last message edit")]
     public async Task EditSnipeCommand(CommandContext ctx, int index = 0) 
     {

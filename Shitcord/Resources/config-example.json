@@ -26,7 +26,8 @@
         "password": "<lavlink-password>",
         "enabled": false,
         "autostart": false,
-        "javapath": "/path/to/java (or just java as env var)"
+        "javapath": "/path/to/java (or just java as env var)",
+        "connectiontimout": 3000
     },
     "openai": {
         "enabled": false,

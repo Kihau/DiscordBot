@@ -28,8 +28,7 @@ public class AuthModule : BaseCommandModule
         this.Db = db;
     }
 
-    public override async Task BeforeExecutionAsync(CommandContext ctx)
-    {
+    public override async Task BeforeExecutionAsync(CommandContext ctx) {
         //this.Data = this.Audio.GetOrAddData(ctx.Guild);
         await base.BeforeExecutionAsync(ctx);
     }
@@ -59,6 +58,7 @@ public class AuthModule : BaseCommandModule
         if (command.Length == 0)
             throw new CommandException("Command cannot be an empty string");
 
+        // Constructing the command
         string file_name = "";
         string arguments = "";
 
@@ -67,7 +67,6 @@ public class AuthModule : BaseCommandModule
             arguments = $"-c \"{command}\""; 
         } else {
             // Not sure it this works correctly, but also don't care
-             
             var split = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (split.Length == 0)
                 throw new CommandException("Incorrect input command");
@@ -106,6 +105,7 @@ public class AuthModule : BaseCommandModule
 
         var message = await ctx.Channel.SendMessageAsync(message_builder);
 
+        // Executing the command
         var completed = process.WaitForExit(timeout * 1000);
         if (!completed) {
             embed.Title = "Execution failed";
@@ -124,18 +124,21 @@ public class AuthModule : BaseCommandModule
                 : $"Process has finished with an error. Execution time: `{time}`\n"; 
         }
 
-        message_builder = new DiscordMessageBuilder()
-            .WithEmbed(embed.Build())
-            .AddComponents(
-                new DiscordButtonComponent(ButtonStyle.Primary, "stdoutput", "Standard Output"),
-                new DiscordButtonComponent(ButtonStyle.Danger, "stderror", "Standard Error"),
-                new DiscordButtonComponent(
-                    ButtonStyle.Secondary, "clearexec", null, false, new DiscordComponentEmoji("🗑️")
-                )
-            );
+        // Preparing output to update the message
+        message_builder = new DiscordMessageBuilder {
+            Embed = embed.Build(),
+        };
+        message_builder.AddComponents(
+            new DiscordButtonComponent(ButtonStyle.Primary, "stdoutput", "Standard Output"),
+            new DiscordButtonComponent(ButtonStyle.Danger, "stderror", "Standard Error"),
+            new DiscordButtonComponent(
+                ButtonStyle.Secondary, "clearexec", null, false, new DiscordComponentEmoji("🗑️")
+            )
+        );
 
         await message.ModifyAsync(message_builder);
 
+        // Handling the buttons, displaying standard output/error when a button was pressed
         var output = process.StandardOutput.ReadToEnd(); 
         output = String.IsNullOrEmpty(output) ? "<No standard output>" : output;
 
@@ -144,11 +147,9 @@ public class AuthModule : BaseCommandModule
 
         while (true) {
             var interactivity = ctx.Client.GetInteractivity();
-            // var interaction = interactivity.WaitForButtonAsync(message, TimeSpan.FromSeconds(300)));
             var result = await message.WaitForButtonAsync(ctx.User, TimeSpan.FromSeconds(300));
 
             if (result.TimedOut || result.Result.Id == "clearexec") {
-                // await result.Result.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
                 await message.DeleteAsync();
                 break;
             } 
@@ -159,7 +160,9 @@ public class AuthModule : BaseCommandModule
             else if (result.Result.Id == "stderror")
                 pages = interactivity.GeneratePagesInEmbed(error);
 
-            await result.Result.Interaction.CreateResponseAsync(InteractionResponseType.DeferredMessageUpdate);
+            await result.Result.Interaction.CreateResponseAsync(
+                InteractionResponseType.DeferredMessageUpdate
+            );
 
             await ctx.Channel.SendPaginatedMessageAsync(
                 ctx.Member, pages, PaginationBehaviour.WrapAround, 
@@ -175,6 +178,94 @@ public class AuthModule : BaseCommandModule
         if (console) Console.WriteLine("Shutting down");
         else await ctx.RespondAsync("Shutting down");
         Environment.Exit(0);
+    }
+
+    [Group("command")]
+    [Description("Custom command management")]
+    public class CustomCommandModule : BaseCommandModule {
+        private CustomCommandService Custom { get; }
+
+        public CustomCommandModule(CustomCommandService custom) => Custom = custom;
+
+        [Command("add")]
+        public async Task AddCommand(
+            CommandContext ctx, string cmd_name, [RemainingText] string lua_script
+        ) {
+            lua_script = lua_script.Trim();
+
+            int code_start = lua_script.IndexOf("```");
+            if (code_start != -1)
+                code_start = lua_script.IndexOf("lua", code_start + 3);
+
+            code_start = lua_script.IndexOf('\n', code_start + 3);
+
+            int code_end = lua_script.LastIndexOf("```");
+
+            if (code_start == -1)
+                code_start = 0;
+            else code_start += 1;
+
+            if (code_end == -1)
+                code_end = lua_script.Length;
+            else code_end -= 1;
+
+            System.Console.WriteLine($"start: {code_start}, end: {code_end}");
+            lua_script = lua_script.Substring(code_start, code_end - code_start);
+            System.Console.WriteLine(lua_script);
+            Custom.AddCommand(ctx.Guild, cmd_name, lua_script);
+
+            await ctx.RespondAsync("Successfully added custom command 👍");
+        }
+
+        [Command("edit")]
+        public async Task EditCommand(CommandContext ctx, string cmd_name, string lua_script) {
+            lua_script = lua_script.Trim();
+
+            int code_start = lua_script.IndexOf("```");
+            if (code_start != -1)
+                code_start = lua_script.IndexOf("lua", code_start + 3);
+
+            code_start = lua_script.IndexOf('\n', code_start + 3);
+
+            int code_end = lua_script.LastIndexOf("```");
+
+            if (code_start == -1)
+                code_start = 0;
+            else code_start += 1;
+
+            if (code_end == -1)
+                code_end = lua_script.Length;
+            else code_end -= 1;
+
+            System.Console.WriteLine($"start: {code_start}, end: {code_end}");
+            lua_script = lua_script.Substring(code_start, code_end - code_start);
+            System.Console.WriteLine(lua_script);
+            Custom.EditCommand(ctx.Guild, cmd_name, lua_script);
+
+            await ctx.RespondAsync("Successfully edited the command 👍");   
+        }
+
+        [Command("remove")]
+        public async Task RemoveCommand(CommandContext ctx, string cmd_name) {
+            Custom.RemoveCommand(ctx.Guild, cmd_name);
+            await ctx.RespondAsync("Successfully removed specified command 👍");
+        }
+
+        // Should be a part of the custom helper extension
+        [Command("list")]
+        public Task ListCommand(CommandContext ctx) {
+            // TODO: List custom commands
+            return Task.CompletedTask;
+        }
+
+        [Command("showcode"), Aliases("show")]
+        public async Task ShowcodeCommand(CommandContext ctx, string cmd_name) {
+            string lua_script = Custom.GetLuaScript(ctx.Guild, cmd_name);
+            // lua_script = lua_script.Insert(0, "```lua\n") + "\n```";
+            await ctx.Channel.SendMessageAsync(
+                $"Lua code for command `{cmd_name}`: ```lua\n{lua_script}\n```"
+            );
+        }
     }
 
     [Command("authlist")]
@@ -350,6 +441,7 @@ public class AuthModule : BaseCommandModule
         string tables = Db.QueryResultToString(cols, table);
         await ctx.RespondAsync($"```\n{tables}```\n");
     }
+
     [Command("sql"), Description("Executes sql update query against db")]
     public async Task ExecuteSQLQuery(CommandContext ctx, string query, bool console = true)
     {
