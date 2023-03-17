@@ -43,10 +43,6 @@ function stop {
     screen -wipe
 }
 
-function start_wm {
-
-}
-
 function restart {
     stop
     start
