@@ -263,6 +263,11 @@ public class AuthModule : BaseCommandModule
             return Task.CompletedTask;
         }
 
+        [Command("rename"), Aliases("rn")]
+        public async Task RenameCommand(CommandContext ctx, string old_name, string new_name) {
+            // TODO: The rename command
+        }
+
         [Command("showcode"), Aliases("show")]
         public async Task ShowcodeCommand(CommandContext ctx, string cmd_name) {
             string lua_script = Custom.GetLuaScript(ctx.Guild, cmd_name);

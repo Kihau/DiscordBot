@@ -34,7 +34,6 @@ public class CustomCommandService
 
         CommandSet = new();
         LoadCommandsFromDatabase();
-
         // TODO: Check for collisions with hardcoded bot commands.
         //       If collision occurred - log error and exit.
 
@@ -64,11 +63,18 @@ public class CustomCommandService
     }
 
     public void EditCommand(string cmd_name, string lua_script) {
-        // TODO: Also check for colisions with builtin commands.
         cmd_name = cmd_name.ToLower();
         if (!CommandSet.ContainsKey(cmd_name))
             throw new CommandException($"Command called {cmd_name} doesn't exists.");
         CommandSet[cmd_name] = lua_script;
+
+        var cnext = Client.GetCommandsNext();
+        var found = cnext.FindCommand(cmd_name, out var ignored);
+        if (found != null) {
+            throw new CommandException(
+                $"You cannot edit commmand: `{cmd_name}`. Builtin commands are not modifiable."
+            );
+        }
 
         Database.executeUpdate(QueryBuilder
             .New().Update(CustomCommandTable.TABLE_NAME)
@@ -84,8 +90,17 @@ public class CustomCommandService
     }
 
     public void AddCommand(string cmd_name, string lua_script) {
-        // TODO: Also check for colisions with builtin commands.
         cmd_name = cmd_name.ToLower();
+
+        var cnext = Client.GetCommandsNext();
+        var found = cnext.FindCommand(cmd_name, out var ignored);
+        if (found != null) {
+            throw new CommandException(
+                $"You cannot add commmand named: `{cmd_name}`. " +
+                "Builtin command with such name already exists."
+            );
+        }
+
         if (CommandSet.ContainsKey(cmd_name))
             throw new CommandException($"Command called {cmd_name} already exists.");
         CommandSet.Add(cmd_name, lua_script);
@@ -105,9 +120,16 @@ public class CustomCommandService
     }
 
     public void RemoveCommand(DiscordGuild guild, string cmd_name) {
-        // TODO: Also check if a builtin command was provieded and throw
-        //       "You cannot remove a builtin bot command"
         cmd_name = cmd_name.ToLower();
+
+        var cnext = Client.GetCommandsNext();
+        var found = cnext.FindCommand(cmd_name, out var ignored);
+        if (found != null) {
+            throw new CommandException(
+                $"`{cmd_name}` is a builtin command. Only commands added at runtime can be removed"
+            );
+        }
+
         if (!CommandSet.ContainsKey(cmd_name))
             throw new CommandException($"Command `{cmd_name}` does not exist");
         CommandSet.Remove(cmd_name);
@@ -123,7 +145,7 @@ public class CustomCommandService
         if (cmd_name == null)
             return null;
 
-        // cmd_name to lower ?????
+        cmd_name = cmd_name.ToLower();
         if (!CommandSet.ContainsKey(cmd_name))
             return null;
 
@@ -133,8 +155,7 @@ public class CustomCommandService
         return command;
     }
 
-    // TODO: Invoke command executed on success and command error and failure
-    public void ExecuteCommand(CommandContext? context, CustomCommand cmd, string[]? args) {
+    public async Task ExecuteCommandAsync(CommandContext? context, CustomCommand cmd, string[]? args) {
         if (context == null)
             return;
 
@@ -160,20 +181,27 @@ public class CustomCommandService
             // Executing the code
             lua.DoString(cmd.LuaScript);
 
-            var lua_func = lua[cmd.CommandName] as LuaFunction;
+            var lua_func = lua["command"] as LuaFunction;
+            // var lua_func = lua[cmd.CommandName] as LuaFunction;
             if (lua_func == null) {
                 return;
             }
 
             // var args = context.RawArguments.ToArray();
             lua_func.Call(args);
+
+            await cnext.Executed.InvokeAsync(
+                cnext, new CommandExecutionEventArgs { 
+                    Context = context 
+                }
+            );
         } catch (Exception e) {
-            cnext.Error.InvokeAsync(
+            await cnext.Error.InvokeAsync(
                 cnext, new CommandErrorEventArgs {
                     Context = context,
                     Exception = e,
                 }
-            ).Wait();
+            );
         }
 
         // var args = context.RawArguments.ToArray();
@@ -220,7 +248,6 @@ public class CustomCommandService
     //     var context = cnext.CreateContext(e.Message, Config.Prefix, null);
     //     lua["ctx"] = context;
     //
-    //     // TODO: Insert frequent imports into the lua code
     //     // Executing the code
     //     lua.DoString(lua_script);
     //

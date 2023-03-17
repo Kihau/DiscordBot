@@ -50,9 +50,11 @@ public class BotConfig
             );
         }
         
-        this.Discord = config.Discord;
-        this.Ssh = config.Ssh;
-        this.Lava = config.Lava;
+        Discord = config.Discord;
+        Ssh = config.Ssh;
+        Lava = config.Lava;
+        Logging = config.Logging;
+        OpenAI = config.OpenAI;
     }
 
     public void SaveConfig(string path)
