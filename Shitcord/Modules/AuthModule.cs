@@ -256,16 +256,17 @@ public class AuthModule : BaseCommandModule
             await ctx.RespondAsync("Successfully removed specified command 👍");
         }
 
-        // Should be a part of the custom helper extension
         [Command("list")]
         public Task ListCommand(CommandContext ctx) {
             // TODO: List custom commands
+            // Should be a part of the custom helper extension
             return Task.CompletedTask;
         }
 
         [Command("rename"), Aliases("rn")]
-        public async Task RenameCommand(CommandContext ctx, string old_name, string new_name) {
+        public Task RenameCommand(CommandContext ctx, string old_name, string new_name) {
             // TODO: The rename command
+            return Task.CompletedTask;
         }
 
         [Command("showcode"), Aliases("show")]

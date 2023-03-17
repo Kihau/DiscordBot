@@ -25,6 +25,22 @@ public class FunModule : BaseCommandModule
         else throw new CommandException("404 - HttpCat not found");
     }
 
+
+    [Command("vanish")]
+    [Description("You and your messages go *POOF*")]
+    public async Task VanishCommand(CommandContext ctx, int counter = 10) {
+        var to_delete = new List<DiscordMessage>();
+        var messages = await ctx.Channel.GetMessagesAsync();
+        for (int i = 0; i < messages.Count && counter > 0; i++) {
+            var msg = messages[i];
+            if (msg.Author.Id == ctx.Message.Author.Id) {
+                to_delete.Add(msg);
+                counter -= 1;
+            }
+        }
+        await ctx.Channel.DeleteMessagesAsync(to_delete);
+    }
+
     [Command("mcseed")]
     public async Task MCSeedCommand(CommandContext ctx) 
         => await ctx.RespondAsync(new Random().NextInt64().ToString());

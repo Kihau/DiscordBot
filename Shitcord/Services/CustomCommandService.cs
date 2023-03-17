@@ -124,11 +124,11 @@ public class CustomCommandService
 
         var cnext = Client.GetCommandsNext();
         var found = cnext.FindCommand(cmd_name, out var ignored);
-        if (found != null) {
-            throw new CommandException(
-                $"`{cmd_name}` is a builtin command. Only commands added at runtime can be removed"
-            );
-        }
+        // if (found != null) {
+        //     throw new CommandException(
+        //         $"`{cmd_name}` is a builtin command. Only commands added at runtime can be removed"
+        //     );
+        // }
 
         if (!CommandSet.ContainsKey(cmd_name))
             throw new CommandException($"Command `{cmd_name}` does not exist");
