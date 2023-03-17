@@ -134,15 +134,14 @@ public class DiscordBot
             arg = content.ExtractNextArgument(ref arg_pos, cnext.Config.QuotationMarks);
         } 
 
-        if (context != null) {
-            if (context.Command == null) {
-                context.Command = new Command();
-            }
+        if (cmd_runtime != null) {
+            context ??= new();
+            context.Command ??= new();
+            context.RawArguments = cmd_args;
             context.Command.Name = cmd_name ?? "UnknownCommand";
-        }
 
-        if (cmd_runtime != null) 
-            Task.Run(() => ccommand.ExecuteCommandAsync(context, cmd_runtime, cmd_args.ToArray()));
+            Task.Run(() => ccommand.ExecuteCommandAsync(context, cmd_runtime));
+        }
 
         return Task.CompletedTask;
     }

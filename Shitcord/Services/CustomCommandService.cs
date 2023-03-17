@@ -155,7 +155,7 @@ public class CustomCommandService
         return command;
     }
 
-    public async Task ExecuteCommandAsync(CommandContext? context, CustomCommand cmd, string[]? args) {
+    public async Task ExecuteCommandAsync(CommandContext? context, CustomCommand cmd) {
         if (context == null)
             return;
 
@@ -193,7 +193,7 @@ public class CustomCommandService
             }
 
             // var args = context.RawArguments.ToArray();
-            lua_func.Call(args);
+            lua_func.Call(context.RawArguments.ToArray());
 
             await cnext.Executed.InvokeAsync(
                 cnext, new CommandExecutionEventArgs { 
