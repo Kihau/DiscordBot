@@ -134,6 +134,13 @@ public class DiscordBot
             arg = content.ExtractNextArgument(ref arg_pos, cnext.Config.QuotationMarks);
         } 
 
+        if (context != null) {
+            if (context.Command == null) {
+                context.Command = new Command();
+            }
+            context.Command.Name = cmd_name ?? "UnknownCommand";
+        }
+
         if (cmd_runtime != null) 
             Task.Run(() => ccommand.ExecuteCommandAsync(context, cmd_runtime, cmd_args.ToArray()));
 
@@ -245,7 +252,7 @@ public class DiscordBot
                 $" with {e.Context.RawArgumentString}" : ""; 
 
             Client.Logger.LogInformation(new EventId(2, "Executed"),
-                $"Called: {e.Command.Name}{ctx_args} by {e.Context.User.Id} in " +
+                $"Called: {e.Command?.Name}{ctx_args} by {e.Context.User.Id} in " +
                 $"{e.Context.Guild.Id}@{e.Context.Channel.Id}"
             ); 
             return Task.CompletedTask;

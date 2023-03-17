@@ -184,6 +184,11 @@ public class CustomCommandService
             var lua_func = lua["command"] as LuaFunction;
             // var lua_func = lua[cmd.CommandName] as LuaFunction;
             if (lua_func == null) {
+                await cnext.Executed.InvokeAsync(
+                    cnext, new CommandExecutionEventArgs { 
+                        Context = context 
+                    }
+                );
                 return;
             }
 
