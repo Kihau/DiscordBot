@@ -264,17 +264,6 @@ public class DiscordBot
     private async Task CommandErrorHandler(CommandsNextExtension sender, CommandErrorEventArgs e) {
         Client.Logger.LogError(new EventId(0, "Exception"), $"{e.Exception}"); 
 
-        // bool custom_command = false;
-        // var service = sender.Services.GetService(typeof(CustomCommandService)) as CustomCommandService;
-        // if (service != null && e.Command != null) {
-        //     // Console.WriteLine($"{e.Command.Name}");
-        //     custom_command = service.CommandExist(e.Command.Name);
-        // }
-
-        // TODO: Fine tune
-        // if (custom_command)
-        //     return;
-
         // if (!DebugEnabled && e.Exception is not CommandException)
         //     return;
 

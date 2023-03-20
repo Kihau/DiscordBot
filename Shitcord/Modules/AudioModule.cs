@@ -1,3 +1,4 @@
+using System.Net;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -234,8 +235,41 @@ public class AudioModule : BaseCommandModule
                 .WithColor(DiscordColor.Purple);
 
             this.Data.Enqueue(tracks);
+        } else throw new CommandException("Failed to enqueue");
+
+        await ctx.Channel.SendMessageAsync(embed.Build());
+    }
+
+    [Command("queuefile")]
+    [Description("Enqueues all songs from a file")]
+    public async Task QueueFileCommand(CommandContext ctx) {
+        var attachement = ctx.Message.Attachments.FirstOrDefault();
+        if (attachement == null) {
+            throw new CommandException("You must attach a file.");
         }
-        else throw new CommandException("Failed to enqueue");
+
+        var client = new HttpClient();
+        string content = await client.GetStringAsync(attachement.Url);
+        // await ctx.RespondAsync(content);
+        var songs = content.Split(new[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+
+        var tracks = new List<LavalinkTrack>();
+        foreach (var s in songs) {
+            var foundTracks = (await this.Audio.GetTracksAsync(s)).ToList();
+            if (foundTracks.Any())
+                tracks.Add(foundTracks.First());
+        }
+
+        var embed = new DiscordEmbedBuilder();
+        if (tracks.Any()) {
+            string description = $"Enqueued {tracks.Count} songs";
+
+            embed.WithTitle(":thumbsup:  |  Enqueued: ")
+                .WithDescription(description)
+                .WithColor(DiscordColor.Purple);
+
+            Data.Enqueue(tracks);
+        } else throw new CommandException("Failed to enqueue");
 
         await ctx.Channel.SendMessageAsync(embed.Build());
     }

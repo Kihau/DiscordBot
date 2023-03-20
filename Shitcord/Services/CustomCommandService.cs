@@ -1,8 +1,9 @@
+using NLua;
+
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
-using NLua;
+
 using Shitcord.Database;
 using Shitcord.Database.Queries;
 using Shitcord.Extensions;

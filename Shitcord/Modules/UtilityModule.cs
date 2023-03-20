@@ -271,46 +271,56 @@ public class UtilityModule : BaseCommandModule
         await clone.ModifyAsync(x => x.Name = name);
     }
 
-    // TODO: Also snipe images and videos (and other stuff)
     [Command("rmsnipe"), Description("Snipes last deleted message")]
-    public async Task RemoveSnipeCommand(CommandContext ctx, int index = 0) 
+    public async Task RemoveSnipeCommand(CommandContext ctx, int index = 0, int image = 0) 
     {
         var data = Mod.GetOrAddDeleteData(ctx.Guild);
 
         if (data.Count == 0)
             throw new CommandException("There is nothing to snipe");
 
-        if (index < 0 && index >= data.Count - 1)
+        if (index < 0 || index >= data.Count - 1)
             throw new CommandException("Incorrect index");
 
         var mess = data[data.Count - index - 1];
+
         var embed = new DiscordEmbedBuilder()
             .WithAuthor(mess.Author.Username, null , mess.Author.AvatarUrl)
             .WithDescription(mess.Content)
             .WithFooter($"#{mess.Channel.Name} - {mess.CreationTimestamp}")
             .WithColor(DiscordColor.Purple);
 
+        var atts = mess.Attachments;
+        if (atts.Count > 0 && image < atts.Count) {
+            embed.WithImageUrl(atts[image].Url);
+        }
+
         await ctx.RespondAsync(embed);
     }
 
-    // TODO: Also snipe images and videos (and other stuff)
     [Command("editsnipe"), Description("Snipes last message edit")]
-    public async Task EditSnipeCommand(CommandContext ctx, int index = 0) 
+    public async Task EditSnipeCommand(CommandContext ctx, int index = 0, int image = 0) 
     {
         var data = Mod.GetOrAddEditData(ctx.Guild);
 
         if (data.Count == 0)
             throw new CommandException("There is nothing to snipe");
 
-        if (index < 0 && index >= data.Count - 1)
+        if (index < 0 || index >= data.Count - 1)
             throw new CommandException("Incorrect index");
 
         var tup = data[data.Count - index - 1];
+
         var embed = new DiscordEmbedBuilder()
             .WithAuthor(tup.Item1.Author.Username, null , tup.Item1.Author.AvatarUrl)
             .WithDescription(tup.Item2)
             .WithFooter($"#{tup.Item1.Channel.Name}")
             .WithColor(DiscordColor.Purple);
+
+        var atts = tup.Item1.Attachments;
+        if (atts.Count > 0 && image < atts.Count) {
+            embed.WithImageUrl(atts[image].Url);
+        }
 
         await ctx.RespondAsync(embed);
     }
