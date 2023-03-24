@@ -53,7 +53,6 @@ public class SeekstampArgumentConverter : IArgumentConverter<SeekStamp>
             seconds = parseSeconds(time, 0);
         else seconds = parseSeconds(time, 1);
 
-        // TODO(?): Throw CommandException instead ???
         if (seconds == -1) 
             return Task.FromResult(Optional.FromNoValue<SeekStamp>());
         

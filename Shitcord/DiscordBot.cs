@@ -20,7 +20,6 @@ using DSharpPlus.CommandsNext.Exceptions;
 
 namespace Shitcord;
 
-// TODO: Slash commands
 // TODO: Markov meme - stores images when markov is enabled and generates random memes by adding top
 //       and bottom text as markov string
 
@@ -49,6 +48,7 @@ public class DiscordBot
         GlobalData.StaticInitalize();
         ConfigureClient();
         ConfigureCommands();
+        ConfigureSlash();
     }
 
     private void ConfigureClient() {
@@ -94,8 +94,7 @@ public class DiscordBot
         var cnext = Client.GetCommandsNext();
         var ccommand = cnext.Services.GetService<CustomCommandService>();
         if (ccommand == null) {
-            // TODO: Log error and exit here?
-            return Task.CompletedTask;
+            throw new Exception("Could not find custom commands. Was the service loaded?");
         }
 
         var cmd_start = e.Message.GetStringPrefixLength(Config.Discord.Prefix);
@@ -110,7 +109,7 @@ public class DiscordBot
         var cmd_name = content.ExtractNextArgument(ref arg_pos, cnext.Config.QuotationMarks);
 
         var cmd_builtin = cnext.FindCommand(content, out var args);
-        var cmd_runtime = ccommand.FindCommand(e.Guild, cmd_name);
+        var cmd_runtime = ccommand.FindCommand(cmd_name);
 
         var context = cnext.CreateContext(e.Message, prefix, cmd_builtin, args);
 
@@ -214,6 +213,9 @@ public class DiscordBot
 
         var _ = Task.Run(async () => await cnext.ExecuteCommandAsync(ctx));
         return true;
+    }
+
+    private void ConfigureSlash() {
     }
 
     private void ConfigureCommands()

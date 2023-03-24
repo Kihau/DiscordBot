@@ -329,6 +329,7 @@ public class GuildAudioData
         const int page_size = 20;
         // int page_count = tracks.Length / page_size;
         int page_count = ((int)Math.Ceiling(tracks.Length / (float)page_size)) - 1;
+        if (page_count < 0) page_count = 0;
 
         if (page < 0) page = 0;
         else if (page > page_count)

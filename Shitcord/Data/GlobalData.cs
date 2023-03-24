@@ -58,6 +58,7 @@ public static class GlobalData {
     // TODO: Do this more robust(but still hacky) way?
     // public static McWhitelist mc_whitelist = new();
 
+    // Temp stuff
     public const string whitelist_path = "Resources/mcwhitelist.json";
     public const string mcserver_path = "/home/kihau/Servers/Minecraft";
 }

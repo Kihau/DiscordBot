@@ -2,7 +2,6 @@ using NLua;
 
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using DSharpPlus.Entities;
 
 using Shitcord.Database;
 using Shitcord.Database.Queries;
@@ -35,10 +34,18 @@ public class CustomCommandService
 
         CommandSet = new();
         LoadCommandsFromDatabase();
-        // TODO: Check for collisions with hardcoded bot commands.
-        //       If collision occurred - log error and exit.
+        DetectCollisions();
 
         // Client.MessageCreated += MessageCreatedHandler;
+    }
+
+    private void DetectCollisions() {
+        var cnext = Client.GetCommandsNext();
+        foreach (var key in CommandSet.Keys) {
+            var found = cnext.FindCommand(key, out var ignored);
+            if (found != null)
+                throw new Exception($"Builtin and runtime commands collision for command `{key}`");
+        }
     }
 
     private void LoadCommandsFromDatabase() {
@@ -113,18 +120,35 @@ public class CustomCommandService
         );
     }
 
-    public string GetLuaScript(DiscordGuild guild, string cmd_name) {
+    public string GetLuaScript(string cmd_name) {
         cmd_name = cmd_name.ToLower();
         if (!CommandSet.ContainsKey(cmd_name))
             throw new CommandException($"Command `{cmd_name}` does not exist");
         return CommandSet[cmd_name];
     }
 
-    public void RemoveCommand(DiscordGuild guild, string cmd_name) {
+    public void RenameCommand(string old_name, string new_name) {
+        old_name = old_name.ToLower();
+
+        if (!CommandSet.ContainsKey(old_name))
+            throw new CommandException($"Command `{old_name}` does not exist");
+        CommandSet.Remove(old_name);
+        var lua_script = CommandSet[old_name];
+        CommandSet.Add(new_name, lua_script);
+
+        Database.executeUpdate(QueryBuilder
+            .New().Update(CustomCommandTable.TABLE_NAME)
+            .WhereEquals(CustomCommandTable.COMMAND_NAME, old_name)
+            .Set(CustomCommandTable.COMMAND_NAME, new_name)
+            .Build()
+        );
+    }
+
+    public void RemoveCommand(string cmd_name) {
         cmd_name = cmd_name.ToLower();
 
-        var cnext = Client.GetCommandsNext();
-        var found = cnext.FindCommand(cmd_name, out var ignored);
+        // var cnext = Client.GetCommandsNext();
+        // var found = cnext.FindCommand(cmd_name, out var ignored);
         // if (found != null) {
         //     throw new CommandException(
         //         $"`{cmd_name}` is a builtin command. Only commands added at runtime can be removed"
@@ -142,7 +166,7 @@ public class CustomCommandService
         );
     }
 
-    public CustomCommand? FindCommand(DiscordGuild guild, string? cmd_name) {
+    public CustomCommand? FindCommand(string? cmd_name) {
         if (cmd_name == null)
             return null;
 

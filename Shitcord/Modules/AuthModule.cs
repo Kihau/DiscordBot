@@ -252,26 +252,26 @@ public class AuthModule : BaseCommandModule
 
         [Command("remove")]
         public async Task RemoveCommand(CommandContext ctx, string cmd_name) {
-            Custom.RemoveCommand(ctx.Guild, cmd_name);
+            Custom.RemoveCommand(cmd_name);
             await ctx.RespondAsync("Successfully removed specified command 👍");
         }
 
         [Command("list")]
-        public Task ListCommand(CommandContext ctx) {
+        public async Task ListCommand(CommandContext ctx) {
             // TODO: List custom commands
             // Should be a part of the custom helper extension
-            return Task.CompletedTask;
+            await ctx.RespondAsync("TODO");
         }
 
         [Command("rename"), Aliases("rn")]
-        public Task RenameCommand(CommandContext ctx, string old_name, string new_name) {
-            // TODO: The rename command
-            return Task.CompletedTask;
+        public async Task RenameCommand(CommandContext ctx, string old_name, string new_name) {
+            Custom.RenameCommand(old_name, new_name);
+            await ctx.RespondAsync("Succesfully renamed the command");
         }
 
         [Command("showcode"), Aliases("show")]
         public async Task ShowcodeCommand(CommandContext ctx, string cmd_name) {
-            string lua_script = Custom.GetLuaScript(ctx.Guild, cmd_name);
+            string lua_script = Custom.GetLuaScript(cmd_name);
             // lua_script = lua_script.Insert(0, "```lua\n") + "\n```";
             await ctx.Channel.SendMessageAsync(
                 $"Lua code for command `{cmd_name}`: ```lua\n{lua_script}\n```"
