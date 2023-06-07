@@ -18,7 +18,6 @@
         </Content>
 
         <!-- Nuget dependencies -->
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.1.0" />
         <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.6" />
         <PackageReference Include="NLua" Version="1.6.2" />
     </ItemGroup>
