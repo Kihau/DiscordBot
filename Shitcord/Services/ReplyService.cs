@@ -41,7 +41,7 @@ public class ReplyService
 
         Client.MessageCreated += ReplyMessageHandler;
         Client.GuildDownloadCompleted += (_, _) => {
-            Task.Run(LoadDataFromDatabase);
+            LoadDataFromDatabase();
             return Task.CompletedTask;
         };
     }

@@ -98,14 +98,12 @@ public class GuildAudioData
         Lavalink = lavalink;
         DatabaseContext = database;
 
-        // Try to load UpdateMessages here
         InitializeDatabase();
 
         Queue = new ConcurrentQueue<LavalinkTrack>();
         PrevQueue = new ConcurrentQueue<LavalinkTrack>();
         Filters = new AudioFilters();
 
-        //Task.Run(AutoMessageUpdater);
         MessageUpdaterTimer = new Timer(AutoMessageUpdater, null, 1000, 1000);
     }
 
@@ -267,7 +265,7 @@ public class GuildAudioData
 
         try
         {
-            if (this.SongUpdateMessage != null)
+            if (this.SongUpdateMessage is not null)
                 await this.SongUpdateMessage.DeleteAsync();
         } catch { /* ignored */ }
 
@@ -282,7 +280,7 @@ public class GuildAudioData
 
         try
         {
-            if (this.QueueUpdateMessage != null)
+            if (this.QueueUpdateMessage is not null)
                 await this.QueueUpdateMessage.DeleteAsync();
         } catch { /* ignored */ }
 
@@ -297,7 +295,7 @@ public class GuildAudioData
 
         try
         {
-            if (this.QueueUpdateMessage != null)
+            if (this.QueueUpdateMessage is not null)
                 await this.QueueUpdateMessage.DeleteAsync();
         } catch { /* ignored */ }
 
@@ -311,7 +309,7 @@ public class GuildAudioData
 
         try
         {
-            if (this.SongUpdateMessage != null)
+            if (this.SongUpdateMessage is not null)
                 await this.SongUpdateMessage.DeleteAsync();
         } catch { /* ignored */ }
 
@@ -354,24 +352,24 @@ public class GuildAudioData
         };
 
         builder.AddComponents(
-            new DiscordButtonComponent(ButtonStyle.Primary, "firstpage_btn", null, false,
+            new DiscordButtonComponent(ButtonStyle.Primary, "firstpage_btn", " ", false,
                 new DiscordComponentEmoji("⏪")),
-            new DiscordButtonComponent(ButtonStyle.Primary, "prevpage_btn", null, false,
+            new DiscordButtonComponent(ButtonStyle.Primary, "prevpage_btn", " ", false,
                 new DiscordComponentEmoji("◀️")),
-            new DiscordButtonComponent(ButtonStyle.Primary, "nextpage_btn", null, false,
+            new DiscordButtonComponent(ButtonStyle.Primary, "nextpage_btn", " ", false,
                 new DiscordComponentEmoji("▶️")),
-            new DiscordButtonComponent(ButtonStyle.Primary, "lastpage_btn", null, false,
+            new DiscordButtonComponent(ButtonStyle.Primary, "lastpage_btn", " ", false,
                 new DiscordComponentEmoji("⏩"))
         );
 
         builder.AddComponents(
-            new DiscordButtonComponent(ButtonStyle.Success, "resendqueue_btn", null, false,
+            new DiscordButtonComponent(ButtonStyle.Success, "resendqueue_btn", " ", false,
                 new DiscordComponentEmoji("🔁")),
-            new DiscordButtonComponent(ButtonStyle.Success, "shuffle_btn", null, false,
+            new DiscordButtonComponent(ButtonStyle.Success, "shuffle_btn", " ", false,
                 new DiscordComponentEmoji("🎲")),
-            new DiscordButtonComponent(ButtonStyle.Danger, "clear_btn", null, false,
+            new DiscordButtonComponent(ButtonStyle.Danger, "clear_btn", " ", false,
                 new DiscordComponentEmoji("🗑️")),
-            new DiscordButtonComponent(ButtonStyle.Danger, "revertqueue_btn", null, false,
+            new DiscordButtonComponent(ButtonStyle.Danger, "revertqueue_btn", " ", false,
                 new DiscordComponentEmoji("↩️"))
         );
 
@@ -380,7 +378,7 @@ public class GuildAudioData
 
     private Task UpdateQueueMessage()
     {
-        if (this.QueueUpdateMessage == null || this.QueueUpdateChannel == null)
+        if (this.QueueUpdateMessage is null || this.QueueUpdateChannel is null)
             return Task.CompletedTask;
 
         Task.Run(async () => {
@@ -461,7 +459,7 @@ public class GuildAudioData
 
     private Task UpdateSongMessage()
     {
-        if (this.SongUpdateMessage == null || this.SongUpdateChannel == null)
+        if (this.SongUpdateMessage is null || this.SongUpdateChannel is null)
             return Task.CompletedTask;
 
         Task.Run(async () => {

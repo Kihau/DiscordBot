@@ -1,7 +1,5 @@
 using Shitcord;
-using DSharpPlus;
 using Shitcord.Services;
-using DSharpPlus.EventArgs;
 
 public class BotCommandHandler
 {

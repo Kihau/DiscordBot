@@ -181,6 +181,7 @@ public class DatabaseService
         var reader = executeRead(selectStatement);
         return RetrieveColumns(reader);
     }
+
     public int RetrieveNumberOfRows(string tableName)
     {
         var reader = executeRead(QueryBuilder.New()
@@ -266,11 +267,13 @@ public class DatabaseService
         reader.Close();
         return dataList;
     }
+
     public static List<T?> CastColumnToList<T>(List<object?>? aColumn)
     {
         IEnumerable<T?> enumerable = CastColumn<T>(aColumn);
         return enumerable.ToList();
     }
+
     public static T?[] CastColumnToArray<T>(List<object?>? aColumn)
     {
         IEnumerable<T?> enumerable = CastColumn<T>(aColumn);

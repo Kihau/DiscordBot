@@ -35,8 +35,6 @@ public class CustomCommandService
         CommandSet = new();
         LoadCommandsFromDatabase();
         DetectCollisions();
-
-        // Client.MessageCreated += MessageCreatedHandler;
     }
 
     private void DetectCollisions() {
@@ -233,65 +231,5 @@ public class CustomCommandService
                 }
             );
         }
-
-        // var args = context.RawArguments.ToArray();
-        // System.Console.WriteLine("ARGS ARE: " + args);
-        // var debug = lua_func.Call(args);
-        // System.Console.WriteLine("DEBUG: " + debug);
     }
-
-    // private Task MessageCreatedHandler(DiscordClient sender, MessageCreateEventArgs e) {
-    //     if (e.Message.Author.IsBot) 
-    //         return Task.CompletedTask;
-    //
-    //     var msg = e.Message.Content.Trim();
-    //     if (!msg.StartsWith(Config.Prefix)) 
-    //         return Task.CompletedTask;
-    //
-    //     msg = msg.Substring(Config.Prefix.Length);
-    //     var msg_args = msg.Split();
-    //
-    //     if (!CommandSet.ContainsKey(e.Guild.Id))
-    //         throw new CommandException("Get fixed boi");
-    //     var commands = CommandSet[e.Guild.Id];
-    //
-    //     var cmd_name = msg_args[0].ToLower();
-    //     if (!commands.ContainsKey(cmd_name))
-    //         throw new CommandException("Get fixed boi");
-    //
-    //     var lua_script = commands[cmd_name];
-    //
-    //     Lua lua = new();
-    //     lua.LoadCLRPackage();
-    //     var cnext = Client.GetCommandsNext();
-    //     // var command = cnext.FindCommand("luacommand", out var ignored);
-    //     // if (command == null)
-    //     //     throw new CommandException("Get fixed boi");
-    //     //
-    //     // var context = cnext.CreateFakeContext(
-    //     //     actor: e.Author,
-    //     //     channel: e.Channel,
-    //     //     messageContents: msg,
-    //     //     prefix: Config.Prefix,
-    //     //     cmd: command
-    //     // );
-    //     var context = cnext.CreateContext(e.Message, Config.Prefix, null);
-    //     lua["ctx"] = context;
-    //
-    //     // Executing the code
-    //     lua.DoString(lua_script);
-    //
-    //     var lua_func = lua[cmd_name] as LuaFunction;
-    //     if (lua_func == null) {
-    //         throw new CommandException("Get fixed boi");
-    //     }
-    //
-    //     // Does this thing throw? yes, catch it
-    //     var args = msg_args.Skip(1).ToArray();
-    //     System.Console.WriteLine("ARGS ARE: " + args);
-    //     var debug = lua_func.Call(args);
-    //     System.Console.WriteLine("DEBUG: " + debug);
-    //
-    //     return Task.CompletedTask;
-    // }
 }

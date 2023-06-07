@@ -13,9 +13,6 @@ public class BotConfig
     [JsonPropertyName("logging")] 
     public LoggingConfig Logging { get; set; } = new();
 
-    [JsonPropertyName("ssh")] 
-    public SshConfig Ssh { get; set; } = new();
-
     [JsonPropertyName("lavalink")] 
     public LavalinkConfig Lava { get; set; } = new();
 
@@ -51,7 +48,6 @@ public class BotConfig
         }
         
         Discord = config.Discord;
-        Ssh = config.Ssh;
         Lava = config.Lava;
         Logging = config.Logging;
         OpenAI = config.OpenAI;
@@ -101,25 +97,6 @@ public class LoggingConfig
 
     [JsonPropertyName("max-history")]
     public int MaxHistory { get; set; } = 30;
-}
-
-[Serializable]
-public class SshConfig
-{
-    [JsonPropertyName("hostname")]
-    public string Hostname { get; set; } = "localhost";
-
-    [JsonPropertyName("port")]
-    public int Port { get; set; } = 1111;
-
-    [JsonPropertyName("username")] 
-    public string Username { get; set; } = "derp";
-
-    [JsonPropertyName("key")]
-    public string Keyfile { get; set; } = "/path/to/a/keyfile";
-
-    [JsonPropertyName("enabled")] 
-    public bool IsEnabled { get; set; } = false;
 }
 
 [Serializable]

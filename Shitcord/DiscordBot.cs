@@ -71,7 +71,7 @@ public class DiscordBot
         Client.GuildDownloadCompleted += (_, _) => {
             Task.Run(StartBotConsoleInput);
             return Task.CompletedTask;
-        };
+        }; 
 
         if (Config.Lava.IsEnabled)
             Client.UseLavalink();
@@ -79,14 +79,14 @@ public class DiscordBot
         Client.UseInteractivity(new InteractivityConfiguration { 
             PollBehaviour = PollBehaviour.KeepEmojis,
             Timeout = TimeSpan.FromSeconds(300),
-            AckPaginationButtons = true,
+            // AckPaginationButtons = true,
         });
     }
 
-    private Task BotCommandHandler(DiscordClient sender, MessageCreateEventArgs e)
+    private async Task BotCommandHandler(DiscordClient sender, MessageCreateEventArgs e)
     {
         if (e.Author.IsBot)
-            return Task.CompletedTask;
+            return;
 
         // if (!this.Config.EnableDms && e.Channel.IsPrivate)
         //     return;
@@ -100,7 +100,7 @@ public class DiscordBot
         var cmd_start = e.Message.GetStringPrefixLength(Config.Discord.Prefix);
 
         if (cmd_start == -1)
-            return Task.CompletedTask;
+            return;
 
         string prefix = e.Message.Content.Substring(0, cmd_start);
         string content = e.Message.Content.Substring(cmd_start);
@@ -120,11 +120,11 @@ public class DiscordBot
                     Exception = new CommandNotFoundException(cmd_name ?? "UnknownCmd")
                 }
             ).Wait();
-            return Task.CompletedTask;
+            return;
         }
 
         if (cmd_builtin != null)
-            Task.Run(async () => await cnext.ExecuteCommandAsync(context));
+            await cnext.ExecuteCommandAsync(context);
 
         var cmd_args = new List<string>();
         string? arg = content.ExtractNextArgument(ref arg_pos, cnext.Config.QuotationMarks);;
@@ -139,10 +139,8 @@ public class DiscordBot
             context.RawArguments = cmd_args;
             context.Command.Name = cmd_name ?? "UnknownCommand";
 
-            Task.Run(() => ccommand.ExecuteCommandAsync(context, cmd_runtime));
+            await ccommand.ExecuteCommandAsync(context, cmd_runtime);
         }
-
-        return Task.CompletedTask;
     }
 
     private Task PrintMessage(DiscordClient client, MessageCreateEventArgs e) {
@@ -154,7 +152,6 @@ public class DiscordBot
                 $"[{e.Guild.Name}] {e.Author.Username}@{e.Channel.Name}: {message_content}"
             );
         }
-
         return Task.CompletedTask;
     }
 
@@ -287,7 +284,6 @@ public class DiscordBot
     {
         var collection = new ServiceCollection()
             .AddSingleton<DatabaseService>()
-            .AddSingleton<SshService>()
             .AddSingleton<WeatherService>()
             .AddSingleton<ReplyService>()
             .AddSingleton<MarkovService>()

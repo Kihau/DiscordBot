@@ -1,13 +1,10 @@
 using System.Diagnostics;
-using System.Reflection;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Interactivity;
-using Microsoft.CodeAnalysis.CSharp.Scripting;
-using Microsoft.CodeAnalysis.Scripting;
 using Shitcord.Extensions;
 using Shitcord.Services;
 using Shitcord.Database;
@@ -132,7 +129,7 @@ public class AuthModule : BaseCommandModule
             new DiscordButtonComponent(ButtonStyle.Primary, "stdoutput", "Standard Output"),
             new DiscordButtonComponent(ButtonStyle.Danger, "stderror", "Standard Error"),
             new DiscordButtonComponent(
-                ButtonStyle.Secondary, "clearexec", null, false, new DiscordComponentEmoji("🗑️")
+                ButtonStyle.Secondary, "clearexec", "", false, new DiscordComponentEmoji("🗑️")
             )
         );
 
@@ -164,10 +161,12 @@ public class AuthModule : BaseCommandModule
                 InteractionResponseType.DeferredMessageUpdate
             );
 
-            await ctx.Channel.SendPaginatedMessageAsync(
-                ctx.Member, pages, PaginationBehaviour.WrapAround, 
-                ButtonPaginationBehavior.DeleteMessage
-            );
+            if (ctx.Member is not null && pages is not null) {
+                await ctx.Channel.SendPaginatedMessageAsync(
+                    ctx.Member, pages, PaginationBehaviour.WrapAround, 
+                    ButtonPaginationBehavior.DeleteMessage
+                );
+            }
         }
     }
 
@@ -467,101 +466,102 @@ public class AuthModule : BaseCommandModule
         await ctx.RespondAsync($"\nSuccessfully executed, affected {rowsAffected} rows\n");
     }
 
-    [Command("eval")]
-    public async Task EvalCommand(CommandContext ctx, [RemainingText] string code)
-    {
-        int cs1 = code.IndexOf("```", StringComparison.Ordinal) + 3;
-        cs1 = code.IndexOf('\n', cs1) + 1;
-        int cs2 = code.LastIndexOf("```", StringComparison.Ordinal);
+    // Eval isnt really needed since I now have runtime commands
+    // [Command("eval")]
+    // public async Task EvalCommand(CommandContext ctx, [RemainingText] string code)
+    // {
+    //     int cs1 = code.IndexOf("```", StringComparison.Ordinal) + 3;
+    //     cs1 = code.IndexOf('\n', cs1) + 1;
+    //     int cs2 = code.LastIndexOf("```", StringComparison.Ordinal);
+    //
+    //     if (cs1 is -1 || cs2 is -1) {
+    //         cs1 = 0;
+    //         cs2 = code.Length;
+    //     }
+    //
+    //     string cs = code.Substring(cs1, cs2 - cs1);
+    //
+    //     DiscordMessage msg = await ctx.RespondAsync("", 
+    //         new DiscordEmbedBuilder()
+    //             .WithColor(new("#FF007F"))
+    //             .WithDescription("Evaluating...")
+    //             .Build()
+    //     );
+    //
+    //     try {
+    //         var globals = new TestVariables(ctx.Message, ctx.Client, ctx);
+    //
+    //         var sopts = ScriptOptions.Default;
+    //         sopts = sopts.WithImports(
+    //             "System", "System.Collections.Generic", "System.Linq", "System.Text",
+    //             "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", 
+    //             "DSharpPlus.CommandsNext", "Microsoft.Extensions.Logging", "Shitcord", 
+    //             "Shitcord.Extensions", "Shitcord.Database", "Shitcord.Database.Queries",
+    //             "Shitcord.Data"
+    //         );
+    //
+    //         IEnumerable<Assembly> asm = AppDomain.CurrentDomain.GetAssemblies()
+    //             .Where(xa => !xa.IsDynamic);
+    //         sopts = sopts.WithReferences(asm);
+    //
+    //         Script<object> script = CSharpScript.Create(cs, sopts, typeof(TestVariables));
+    //         script.Compile();
+    //
+    //         ScriptState<object> result = await script.RunAsync(globals);
+    //
+    //         if (result?.ReturnValue is DiscordEmbedBuilder or DiscordEmbed) {
+    //             await msg.ModifyAsync(m => m.WithEmbed(
+    //                 result.ReturnValue as DiscordEmbedBuilder ??
+    //                 result.ReturnValue as DiscordEmbed
+    //             ));
+    //         } else if (result?.ReturnValue is not null &&
+    //             !string.IsNullOrWhiteSpace(result.ReturnValue.ToString())) {
+    //             await msg.ModifyAsync(new DiscordEmbedBuilder {
+    //                 Title = "Evaluation Result",
+    //                 Description = result.ReturnValue.ToString(),
+    //                 Color = new DiscordColor("#007FFF")
+    //             }.Build());
+    //         } else {
+    //             await msg.ModifyAsync(new DiscordEmbedBuilder {
+    //                 Title = "Evaluation Successful", 
+    //                 Description = "No result was returned.",
+    //                 Color = new DiscordColor("#007FFF")
+    //             }.Build());
+    //         }    
+    //
+    //     } catch (Exception ex) {
+    //         await msg.ModifyAsync(new DiscordEmbedBuilder {
+    //             Title = "Evaluation Failure",
+    //             Description = $"**{ex.GetType()}**: {ex.Message.Split('\n')[0]}",
+    //             Color = new DiscordColor("#FF0000")
+    //         }.Build());
+    //     }
+    // }
 
-        if (cs1 is -1 || cs2 is -1) {
-            cs1 = 0;
-            cs2 = code.Length;
-        }
-
-        string cs = code.Substring(cs1, cs2 - cs1);
-
-        DiscordMessage msg = await ctx.RespondAsync("", 
-            new DiscordEmbedBuilder()
-                .WithColor(new("#FF007F"))
-                .WithDescription("Evaluating...")
-                .Build()
-        );
-
-        try {
-            var globals = new TestVariables(ctx.Message, ctx.Client, ctx);
-
-            var sopts = ScriptOptions.Default;
-            sopts = sopts.WithImports(
-                "System", "System.Collections.Generic", "System.Linq", "System.Text",
-                "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", 
-                "DSharpPlus.CommandsNext", "Microsoft.Extensions.Logging", "Shitcord", 
-                "Shitcord.Extensions", "Shitcord.Database", "Shitcord.Database.Queries",
-                "Shitcord.Data"
-            );
-
-            IEnumerable<Assembly> asm = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(xa => !xa.IsDynamic);
-            sopts = sopts.WithReferences(asm);
-
-            Script<object> script = CSharpScript.Create(cs, sopts, typeof(TestVariables));
-            script.Compile();
-
-            ScriptState<object> result = await script.RunAsync(globals);
-
-            if (result?.ReturnValue is DiscordEmbedBuilder or DiscordEmbed) {
-                await msg.ModifyAsync(m => m.WithEmbed(
-                    result.ReturnValue as DiscordEmbedBuilder ??
-                    result.ReturnValue as DiscordEmbed
-                ));
-            } else if (result?.ReturnValue is not null &&
-                !string.IsNullOrWhiteSpace(result.ReturnValue.ToString())) {
-                await msg.ModifyAsync(new DiscordEmbedBuilder {
-                    Title = "Evaluation Result",
-                    Description = result.ReturnValue.ToString(),
-                    Color = new DiscordColor("#007FFF")
-                }.Build());
-            } else {
-                await msg.ModifyAsync(new DiscordEmbedBuilder {
-                    Title = "Evaluation Successful", 
-                    Description = "No result was returned.",
-                    Color = new DiscordColor("#007FFF")
-                }.Build());
-            }    
-
-        } catch (Exception ex) {
-            await msg.ModifyAsync(new DiscordEmbedBuilder {
-                Title = "Evaluation Failure",
-                Description = $"**{ex.GetType()}**: {ex.Message.Split('\n')[0]}",
-                Color = new DiscordColor("#FF0000")
-            }.Build());
-        }
-    }
-
-    public record TestVariables
-    {
-        public TestVariables(DiscordMessage msg, DiscordClient client, CommandContext ctx)
-        {
-            Client = client;
-            Context = ctx;
-            Message = msg;
-            Channel = msg.Channel;
-            Guild = Channel.Guild;
-            User = Message.Author;
-            Reply = Message.ReferencedMessage;
-
-            if (Guild != null) 
-                Member = Guild.GetMemberAsync(User.Id).GetAwaiter().GetResult();
-        }
-
-        public DiscordMessage Message { get; }
-        public DiscordMessage Reply { get; }
-        public DiscordChannel Channel { get; }
-        public DiscordGuild? Guild { get; }
-        public DiscordUser User { get; }
-        public DiscordMember? Member { get; }
-        public CommandContext Context { get; }
-        public DiscordClient Client { get; }
-    }
+    // public record TestVariables
+    // {
+    //     public TestVariables(DiscordMessage msg, DiscordClient client, CommandContext ctx)
+    //     {
+    //         Client = client;
+    //         Context = ctx;
+    //         Message = msg;
+    //         Channel = msg.Channel;
+    //         Guild = Channel.Guild;
+    //         User = Message.Author;
+    //         Reply = Message.ReferencedMessage;
+    //
+    //         if (Guild != null) 
+    //             Member = Guild.GetMemberAsync(User.Id).GetAwaiter().GetResult();
+    //     }
+    //
+    //     public DiscordMessage Message { get; }
+    //     public DiscordMessage Reply { get; }
+    //     public DiscordChannel Channel { get; }
+    //     public DiscordGuild? Guild { get; }
+    //     public DiscordUser User { get; }
+    //     public DiscordMember? Member { get; }
+    //     public CommandContext Context { get; }
+    //     public DiscordClient Client { get; }
+    // }
 
 }

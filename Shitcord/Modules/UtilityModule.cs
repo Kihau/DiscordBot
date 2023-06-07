@@ -38,7 +38,7 @@ public class UtilityModule : BaseCommandModule
         if ((member?.Permissions & Permissions.ManageMessages) == 0)
             return;
 
-        if (channel == null)
+        if (channel is null)
             count += 1;
 
         channel ??= ctx.Channel;
@@ -131,10 +131,12 @@ public class UtilityModule : BaseCommandModule
                 String.IsNullOrWhiteSpace(list) ? "Autoreply list is empty" : list  
             );
 
-            await ctx.Channel.SendPaginatedMessageAsync(
-                ctx.Member, pages, PaginationBehaviour.Ignore, 
-                ButtonPaginationBehavior.DeleteMessage
-            );
+            if (pages is not null && ctx.Member is not null) {
+                await ctx.Channel.SendPaginatedMessageAsync(
+                    ctx.Member, pages, PaginationBehaviour.Ignore, 
+                    ButtonPaginationBehavior.DeleteMessage
+                );
+            }
         }
     }
 
@@ -285,7 +287,7 @@ public class UtilityModule : BaseCommandModule
         var mess = data[data.Count - index - 1];
 
         var embed = new DiscordEmbedBuilder()
-            .WithAuthor(mess.Author.Username, null , mess.Author.AvatarUrl)
+            .WithAuthor(mess.Author.Username, "", mess.Author.AvatarUrl)
             .WithDescription(mess.Content)
             .WithFooter($"#{mess.Channel.Name} - {mess.CreationTimestamp}")
             .WithColor(DiscordColor.Purple);
@@ -312,7 +314,7 @@ public class UtilityModule : BaseCommandModule
         var tup = data[data.Count - index - 1];
 
         var embed = new DiscordEmbedBuilder()
-            .WithAuthor(tup.Item1.Author.Username, null , tup.Item1.Author.AvatarUrl)
+            .WithAuthor(tup.Item1.Author.Username, "", tup.Item1.Author.AvatarUrl)
             .WithDescription(tup.Item2)
             .WithFooter($"#{tup.Item1.Channel.Name}")
             .WithColor(DiscordColor.Purple);

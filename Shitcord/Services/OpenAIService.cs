@@ -22,17 +22,13 @@ public class OpenAIService
         throw new NotImplementedException();
     }
 
-    private Task OpenAIMessageHandler(DiscordClient client, MessageCreateEventArgs e) {
-        // Task.Run(async () => {
-        Task.Run(() => {
-            if (e.Author.IsBot)
-                return;
+    private async Task OpenAIMessageHandler(DiscordClient client, MessageCreateEventArgs e) {
+        if (e.Author.IsBot)
+            return;
 
-            if (!Config.AllowedUsers.Contains(e.Author.Id)) 
-                return;
+        if (!Config.AllowedUsers.Contains(e.Author.Id)) 
+            return;
 
-            // When string is more than just a mention create the openai request
-        });
-        return Task.CompletedTask;
+        // When string is more than just a mention create the openai request
     }
 }

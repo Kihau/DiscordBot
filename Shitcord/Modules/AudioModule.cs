@@ -1,4 +1,3 @@
-using System.Net;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -49,7 +48,7 @@ public class AudioModule : BaseCommandModule
                 x.Value.Type == ChannelType.Voice
             ).Value;
 
-        if (channel == null)
+        if (channel is null)
             return;
 
         await this.Data.CreateConnectionAsync(channel);
@@ -76,7 +75,7 @@ public class AudioModule : BaseCommandModule
     ) {
         var channel = ctx.Member?.VoiceState?.Channel;
 
-        if (channel != null)
+        if (channel is not null)
             await this.Data.CreateConnectionAsync(channel);
 
         var msgBuilder = new DiscordMessageBuilder();

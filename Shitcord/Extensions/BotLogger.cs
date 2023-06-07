@@ -42,11 +42,12 @@ public class BotLogger : ILogger
         _path += LogFileName + ".log";
     }
 
+
     public void Log<TState>(
-        LogLevel log_level, EventId event_id, TState state, Exception exception, 
-        Func<TState, Exception, string> formatter
+        LogLevel log_level, EventId event_id, TState state, Exception? exception,
+        Func<TState, Exception?, string> formatter
     ) {
-        if (!IsEnabled(log_level))
+        if (!IsEnabled(log_level) || exception is null)
             return;
 
         var log_output = new StringBuilder();
@@ -178,6 +179,7 @@ public class BotLogger : ILogger
     public bool IsEnabled(LogLevel log_level)
         => log_level >= Config.MinLogLevel && Config.IsEnabled;
 
-    public IDisposable BeginScope<TState>(TState state) 
-        => throw new NotImplementedException();
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull {
+        throw new NotImplementedException();
+    }
 }

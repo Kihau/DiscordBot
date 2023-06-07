@@ -307,71 +307,67 @@ public class MarkovService
     //       the following requirements are met:
     //           - The message contains something more than just a bot mention
     //           - User that mentioned the bot is whitelisted to use openai
-    private Task MarkovMessageHandler(DiscordClient client, MessageCreateEventArgs e)
+    private async Task MarkovMessageHandler(DiscordClient client, MessageCreateEventArgs e)
     {
-        Task.Run(async () => {
-            if (e.Author.IsBot || !AuthorizedGuilds.Contains(e.Guild.Id))
-                return;
+        if (e.Author.IsBot || !AuthorizedGuilds.Contains(e.Guild.Id))
+            return;
 
-            var data = GetOrAddData(e.Guild);
+        var data = GetOrAddData(e.Guild);
 
-            if (!data.IsEnabled)
-                return;
+        if (!data.IsEnabled)
+            return;
 
-            string input = e.Message.Content.Trim();
-            // Ignore strings that start with the bot prefix
-            if (input.StartsWith(Config.Discord.Prefix)) 
-                return;
-            
-            // When the bot is tagged, respond with a markov message
-            if (input.StartsWith(Client.CurrentUser.Mention)) { 
-                var response = GenerateMarkovString(data.MinChainLength, data.MaxChainLength);
-                await e.Message.RespondAsync(response);
-                return;
-            }
+        string input = e.Message.Content.Trim();
+        // Ignore strings that start with the bot prefix
+        if (input.StartsWith(Config.Discord.Prefix)) 
+            return;
 
-            // Do not gather data from channels excluded by the user
-            if (data.ExcludedChannelIDs.Contains(e.Channel.Id))
-                return;
+        // When the bot is tagged, respond with a markov message
+        if (input.StartsWith(Client.CurrentUser.Mention)) { 
+            var response = GenerateMarkovString(data.MinChainLength, data.MaxChainLength);
+            await e.Message.RespondAsync(response);
+            return;
+        }
 
-            // NOTE: Max word length is set to 255 chars
-            List<string> parsed_input = input.Split(
-                new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries
-            ).Where(x => x.Length <= 255).ToList();
+        // Do not gather data from channels excluded by the user
+        if (data.ExcludedChannelIDs.Contains(e.Channel.Id))
+            return;
 
-            // Some logic to remove unnecessary characters
-            /*
-            for (int i = 0; i < data.Count; i++) {
-                if (_excludeCharacters.Contains(data[i].Last()))
-                    data[i] = data[i].Substring(0, data[i].Length - 2);
+        // NOTE: Max word length is set to 255 chars
+        List<string> parsed_input = input.Split(
+            new[] { ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries
+        ).Where(x => x.Length <= 255).ToList();
 
-                if (_excludeCharacters.Contains(data[i].First()))
-                    data[i] = data[i].Substring(1);
-            }
-            */
+        // Some logic to remove unnecessary characters
+        /*
+           for (int i = 0; i < data.Count; i++) {
+           if (_excludeCharacters.Contains(data[i].Last()))
+           data[i] = data[i].Substring(0, data[i].Length - 2);
 
-            FeedStringsToMarkov(parsed_input);
+           if (_excludeCharacters.Contains(data[i].First()))
+           data[i] = data[i].Substring(1);
+           }
+           */
 
-            // Logic to auto respond to user messages with markov strings
-            if (!data.ResponseEnabled)
-                return;
+        FeedStringsToMarkov(parsed_input);
 
-            var time = DateTime.Now - data.LastResponse;
-            if (time < data.ResponseTimeout)
-                return;
+        // Logic to auto respond to user messages with markov strings
+        if (!data.ResponseEnabled)
+            return;
 
-            var rolled_chance = Rng.Next(GuildMarkovData.MAX_CHANCE);
-            if (data.ResponseChance >= rolled_chance) {
-                data.LastResponse = DateTime.Now;
-                var markov_text = GenerateMarkovString(data.MinChainLength, data.MaxChainLength);
+        var time = DateTime.Now - data.LastResponse;
+        if (time < data.ResponseTimeout)
+            return;
 
-                var direct_respond = Rng.Next(2) == 1;
-                if (direct_respond) 
-                    await e.Message.RespondAsync(markov_text);
-                else await e.Channel.SendMessageAsync(markov_text);
-            }
-        });
+        var rolled_chance = Rng.Next(GuildMarkovData.MAX_CHANCE);
+        if (data.ResponseChance >= rolled_chance) {
+            data.LastResponse = DateTime.Now;
+            var markov_text = GenerateMarkovString(data.MinChainLength, data.MaxChainLength);
 
-        return Task.CompletedTask;
+            var direct_respond = Rng.Next(2) == 1;
+            if (direct_respond) 
+                await e.Message.RespondAsync(markov_text);
+            else await e.Channel.SendMessageAsync(markov_text);
+        }
     }
 }

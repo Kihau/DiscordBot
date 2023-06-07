@@ -13,13 +13,6 @@
         "directory": "botlogs",
         "max-history": 30
     },
-    "ssh": {
-        "hostname": "localhost",
-        "port": 1111,
-        "username": "derp",
-        "key": "/my/epic/keyfile",
-        "enabled": false
-    },
     "lavalink": {
         "hostname": "127.0.0.1",
         "port": 2333,

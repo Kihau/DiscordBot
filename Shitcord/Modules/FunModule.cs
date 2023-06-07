@@ -51,12 +51,6 @@ public class FunModule : BaseCommandModule
         await ctx.RespondAsync(FunModule.solarlessons[index]);
     }
 
-    // [Command("runscript"), Aliases("script", "python")]
-    // async Task RunSciptCommand(
-    //     CommandContext ctx, string scipt_name, [RemainingText] string? input_args = null
-    // ) {
-    // }
-
     [Command("mcwhitelist"), Aliases("whitelist")]
     public async Task McWhitelistCommand(CommandContext ctx, string username) {
         // await ctx.Message.DeleteAsync();

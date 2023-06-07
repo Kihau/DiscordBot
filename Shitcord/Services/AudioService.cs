@@ -26,8 +26,10 @@ public class AudioService
         Client.VoiceStateUpdated += BotVoiceTimeout;
         Client.VoiceStateUpdated += BotVoiceAutoJoin;
         Client.ComponentInteractionCreated += AudioUpdateButtons;
-
-        Client.GuildDownloadCompleted += (_, _) => Task.Run(LoadAllDataFromDatabase);
+        Client.GuildDownloadCompleted += (_, _) => {
+            LoadAllDataFromDatabase();
+            return Task.CompletedTask;
+        };
     }
 
     private void LoadAllDataFromDatabase() {
@@ -41,148 +43,141 @@ public class AudioService
         }
     }
 
-    private Task AudioUpdateButtons(
+    private async Task AudioUpdateButtons(
         DiscordClient client, ComponentInteractionCreateEventArgs args
     ) {
-        Task.Run(async () => {
-            AudioData.TryGetValue(args.Guild.Id, out var data);
-            if (data == null) 
-                return;
+        AudioData.TryGetValue(args.Guild.Id, out var data);
+        if (data == null) 
+            return;
 
-            bool deferred = true;
-            switch (args.Id)
-            {
-            // Song Info
-            case "skip_btn": {
-                await data.SkipAsync(1);
-                data.SongRequiresUpdate = true;
-                data.QueueRequiresUpdate = true;
-            } break;
-            case "prev_btn": {
-                await data.PreviousAsync();
-                data.SongRequiresUpdate = true;
-                data.QueueRequiresUpdate = true;
-            } break;
-            case "remove_btn": {
-                await data.SkipAsync(1, true);
-                data.SongRequiresUpdate = true;
-                data.QueueRequiresUpdate = true;
-            } break;
-            case "pause_btn": { 
-                if (data.IsPaused)
-                    await data.ResumeAsync();
-                else await data.PauseAsync();
+        bool deferred = true;
+        switch (args.Id)
+        {
+        // Song Info
+        case "skip_btn": {
+            await data.SkipAsync(1);
+            data.SongRequiresUpdate = true;
+            data.QueueRequiresUpdate = true;
+        } break;
+        case "prev_btn": {
+            await data.PreviousAsync();
+            data.SongRequiresUpdate = true;
+            data.QueueRequiresUpdate = true;
+        } break;
+        case "remove_btn": {
+            await data.SkipAsync(1, true);
+            data.SongRequiresUpdate = true;
+            data.QueueRequiresUpdate = true;
+        } break;
+        case "pause_btn": { 
+            if (data.IsPaused)
+                await data.ResumeAsync();
+            else await data.PauseAsync();
 
-                data.SongRequiresUpdate = true;
-                data.QueueRequiresUpdate = true;
-            } break;
-            case "state_btn": { 
-                if (!data.IsConnected) {
-                    var member = await args.Guild.GetMemberAsync(args.User.Id);
-                    if (member.VoiceState != null)
-                        await data.CreateConnectionAsync(member.VoiceState.Channel);
-                } else if (!data.IsStopped) {
-                    await data.StopAsync();
-                } else await data.PlayAsync();
+            data.SongRequiresUpdate = true;
+            data.QueueRequiresUpdate = true;
+        } break;
+        case "state_btn": { 
+            if (!data.IsConnected) {
+                var member = await args.Guild.GetMemberAsync(args.User.Id);
+                if (member.VoiceState != null)
+                    await data.CreateConnectionAsync(member.VoiceState.Channel);
+            } else if (!data.IsStopped) {
+                await data.StopAsync();
+            } else await data.PlayAsync();
 
-                data.SongRequiresUpdate = true;
-                data.QueueRequiresUpdate = true;
-            } break;
-            case "leave_btn": {
-                await data.DestroyConnectionAsync();
-                data.SongRequiresUpdate = true;
-            } break;
-            case "loop_btn": {
-                if (data.Looping == LoopingMode.Shuffle)
-                    data.Looping = 0;
-                else data.Looping++;
-                data.SongRequiresUpdate = true;
-            } break;
-            case "resendsong_btn": {
-                // TODO: Create a method for this (resendsongupdate or rsu) (database changes are
-                //       not necessary for the resend?)
-                var message = data.GenerateSongMessage();
-                if (data.SongUpdateMessage == null || data.SongUpdateChannel == null)
-                    break;
+            data.SongRequiresUpdate = true;
+            data.QueueRequiresUpdate = true;
+        } break;
+        case "leave_btn": {
+            await data.DestroyConnectionAsync();
+            data.SongRequiresUpdate = true;
+        } break;
+        case "loop_btn": {
+            if (data.Looping == LoopingMode.Shuffle)
+                data.Looping = 0;
+            else data.Looping++;
+            data.SongRequiresUpdate = true;
+        } break;
+        case "resendsong_btn": {
+            // TODO: Create a method for this (resendsongupdate or rsu) (database changes are
+            //       not necessary for the resend?)
+            var message = data.GenerateSongMessage();
+            if (data.SongUpdateMessage is null || data.SongUpdateChannel is null)
+                break;
 
-                await data.SongUpdateMessage.DeleteAsync();
-                data.SongUpdateMessage = await data.SongUpdateChannel.SendMessageAsync(message);
-            } break;
+            await data.SongUpdateMessage.DeleteAsync();
+            data.SongUpdateMessage = await data.SongUpdateChannel.SendMessageAsync(message);
+        } break;
 
-            // Queue Info
-            case "firstpage_btn": {
-                data.page = 0;
-                data.QueueRequiresUpdate = true;
-            } break;
-            case "nextpage_btn": {
-                data.page++;
-                data.QueueRequiresUpdate = true;
-            } break;
-            case "prevpage_btn": {
-                data.page--;
-                data.QueueRequiresUpdate = true;
-            } break;
-            case "lastpage_btn": {
-                data.page = Int32.MaxValue;
-                data.QueueRequiresUpdate = true;
-            } break;
-            case "shuffle_btn": {
-                data.Shuffle();
-                data.SongRequiresUpdate = true;
-                data.QueueRequiresUpdate = true;
-            } break;
-            case "resendqueue_btn": {
-                // TODO: Create a method for this (resendqueueupdate or rqu) (database changes are
-                //       not necessary for the resend?)
-                var message = data.GenerateQueueMessage();
-                if (data.QueueUpdateMessage == null || data.QueueUpdateChannel == null)
-                    break;
+        // Queue Info
+        case "firstpage_btn": {
+            data.page = 0;
+            data.QueueRequiresUpdate = true;
+        } break;
+        case "nextpage_btn": {
+            data.page++;
+            data.QueueRequiresUpdate = true;
+        } break;
+        case "prevpage_btn": {
+            data.page--;
+            data.QueueRequiresUpdate = true;
+        } break;
+        case "lastpage_btn": {
+            data.page = Int32.MaxValue;
+            data.QueueRequiresUpdate = true;
+        } break;
+        case "shuffle_btn": {
+            data.Shuffle();
+            data.SongRequiresUpdate = true;
+            data.QueueRequiresUpdate = true;
+        } break;
+        case "resendqueue_btn": {
+            // TODO: Create a method for this (resendqueueupdate or rqu) (database changes are
+            //       not necessary for the resend?)
+            var message = data.GenerateQueueMessage();
+            if (data.QueueUpdateMessage is null || data.QueueUpdateChannel is null)
+                break;
 
-                await data.QueueUpdateMessage.DeleteAsync();
-                data.QueueUpdateMessage = await data.QueueUpdateChannel.SendMessageAsync(message);
-            } break;
-            case "clear_btn": {
-                data.ClearQueue();
-                data.SongRequiresUpdate = true;
-                data.QueueRequiresUpdate = true;
-            } break;
-            case "revertqueue_btn": {
-                data.RevertQueue();
-                data.SongRequiresUpdate = true;
-                data.QueueRequiresUpdate = true;
-            } break;
-            default:
-                deferred = false;
-                break; 
-            }
-            
-            if (deferred) {
-                await args.Interaction.CreateResponseAsync(
-                    InteractionResponseType.DeferredMessageUpdate
-                );
-            }
-        });
-        return Task.CompletedTask;
+            await data.QueueUpdateMessage.DeleteAsync();
+            data.QueueUpdateMessage = await data.QueueUpdateChannel.SendMessageAsync(message);
+        } break;
+        case "clear_btn": {
+            data.ClearQueue();
+            data.SongRequiresUpdate = true;
+            data.QueueRequiresUpdate = true;
+        } break;
+        case "revertqueue_btn": {
+            data.RevertQueue();
+            data.SongRequiresUpdate = true;
+            data.QueueRequiresUpdate = true;
+        } break;
+        default:
+            deferred = false;
+            break; 
+        }
+        
+        if (deferred) {
+            await args.Interaction.CreateResponseAsync(
+                InteractionResponseType.DeferredMessageUpdate
+            );
+        }
     }
 
-    private Task BotVoiceAutoJoin(DiscordClient sender, VoiceStateUpdateEventArgs args) {
-        Task.Run(async () => {
-            AudioData.TryGetValue(args.Guild.Id, out var data);
-            if (data == null || data.IsConnected || !data.AutoJoinChannel) 
-                return;
+    private async Task BotVoiceAutoJoin(DiscordClient sender, VoiceStateUpdateEventArgs args) {
+        AudioData.TryGetValue(args.Guild.Id, out var data);
+        if (data == null || data.IsConnected || !data.AutoJoinChannel) 
+            return;
 
-            if (args.Channel == null)
-                return;
+        if (args.Channel is null)
+            return;
 
-            if (args.Before == null && args.Channel.Users.Count == 1) {
-                await data.CreateConnectionAsync(args.Channel);
+        if (args.Before is null && args.Channel.Users.Count == 1) {
+            await data.CreateConnectionAsync(args.Channel);
 
-                if (data.ResumeOnAutoJoin)
-                    await data.PlayAsync();
-            }
-        });
-
-        return Task.CompletedTask;
+            if (data.ResumeOnAutoJoin)
+                await data.PlayAsync();
+        }
     }
     
     private Task BotVoiceTimeout(DiscordClient sender, VoiceStateUpdateEventArgs args) {
@@ -190,7 +185,7 @@ public class AudioService
         if (data is not {IsConnected: true}) 
             return Task.CompletedTask;
 
-        if (data.Channel == null)
+        if (data.Channel is null)
             return Task.CompletedTask;
         
         if (data.Channel.Users.Count <= 1)
