@@ -3,7 +3,7 @@ Discord bot written in C#
 
 ## Dependencies:
 - Required:
-    - [.Net 6.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
+    - [.Net 7.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
     - [DSharpplus](https://github.com/kihau/DSharpPlus)
 - Optional:
     - [Lavalink](https://github.com/freyacodes/Lavalink)
