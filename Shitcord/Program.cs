@@ -1,8 +1,6 @@
 ﻿using Shitcord;
 
-// TODO: Add a way to create global commands at runtime (might require custom help handler)
 // TODO: Custom help handler
-// TODO: Create one discord message (a terminal) and print actual terminal output (add interaction button)
 //
 // NOTE: We could store custom prefix for each guild and use Config.Prefix
 //       as a default prefix.

@@ -11,6 +11,7 @@ using Shitcord.Database;
 using Shitcord.Database.Queries;
 using DSharpPlus.Interactivity.Enums;
 using Microsoft.Data.Sqlite;
+using NLua;
 
 namespace Shitcord.Modules;
 
@@ -464,5 +465,103 @@ public class AuthModule : BaseCommandModule
             return;
         }
         await ctx.RespondAsync($"\nSuccessfully executed, affected {rowsAffected} rows\n");
+    }
+
+    [Command("eval")]
+    public async Task EvalCommand(CommandContext ctx, [RemainingText] string code)
+    {
+        int cs1 = code.IndexOf("```", StringComparison.Ordinal) + 3;
+        cs1 = code.IndexOf('\n', cs1) + 1;
+        int cs2 = code.LastIndexOf("```", StringComparison.Ordinal);
+    
+        if (cs1 is -1 || cs2 is -1) {
+            cs1 = 0;
+            cs2 = code.Length;
+        }
+    
+        string lua_code = code.Substring(cs1, cs2 - cs1);
+    
+        DiscordMessage msg = await ctx.RespondAsync("", 
+            new DiscordEmbedBuilder()
+                .WithColor(new("#FF007F"))
+                .WithDescription("Evaluating...")
+                .Build()
+        );
+    
+        //
+        // TODO: Eval lua code instead of C#
+        //
+        
+        Lua lua = new();
+        try {
+            // catch and do some shit on fail
+            lua.LoadCLRPackage();
+            lua["ctx"] = ctx;
+
+            // Executing the code (is this non-blocking?)
+            lua.DoString(lua_code);
+
+            await msg.ModifyAsync(new DiscordEmbedBuilder {
+                Title = "Evaluation Successful", 
+                Description = "Lua script finished the execution.",
+                Color = new DiscordColor(DiscordColor.Purple.Value)
+            }.Build());
+
+        } catch (Exception e) {
+            await msg.ModifyAsync(new DiscordEmbedBuilder {
+                Title = "Evaluation Failure",
+                Description = $"**{e.GetType()}**: {e.Message.Split('\n')[0]}",
+                Color = new DiscordColor("#FF0000")
+            }.Build());
+        }
+
+        /* try {
+            var globals = new TestVariables(ctx.Message, ctx.Client, ctx);
+
+            var sopts = ScriptOptions.Default;
+            sopts = sopts.WithImports(
+                "System", "System.Collections.Generic", "System.Linq", "System.Text",
+                "System.Threading.Tasks", "DSharpPlus", "DSharpPlus.Entities", 
+                "DSharpPlus.CommandsNext", "Microsoft.Extensions.Logging", "Shitcord", 
+                "Shitcord.Extensions", "Shitcord.Database", "Shitcord.Database.Queries",
+                "Shitcord.Data"
+            );
+
+            IEnumerable<Assembly> asm = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(xa => !xa.IsDynamic);
+            sopts = sopts.WithReferences(asm);
+
+            Script<object> script = CSharpScript.Create(cs, sopts, typeof(TestVariables));
+            script.Compile();
+
+            ScriptState<object> result = await script.RunAsync(globals);
+
+            if (result?.ReturnValue is DiscordEmbedBuilder or DiscordEmbed) {
+                await msg.ModifyAsync(m => m.WithEmbed(
+                    result.ReturnValue as DiscordEmbedBuilder ??
+                    result.ReturnValue as DiscordEmbed
+                ));
+            } else if (result?.ReturnValue is not null &&
+                !string.IsNullOrWhiteSpace(result.ReturnValue.ToString())) {
+                await msg.ModifyAsync(new DiscordEmbedBuilder {
+                    Title = "Evaluation Result",
+                    Description = result.ReturnValue.ToString(),
+                    Color = new DiscordColor("#007FFF")
+                }.Build());
+            } else {
+                await msg.ModifyAsync(new DiscordEmbedBuilder {
+                    Title = "Evaluation Successful", 
+                    Description = "No result was returned.",
+                    Color = new DiscordColor("#007FFF")
+                }.Build());
+            }    
+
+        } catch (Exception ex) {
+            await msg.ModifyAsync(new DiscordEmbedBuilder {
+                Title = "Evaluation Failure",
+                Description = $"**{ex.GetType()}**: {ex.Message.Split('\n')[0]}",
+                Color = new DiscordColor("#FF0000")
+            }.Build());
+        } */
     }
 }
