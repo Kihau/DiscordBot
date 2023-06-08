@@ -1,4 +1,4 @@
 [submodule "DSharpPlus"]
-	path = DSharpPlus
-	url = https://github.com/Kihau/DSharpPlus.git
-    branch = master
+path = DSharpPlus
+url = https://github.com/Kihau/DSharpPlus.git
+branch = master
