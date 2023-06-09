@@ -23,7 +23,8 @@ public class StringMatching
                 }
             }
         }
-        //int effectiveLength = names.Sum(q => q.Length);
+        
+        accuracy = Math.Min(accuracy, name.Length);
         return Math.Min(accuracy, target.Length);
     }
 

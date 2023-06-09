@@ -6,6 +6,8 @@ public class MatchingTest{
     private static int passedTests, failedTests;
     
     public static void RunTests(){
+        test("lil yachty", "lil yachty russia", 9);
+        test("lil yachty", "lil yachty", 9);
         test("dekstop", "desktop", 6);
         test("beeee gees", "beeee", 5);
         test("gees", "skeler", 2);
