@@ -20,14 +20,18 @@ public class AudioModule : BaseCommandModule{
     private static HttpClient SharedClient = new();
     private GuildAudioData Data { get; set; }
     private AudioService Audio { get; init; }
+    private GeniusConfig Genius { get; init; }
 
 #pragma warning disable CS8618
-    public AudioModule(AudioService service) => this.Audio = service;
+    public AudioModule(AudioService service, DiscordBot bot) {
+        Audio = service;
+        Genius = bot.Config.Genius;
+    } 
 #pragma warning restore CS8618
 
     public override async Task BeforeExecutionAsync(CommandContext ctx)
     {
-        this.Data = this.Audio.GetOrAddData(ctx.Guild);
+        Data = Audio.GetOrAddData(ctx.Guild);
         await base.BeforeExecutionAsync(ctx);
     }
 
