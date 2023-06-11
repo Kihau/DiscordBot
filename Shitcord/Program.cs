@@ -9,7 +9,7 @@ static class Program
     static void Main(string[] args)
     {
         #if DEBUG
-            BotConfig config = new BotConfig("Resources/config-example.json");
+            BotConfig config = new BotConfig("Resources/config-debug.json");
         #else
             BotConfig config = new BotConfig("Resources/config.json");
         #endif
