@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Http.Headers;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -14,8 +16,8 @@ namespace Shitcord.Modules;
 // TODO: savequque, loadqueue (number) and listqueues, markovqueue commands
 
 [Description("Audio and music commands")]
-public class AudioModule : BaseCommandModule
-{
+public class AudioModule : BaseCommandModule{
+    private static HttpClient SharedClient = new();
     private GuildAudioData Data { get; set; }
     private AudioService Audio { get; init; }
 
@@ -211,6 +213,22 @@ public class AudioModule : BaseCommandModule
         await ctx.Channel.SendMessageAsync(embed.Build());
     }
 
+    [Command("lyrics"), Aliases("lyr")]
+    [Description("Fetches currently lyrics of the song that's currently being played")]
+    public async Task LyricsCommand(){
+        SharedClient.Timeout = TimeSpan.FromMilliseconds(2000);
+        const string ACCESS_TOKEN = "";
+        string songName = "Lil Yachty";
+        var searchRequest = new HttpRequestMessage {
+            RequestUri = new Uri($"https://api.genius.com/search?q={songName}"),
+            Method = HttpMethod.Get,
+        };
+        SharedClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue($"Bearer {ACCESS_TOKEN}");
+        HttpResponseMessage response = await SharedClient.SendAsync(searchRequest);
+        Console.WriteLine($"Response:{response.StatusCode}");
+
+    }
+
     [Command("queuemany"), Aliases("qm")]
     [Description("Enqueues multiple songs")]
     public async Task QueueManyCommand(
@@ -246,9 +264,8 @@ public class AudioModule : BaseCommandModule
         if (attachement == null) {
             throw new CommandException("You must attach a file.");
         }
-
-        var client = new HttpClient();
-        string content = await client.GetStringAsync(attachement.Url);
+        
+        string content = await SharedClient.GetStringAsync(attachement.Url);
         // await ctx.RespondAsync(content);
         var songs = content.Split(new[] { ' ', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -549,7 +566,6 @@ public class AudioModule : BaseCommandModule
     [Description("Leaves the voice channel")]
     public async Task LeaveCommand(CommandContext ctx)
         => await Data.DestroyConnectionAsync();
-
 
     [Command("autoleave")]
     [Description("Sets timeout for the auto leave when noone is in a voice channel")]

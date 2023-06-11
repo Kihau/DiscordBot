@@ -1,10 +1,9 @@
-﻿using System.Reflection.Metadata.Ecma335;
-
+﻿
 namespace Shitcord.Extensions;
 
 public class StringMatching
 {
-    private const int MIN_LEN_THRESHOLD = 2;
+    private const int MIN_LEN_THRESHOLD = 3;
     // larger value = better matching
     public static int Accuracy(string name, string target)
     {
@@ -16,8 +15,8 @@ public class StringMatching
         string[] names = name.ToLower().Split(" ");
         string[] targets = target.ToLower().Split(" ");
         foreach (string q in names) {
-            foreach (string t in targets) {
-                int tmp = matchingLen(q, t);
+            foreach (string t in targets){
+                int tmp = matchingLen(q.ToLower(), t.ToLower());
                 if (tmp >= MIN_LEN_THRESHOLD) {
                     accuracy += tmp;
                 }
