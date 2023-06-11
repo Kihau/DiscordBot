@@ -19,6 +19,9 @@ public class BotConfig
     [JsonPropertyName("openai")] 
     public OpenAIConfig OpenAI { get; set; } = new();
 
+    [JsonPropertyName("genius")] 
+    public GeniusConfig Genius { get; set; } = new();
+
     public BotConfig() { }
 
     public BotConfig(string? path = null)
@@ -28,7 +31,7 @@ public class BotConfig
             SaveConfig(path);
 
             throw new Exception(
-                "Example config file was generated. Edit it in order to start the bot"
+                $"Example config file was generated {path}. Edit it in order to start the bot"
             );
         }
         
@@ -118,8 +121,7 @@ public class LavalinkConfig
     public bool AutoStart { get; set; } = false;
 
     [JsonPropertyName("javapath")]
-    public string JavaPath { get; set; } 
-        = "path/to/java.exe (or just java if set as an enviroment veriable)";
+    public string JavaPath { get; set; } = "path/to/java.exe (or just java if set as an enviroment veriable)";
 
     [JsonPropertyName("connectiontimeout")]
     public int ConnectionTimeout { get; set; } = 3000;
@@ -136,4 +138,14 @@ public class OpenAIConfig
 
     [JsonPropertyName("users")]
     public List<ulong> AllowedUsers { get; set; } = new();
+}
+
+[Serializable]
+public class GeniusConfig 
+{
+    [JsonPropertyName("token")] 
+    public string Token { get; set; } = "your genus token";
+
+    [JsonPropertyName("min_length")] 
+    public int MinLength { get; set; } = 3;
 }

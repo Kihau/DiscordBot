@@ -1,9 +1,9 @@
 {
     "discord": {
-        "token": "<your-bot-token>",
-        "prefix": "/",
+        "token": "discord token",
+        "prefix": "\u003E\u003E",
         "cache": 100,
-        "status": "bot discord status",
+        "status": "something",
         "startdelay": 0
     },
     "logging": {
@@ -14,17 +14,21 @@
         "max-history": 30
     },
     "lavalink": {
-        "hostname": "127.0.0.1",
+        "hostname": "localhost",
         "port": 2333,
-        "password": "<lavlink-password>",
+        "password": "password here",
         "enabled": false,
         "autostart": false,
-        "javapath": "/path/to/java (or just java as env var)",
-        "connectiontimout": 3000
+        "javapath": "path/to/java.exe (or just java if set as an enviroment veriable)",
+        "connectiontimeout": 3000
     },
     "openai": {
         "enabled": false,
-        "token": "openai api token",
+        "token": "openai api key",
         "users": []
+    },
+    "genius": {
+        "token": "your genus token",
+        "min_length": 3
     }
 }
