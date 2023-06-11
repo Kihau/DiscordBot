@@ -3,7 +3,7 @@
         "token": "discord token",
         "prefix": "\u003E\u003E",
         "cache": 100,
-        "status": "something",
+        "status": "discord bot status",
         "startdelay": 0
     },
     "logging": {
@@ -28,7 +28,7 @@
         "users": []
     },
     "genius": {
-        "token": "your genus token",
+        "token": "your genius token",
         "min_length": 3
     }
 }
