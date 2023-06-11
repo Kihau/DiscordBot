@@ -54,6 +54,7 @@ public class BotConfig
         Lava = config.Lava;
         Logging = config.Logging;
         OpenAI = config.OpenAI;
+        Genius = config.Genius;
     }
 
     public void SaveConfig(string path)
