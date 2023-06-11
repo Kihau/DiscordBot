@@ -217,6 +217,7 @@ public class AudioModule : BaseCommandModule{
     [Description("Fetches currently lyrics of the song that's currently being played")]
     public async Task LyricsCommand(){
         SharedClient.Timeout = TimeSpan.FromMilliseconds(2000);
+        //TODO: add genius config - token, accuracy_ratio, min_len_threshold
         const string ACCESS_TOKEN = "";
         string songName = "Lil Yachty";
         var searchRequest = new HttpRequestMessage {
