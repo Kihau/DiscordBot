@@ -17,8 +17,10 @@ public class HttpTests{
         thread.Start();
         
         Console.WriteLine("OUTPUT");
-        SharedClient.Timeout = TimeSpan.FromSeconds(500);
-        string songName = "triple one driving range";
+        SharedClient.Timeout = TimeSpan.FromSeconds(12);
+        string deadCanDance = "dead can dance anabis";
+        string tripleOne = "triple one driving off";
+        string songName = tripleOne;
         var searchRequest = new HttpRequestMessage {
             RequestUri = new Uri($"https://api.genius.com/search?q={songName}"),
             Method = HttpMethod.Get,
@@ -28,6 +30,7 @@ public class HttpTests{
         HttpResponseMessage response = await SharedClient.SendAsync(searchRequest);
         if (response.StatusCode != HttpStatusCode.OK){
             //exception
+            Console.WriteLine("RESPONSE: " + response.StatusCode);
             return;
         }
 
@@ -78,21 +81,30 @@ public class HttpTests{
         }
         byte[] bytes = await pageResponse.Content.ReadAsByteArrayAsync();
         var pageContent = Encoding.UTF8.GetString(bytes);
-        string lyrics = await ScrapeLyrics(pageContent);
+        string lyrics = ScrapeLyrics(pageContent);
         Console.WriteLine("SCRAPED");
         Console.WriteLine(lyrics);
     }
 
-    private static async Task<string> ScrapeLyrics(string page){
-        if (page == null) 
+    private static void nothing(){
+        Thread.Sleep(60000000);
+    }
+
+    private static string ScrapeLyrics(string page){
+        if (page == null)
             return "";
         const string CONTAINER = "Lyrics__Container-sc";
+        const string INSTRUMENTAL = "This song is an instrumental";
         int fakeContainer = page.IndexOf(CONTAINER, StringComparison.Ordinal);
+        if(fakeContainer == -1){
+            return page.Contains(INSTRUMENTAL) ? "This song is an instrumental" : "";
+        }
         int lyricContainer = page.IndexOf(CONTAINER, fakeContainer + 1, StringComparison.Ordinal);
         int textStart = page.IndexOf('>', lyricContainer);
         StringBuilder lyrics = new StringBuilder();
         int angleBrackets = 0, divCounter = 1;
         bool spaced = false;
+        Console.WriteLine("PARSING");
         for (int i = textStart + 1; i < page.Length; i++){
             switch (page[i]){
                 case '<':
@@ -126,10 +138,6 @@ public class HttpTests{
                         lyrics.Append('\'');
                     }
                     break;
-                case '\\':
-                case '\n':
-                case ';':
-                    break;
                 case '>':
                     if (angleBrackets == 0){
                         goto exitLoop;
@@ -144,14 +152,43 @@ public class HttpTests{
                     break;
             }
         }
+        Console.WriteLine("EXITED");
         exitLoop:
+        stripDigits(lyrics, 3);
+        if(endsWith(lyrics, "Embed")){
+            lyrics.Length -= 5;
+        }
+        stripDigits(lyrics, 4);
+        if(endsWith(lyrics, "You might also like")){
+            lyrics.Length -= 19;
+        }
         return lyrics.ToString();
     }
-
-    private static void nothing(){
-        Thread.Sleep(600000);
-    }
     
+    private static void stripDigits(StringBuilder str, int quantity){
+        if(quantity <= 0) 
+            return;
+        int currLen = str.Length;
+        for (int i = currLen-1; i >= currLen - quantity && i > -1; i--){
+            if(char.IsDigit(str[i])){
+                str.Length = i;
+            }
+        }
+    }
+
+    private static bool endsWith(StringBuilder str, string seq){
+        int mainLen = str.Length;
+        int start = str.Length - seq.Length;
+        if(start < 0){
+            return false;
+        }
+        for (int i = start, j = 0; i < mainLen; i++, j++){
+            if(str[i] != seq[j]){
+                return false;
+            }
+        }
+        return true;
+    }
     private static SongInfo? SelectMostAccurate(string name, List<SongInfo> songs){
         int len = songs.Count;
         if(len == 0){

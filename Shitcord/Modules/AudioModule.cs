@@ -861,9 +861,12 @@ public class AudioModule : BaseCommandModule{
     
     [Command("lyrics"), Aliases("lyr")]
     [Description("Fetches currently lyrics of the song that's currently being played")]
-    public async Task LyricsCommand(CommandContext ctx, string arg){
+    public async Task LyricsCommand(CommandContext ctx){
         SharedClient.Timeout = TimeSpan.FromSeconds(3);
-        string songName = arg;
+        if (Data.CurrentTrack?.Title == null){
+            return;
+        }
+        string songName = Data.CurrentTrack.Title;
         var searchRequest = new HttpRequestMessage {
             RequestUri = new Uri($"https://api.genius.com/search?q={songName}"),
             Method = HttpMethod.Get,
@@ -922,16 +925,20 @@ public class AudioModule : BaseCommandModule{
         }
         byte[] bytes = await pageResponse.Content.ReadAsByteArrayAsync();
         var pageContent = Encoding.UTF8.GetString(bytes);
-        string lyrics = await ScrapeLyrics(pageContent);
+        string lyrics = ScrapeLyrics(pageContent);
         Console.WriteLine("SCRAPED");
         Console.WriteLine(lyrics);
     }
 
-    private static async Task<string> ScrapeLyrics(string page){
+    private static string ScrapeLyrics(string page){
         if (page == null) 
             return "";
         const string CONTAINER = "Lyrics__Container-sc";
+        const string INSTRUMENTAL = "This song is an instrumental";
         int fakeContainer = page.IndexOf(CONTAINER, StringComparison.Ordinal);
+        if(fakeContainer == -1){
+            return page.Contains(INSTRUMENTAL) ? "This song is an instrumental" : "";
+        }
         int lyricContainer = page.IndexOf(CONTAINER, fakeContainer + 1, StringComparison.Ordinal);
         int textStart = page.IndexOf('>', lyricContainer);
         StringBuilder lyrics = new StringBuilder();
@@ -953,7 +960,6 @@ public class AudioModule : BaseCommandModule{
                     }
                     if (page.Substring(i+1, 4) == "/div"){
                         if (divCounter == 0){
-                            Console.WriteLine("DIV EXIT");
                             goto exitLoop;
                         }
                         i += 4;
@@ -988,8 +994,41 @@ public class AudioModule : BaseCommandModule{
                     break;
             }
         }
+        stripDigits(lyrics, 3);
+        if(endsWith(lyrics, "Embed")){
+            lyrics.Length -= 5;
+        }
+        stripDigits(lyrics, 4);
+        if(endsWith(lyrics, "You might also like")){
+            lyrics.Length -= 19;
+        }
         exitLoop:
         return lyrics.ToString();
+    }
+    
+    private static void stripDigits(StringBuilder str, int quantity){
+        if(quantity <= 0) 
+            return;
+        int currLen = str.Length;
+        for (int i = currLen-1; i >= currLen - quantity && i > -1; i--){
+            if(char.IsDigit(str[i])){
+                str.Length = i;
+            }
+        }
+    }
+
+    private static bool endsWith(StringBuilder str, string seq){
+        int mainLen = str.Length;
+        int start = str.Length - seq.Length;
+        if(start < 0){
+            return false;
+        }
+        for (int i = start, j = 0; i < mainLen; i++, j++){
+            if(str[i] != seq[j]){
+                return false;
+            }
+        }
+        return true;
     }
     
     private static SongInfo? SelectMostAccurate(string name, List<SongInfo> songs){
