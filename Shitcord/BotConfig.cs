@@ -78,7 +78,7 @@ public class DiscordConfig
     public int CacheSize { get; set; } = 100;
 
     [JsonPropertyName("status")]
-    public string Status { get; set; } = "something";
+    public string Status { get; set; } = "discord bot status";
 
     [JsonPropertyName("startdelay")]
     public int StartDelay { get; set; } = 0;
@@ -145,7 +145,7 @@ public class OpenAIConfig
 public class GeniusConfig 
 {
     [JsonPropertyName("token")] 
-    public string Token { get; set; } = "your genus token";
+    public string Token { get; set; } = "your genius token";
 
     [JsonPropertyName("min_length")] 
     public int MinLength { get; set; } = 3;
