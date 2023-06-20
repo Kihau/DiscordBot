@@ -829,7 +829,7 @@ public class GuildAudioData
 
         if (skip_enqueue) return;
 
-        switch (Looping) {
+        /*switch (Looping) {
             case LoopingMode.None:
             case LoopingMode.Queue: {
                 Enqueue(tracks);
@@ -843,6 +843,8 @@ public class GuildAudioData
                 EnqueueRandom(tracks);
             } break;
         }
+        */
+        Enqueue(tracks);
     }
 
     public async Task SeekAsync(TimeSpan timestamp) 
