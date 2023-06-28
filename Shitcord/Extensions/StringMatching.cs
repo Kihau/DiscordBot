@@ -20,6 +20,10 @@ public class StringMatching
                 if (tmp >= MIN_LEN_THRESHOLD) {
                     accuracy += tmp;
                 }
+
+                if (tmp >= q.Length){
+                    break;
+                }
             }
         }
         

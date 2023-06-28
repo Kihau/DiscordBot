@@ -971,9 +971,19 @@ public class AudioModule : BaseCommandModule{
                     angleBrackets++;
                     break;
                 case '&':
-                    if (page.Substring(i + 1, 5) == "#x27;"){
-                        i += 5;
-                        lyrics.Append('\'');
+                    switch (page.Substring(i + 1, 5)){
+                        case "#x27;":
+                        case "apos;":
+                            i += 5;
+                            lyrics.Append('\'');
+                            break;
+                        case "quot;":
+                            i += 5;
+                            lyrics.Append('"');
+                            break;
+                        default:
+                            lyrics.Append('&');
+                            break;
                     }
                     break;
                 case '\\':
