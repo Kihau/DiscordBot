@@ -29,6 +29,7 @@ public class AudioModule : BaseCommandModule{
 #pragma warning disable CS8618
     public AudioModule(AudioService service, DiscordBot bot) {
         Audio = service;
+        SharedClient.Timeout = TimeSpan.FromSeconds(3);
         Genius = bot.Config.Genius;
     } 
 #pragma warning restore CS8618
@@ -862,7 +863,6 @@ public class AudioModule : BaseCommandModule{
     [Command("lyrics"), Aliases("lyr")]
     [Description("Fetches currently lyrics of the song that's currently being played")]
     public async Task LyricsCommand(CommandContext ctx){
-        SharedClient.Timeout = TimeSpan.FromSeconds(3);
         if (Data.CurrentTrack?.Title == null){
             return;
         }
@@ -873,7 +873,6 @@ public class AudioModule : BaseCommandModule{
         };
         searchRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         searchRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Genius.Token);
-        
         HttpResponseMessage response = await SharedClient.SendAsync(searchRequest);
         if (response.StatusCode != HttpStatusCode.OK){
             //exception
