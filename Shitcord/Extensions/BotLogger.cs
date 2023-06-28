@@ -47,7 +47,7 @@ public class BotLogger : ILogger
         LogLevel log_level, EventId event_id, TState state, Exception? exception,
         Func<TState, Exception?, string> formatter
     ) {
-        if (!IsEnabled(log_level) || exception is null)
+        if (!IsEnabled(log_level))
             return;
 
         var log_output = new StringBuilder();
