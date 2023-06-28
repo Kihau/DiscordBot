@@ -927,7 +927,8 @@ public class AudioModule : BaseCommandModule{
         var pageContent = Encoding.UTF8.GetString(bytes);
         string lyrics = ScrapeLyrics(pageContent);
         Console.WriteLine("SCRAPED");
-        Console.WriteLine(lyrics);
+        //Console.WriteLine(lyrics);
+        await ctx.Channel.SendMessageAsync(lyrics);
     }
 
     private static string DeGeniusify(string songName){
