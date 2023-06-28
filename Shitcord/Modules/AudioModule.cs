@@ -867,6 +867,7 @@ public class AudioModule : BaseCommandModule{
             return;
         }
         string songName = Data.CurrentTrack.Title;
+        songName = DeGeniusify(songName);
         var searchRequest = new HttpRequestMessage {
             RequestUri = new Uri($"https://api.genius.com/search?q={songName}"),
             Method = HttpMethod.Get,
@@ -927,6 +928,26 @@ public class AudioModule : BaseCommandModule{
         string lyrics = ScrapeLyrics(pageContent);
         Console.WriteLine("SCRAPED");
         Console.WriteLine(lyrics);
+    }
+
+    private static string DeGeniusify(string songName){
+        StringBuilder str = new StringBuilder();
+        bool inBrackets = false;
+        foreach (var chr in songName){
+            switch (chr){
+                case '(':
+                    inBrackets = true;
+                    break;
+                case ')':
+                    inBrackets = false;
+                    break;
+                default:
+                    if(!inBrackets)
+                        str.Append(chr);
+                    break;
+            }
+        }
+        return str.ToString();
     }
 
     private static string ScrapeLyrics(string page){
