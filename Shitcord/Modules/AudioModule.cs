@@ -934,7 +934,7 @@ public class AudioModule : BaseCommandModule{
         if (ctx.Member is null){
             throw new CommandException("Member null, failed to post message");
         }
-        await ctx.Channel.SendPaginatedMessageAsync(ctx.Member, interactivity.GeneratePagesInEmbed(lyrics),
+        await ctx.Channel.SendPaginatedMessageAsync(ctx.Member, interactivity.GeneratePagesInEmbed(lyrics, SplitType.Line),
             PaginationBehaviour.WrapAround, ButtonPaginationBehavior.DeleteMessage);
     }
 
