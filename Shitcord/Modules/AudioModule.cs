@@ -870,6 +870,7 @@ public class AudioModule : BaseCommandModule{
         }
         string songName = Data.CurrentTrack.Title;
         songName = DeGeniusify(songName);
+        songName = AddAuthorIfMissing(songName);
         var searchRequest = new HttpRequestMessage {
             RequestUri = new Uri($"https://api.genius.com/search?q={songName}"),
             Method = HttpMethod.Get,
@@ -936,6 +937,13 @@ public class AudioModule : BaseCommandModule{
         }
         await ctx.Channel.SendPaginatedMessageAsync(ctx.Member, interactivity.GeneratePagesInEmbed(lyrics, SplitType.Line),
             PaginationBehaviour.WrapAround, ButtonPaginationBehavior.DeleteMessage);
+    }
+
+    private string AddAuthorIfMissing(string songName){
+        if (!songName.Contains('-')){
+            return songName + " " + Data.CurrentTrack?.Author;
+        }
+        return songName;
     }
 
     private static string DeGeniusify(string songName){
