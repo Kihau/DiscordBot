@@ -31,7 +31,7 @@ public class AudioModule : BaseCommandModule{
 #pragma warning disable CS8618
     public AudioModule(AudioService service, DiscordBot bot) {
         Audio = service;
-        SharedClient.Timeout = TimeSpan.FromSeconds(3);
+        SharedClient.Timeout = TimeSpan.FromSeconds(5);
         Genius = bot.Config.Genius;
     } 
 #pragma warning restore CS8618
@@ -940,17 +940,23 @@ public class AudioModule : BaseCommandModule{
 
     private static string DeGeniusify(string songName){
         StringBuilder str = new StringBuilder();
-        bool inBrackets = false;
+        bool inRoundBrackets = false, inSquareBrackets = false;
         foreach (var chr in songName){
             switch (chr){
+                case '[':
+                    inSquareBrackets = true;
+                    break;
                 case '(':
-                    inBrackets = true;
+                    inRoundBrackets = true;
                     break;
                 case ')':
-                    inBrackets = false;
+                    inRoundBrackets = false;
+                    break;
+                case ']':
+                    inSquareBrackets = false;
                     break;
                 default:
-                    if(!inBrackets)
+                    if(!inRoundBrackets && !inSquareBrackets)
                         str.Append(chr);
                     break;
             }
