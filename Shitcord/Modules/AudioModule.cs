@@ -7,6 +7,8 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity.Enums;
+using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Lavalink;
 using DSharpPlus.Lavalink.Entities;
 using Shitcord.Data;
@@ -928,7 +930,12 @@ public class AudioModule : BaseCommandModule{
         string lyrics = ScrapeLyrics(pageContent);
         Console.WriteLine("SCRAPED");
         //Console.WriteLine(lyrics);
-        await ctx.Channel.SendMessageAsync(lyrics);
+        var interactivity = ctx.Client.GetInteractivity();
+        if (ctx.Member is null){
+            throw new CommandException("Member null, failed to post message");
+        }
+        await ctx.Channel.SendPaginatedMessageAsync(ctx.Member, interactivity.GeneratePagesInEmbed(lyrics),
+            PaginationBehaviour.WrapAround, ButtonPaginationBehavior.DeleteMessage);
     }
 
     private static string DeGeniusify(string songName){
