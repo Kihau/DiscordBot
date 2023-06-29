@@ -940,10 +940,17 @@ public class AudioModule : BaseCommandModule{
     }
 
     private string AddAuthorIfMissing(string songName){
-        if (!songName.Contains('-')){
-            return songName + " " + Data.CurrentTrack?.Author;
+        if (Data.CurrentTrack?.Author == null || songName.Contains('-')) 
+            return songName;
+        string? author = Data.CurrentTrack?.Author;
+        if (author == null){ //impossible to be null
+            return songName;
         }
-        return songName;
+        int whitespace = author.IndexOf(' ');
+        if (whitespace == -1){
+            return songName + " " + author;
+        }
+        return songName + " " + author[..whitespace];
     }
 
     private static string DeGeniusify(string songName){
