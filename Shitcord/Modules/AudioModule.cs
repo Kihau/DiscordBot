@@ -11,6 +11,7 @@ using DSharpPlus.Interactivity.Enums;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Lavalink;
 using DSharpPlus.Lavalink.Entities;
+using Microsoft.VisualBasic;
 using Shitcord.Data;
 using Shitcord.Extensions;
 using Shitcord.Services;
@@ -870,38 +871,15 @@ public class AudioModule : BaseCommandModule{
         }
         string songName = Data.CurrentTrack.Title;
         songName = DeGeniusify(songName);
-        songName = AddAuthorIfMissing(songName);
-        var searchRequest = new HttpRequestMessage {
-            RequestUri = new Uri($"https://api.genius.com/search?q={songName}"),
-            Method = HttpMethod.Get,
-        };
-        searchRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        searchRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Genius.Token);
-        HttpResponseMessage response = await SharedClient.SendAsync(searchRequest);
-        if (response.StatusCode != HttpStatusCode.OK){
-            //exception
-            return;
-        }
-        string content = await response.Content.ReadAsStringAsync().WaitAsync(TimeSpan.FromSeconds(2));
-        var json = JsonNode.Parse(content);
-        var hits = json?["response"]?["hits"]?.AsArray();
-        if (hits is null) return;
+        string fullSongName = AddFullAuthorIfMissing(songName);
+        var songs = await retrieveSongs(fullSongName);
         
-        var songs = new List<SongInfo>();
-        foreach (var hit in hits) {
-            if (hit is null){
-                continue;
+        if (songs.Count == 0){
+            string partSongName = AddPartAuthorIfMissing(songName);
+            songs = await retrieveSongs(partSongName);
+            if (songs.Count == 0){
+                songs = await retrieveSongs(songName);
             }
-            var result = hit["result"];
-            var song = result.Deserialize<SongInfo?>();
-            if (song != null){
-                song.fixEncoding();
-                songs.Add(song);
-            }
-        }
-        
-        foreach (var song in songs){
-            Console.WriteLine(song);
         }
 
         SongInfo? mostAccurate = SelectMostAccurate(songName, songs);
@@ -929,7 +907,7 @@ public class AudioModule : BaseCommandModule{
         byte[] bytes = await pageResponse.Content.ReadAsByteArrayAsync();
         var pageContent = Encoding.UTF8.GetString(bytes);
         string lyrics = ScrapeLyrics(pageContent);
-        Console.WriteLine("SCRAPED");
+
         //Console.WriteLine(lyrics);
         var interactivity = ctx.Client.GetInteractivity();
         if (ctx.Member is null){
@@ -939,7 +917,51 @@ public class AudioModule : BaseCommandModule{
             PaginationBehaviour.WrapAround, ButtonPaginationBehavior.DeleteMessage);
     }
 
-    private string AddAuthorIfMissing(string songName){
+    private async Task<List<SongInfo>> retrieveSongs(string songName){
+        var searchRequest = new HttpRequestMessage {
+            RequestUri = new Uri($"https://api.genius.com/search?q={songName}"),
+            Method = HttpMethod.Get,
+        };
+        searchRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        searchRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Genius.Token);
+        HttpResponseMessage response = await SharedClient.SendAsync(searchRequest);
+        if (response.StatusCode != HttpStatusCode.OK){
+            //exception
+            return new List<SongInfo>();
+        }
+        string content = await response.Content.ReadAsStringAsync().WaitAsync(TimeSpan.FromSeconds(2));
+        var json = JsonNode.Parse(content);
+        var hits = json?["response"]?["hits"]?.AsArray();
+        if (hits is null) 
+            return new List<SongInfo>();
+        
+        var songs = new List<SongInfo>();
+        foreach (var hit in hits) {
+            if (hit is null){
+                continue;
+            }
+            var result = hit["result"];
+            var song = result.Deserialize<SongInfo?>();
+            if (song != null){
+                song.fixEncoding();
+                songs.Add(song);
+            }
+        }
+
+        return songs;
+    }
+
+    private string AddFullAuthorIfMissing(string songName){
+        if (Data.CurrentTrack?.Author == null || songName.Contains('-')) 
+            return songName;
+        string? author = Data.CurrentTrack?.Author;
+        if (author == null){ //impossible to be null
+            return songName;
+        }
+        return songName + " " + author;
+    }
+
+    private string AddPartAuthorIfMissing(string songName){
         if (Data.CurrentTrack?.Author == null || songName.Contains('-')) 
             return songName;
         string? author = Data.CurrentTrack?.Author;
@@ -956,8 +978,24 @@ public class AudioModule : BaseCommandModule{
     private static string DeGeniusify(string songName){
         StringBuilder str = new StringBuilder();
         bool inRoundBrackets = false, inSquareBrackets = false;
-        foreach (var chr in songName){
+        int len = songName.Length;
+        for (var i = 0; i < len; i++){
+            var chr = songName[i];
             switch (chr){
+                case '-':
+                    if (i == 0 || i == len-1){
+                        continue;
+                    }
+
+                    if (songName[i-1] != ' '){
+                        str.Append(' ');
+                    }
+                    str.Append('-');
+                    if (i+1 < len && songName[i+1] != ' '){
+                        str.Append(' ');
+                    }
+
+                    break;
                 case '[':
                     inSquareBrackets = true;
                     break;
@@ -971,11 +1009,12 @@ public class AudioModule : BaseCommandModule{
                     inSquareBrackets = false;
                     break;
                 default:
-                    if(!inRoundBrackets && !inSquareBrackets)
+                    if (!inRoundBrackets && !inSquareBrackets)
                         str.Append(chr);
                     break;
             }
         }
+
         return str.ToString();
     }
 
@@ -1020,6 +1059,10 @@ public class AudioModule : BaseCommandModule{
                     angleBrackets++;
                     break;
                 case '&':
+                    if (page.Substring(i + 1, 4) == "amp;"){
+                        lyrics.Append('&');
+                        continue;
+                    }
                     switch (page.Substring(i + 1, 5)){
                         case "#x27;":
                         case "apos;":
