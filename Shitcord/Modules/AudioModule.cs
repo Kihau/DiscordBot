@@ -1096,15 +1096,14 @@ public class AudioModule : BaseCommandModule{
                     break;
             }
         }
+        exitLoop:
+        lyrics.Replace("You might also like", "");
         stripDigits(lyrics, 3);
         if(endsWith(lyrics, "Embed")){
             lyrics.Length -= 5;
         }
         stripDigits(lyrics, 4);
-        if(endsWith(lyrics, "You might also like")){
-            lyrics.Length -= 19;
-        }
-        exitLoop:
+
         return lyrics.ToString();
     }
     
