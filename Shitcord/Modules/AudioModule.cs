@@ -873,18 +873,23 @@ public class AudioModule : BaseCommandModule{
         songName = DeGeniusify(songName);
         var songs = await retrieveSongs(songName);
         bool trackAuthorExists = !string.IsNullOrEmpty(Data.CurrentTrack.Author);
-        if (trackAuthorExists){
-            FilterInvalidAuthors(Data.CurrentTrack.Author, songs);
-            if (songs.Count == 0){
-                songs = await retrieveSongs(songName + " " + Data.CurrentTrack.Author);
-            }
+        if (!trackAuthorExists){
+            goto defer;
         }
 
-        if (songs.Count == 0){
-            Console.WriteLine("No results after searching with author");
+        var filtered = FilterInvalidAuthors(Data.CurrentTrack.Author, songs);
+        if (filtered.Count > 0){
+            songs = filtered;
+            goto defer;
         }
+        
+        var withAuthorSongs = await retrieveSongs(songName + " " + Data.CurrentTrack.Author);
+        if (withAuthorSongs.Count > 0){
+            songs = withAuthorSongs;
+        }
+        //defaults to songs
 
-        //defer:
+        defer:
         SongInfo? mostAccurate = SelectMostAccurate(songName, songs);
         if (mostAccurate?.lyrics_url == null) 
             return;
@@ -920,19 +925,23 @@ public class AudioModule : BaseCommandModule{
             PaginationBehaviour.WrapAround, ButtonPaginationBehavior.DeleteMessage);
     }
 
-    private static void FilterInvalidAuthors(string supposedAuthor, List<SongInfo> songs){
-        for (var i = 0; i < songs.Count; i++){
-            var song = songs[i];
+    private static List<SongInfo> FilterInvalidAuthors(string supposedAuthor, List<SongInfo> songs){
+        var filtered = new List<SongInfo>();
+        foreach (var song in songs){
             if (song.artist_name == null){
                 Console.WriteLine("Genius provided no author.");
+                filtered.Add(song);
                 continue;
             }
 
             float accuracy = StringMatching.Accuracy(supposedAuthor, DeGeniusify(song.artist_name));
             if (accuracy < 0.4){
-                songs.RemoveAt(i--);
+                continue;
             }
+            filtered.Add(song);
         }
+
+        return filtered;
     }
 
     private async Task<List<SongInfo>> retrieveSongs(string songName){
