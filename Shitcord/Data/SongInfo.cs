@@ -9,6 +9,9 @@ record SongInfo
 
     [JsonPropertyName("full_title")] 
     public string? full_title { get; set; }
+    
+    [JsonPropertyName("artist_names")] 
+    public string? artist_name { get; set; }
 
     [JsonPropertyName("url")] 
     public string? lyrics_url { get; set; }

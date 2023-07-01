@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Shitcord.Data;
 using Shitcord.Extensions;
 
 namespace Shitcord.Tests;
