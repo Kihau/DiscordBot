@@ -22,6 +22,8 @@ public class MatchingTest{
         test("recur", "owner", 0f);
         test("q", "something", 0);
         test("Lil Yachty german", "lil yachty german", 1);
+        test("assassin player okkay", "okkay player assassin", 1);
+        test("assassin player - okkay", "okkay player assassin", 1);
         test("lil yachty german", "lil yachty german", 1);
         test("lil yachty poland", "Lil Yachty - Poland", 0.93f);
         test("lil yachty poland", "?lil yachty poland freestyle by?MAJ", 0.451f);

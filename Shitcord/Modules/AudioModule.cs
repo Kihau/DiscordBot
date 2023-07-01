@@ -870,37 +870,40 @@ public class AudioModule : BaseCommandModule{
             return;
         }
         string songName = Data.CurrentTrack.Title;
-        songName = DeGeniusify(songName);
-        var songs = await retrieveSongs(songName);
+        string author = Data.CurrentTrack.Author;
         bool trackAuthorExists = !string.IsNullOrEmpty(Data.CurrentTrack.Author);
+        
+        songName = DeGeniusify(songName);
+        author = PerformHacksOnAuthor(author);
+        var songs = await retrieveSongs(songName);
+        
         if (!trackAuthorExists){
             goto defer;
         }
+        
+        string nameWithAuthor = songName + " " + author;
+        var withAuthorSongs = await retrieveSongs(nameWithAuthor);
+        songs.AddRange(withAuthorSongs);
 
-        var filtered = FilterInvalidAuthors(Data.CurrentTrack.Author, songs);
-        if (filtered.Count > 0){
-            songs = filtered;
+        if (!StringHasTwoParts(author)){
             goto defer;
         }
-
-        string nameWithAuthor = songName + " " + Data.CurrentTrack.Author;
-        var withAuthorSongs = await retrieveSongs(nameWithAuthor);
-        RemoveInvalidSongs(nameWithAuthor, withAuthorSongs);
-        if (withAuthorSongs.Count > 0){
-            songs = withAuthorSongs;
-        }
-        //defaults to songs
-
+        string firstPart = author[..author.IndexOf(' ')];
+        var onePartAuthorSongs = await retrieveSongs(songName + " " + firstPart);
+        songs.AddRange(onePartAuthorSongs);
+        
         defer:
         SongInfo? mostAccurate = SelectMostAccurate(songName, songs);
         if (mostAccurate?.lyrics_url == null) 
             return;
         Console.WriteLine(mostAccurate);
+        DiscordEmbed embed = EmbedSong(mostAccurate);
         
         //scrape lyrics request
         if (!mostAccurate.lyrics_url.StartsWith("https://genius.com")){
             return;
         }
+        await ctx.Channel.SendMessageAsync(embed);
         
         var webpageRequest = new HttpRequestMessage {
             RequestUri = new Uri(mostAccurate.lyrics_url),
@@ -927,36 +930,34 @@ public class AudioModule : BaseCommandModule{
             PaginationBehaviour.WrapAround, ButtonPaginationBehavior.DeleteMessage);
     }
 
-    private static void RemoveInvalidSongs(string nameWithAuthor, List<SongInfo> songs){
-        for (var i = 0; i < songs.Count; i++){
-            var song = songs[i];
-            if (song.full_title == null){
-                continue;
+    private static DiscordEmbed EmbedSong(SongInfo song){
+        DiscordEmbedBuilder embed = new DiscordEmbedBuilder();
+        string? title = song.full_title;
+        if (title != null){
+            if(title.Length > 256){
+                title = title[..256];
             }
-            float accuracy = StringMatching.Accuracy(nameWithAuthor, song.full_title);
-            if (accuracy < 0.6){
-                songs.RemoveAt(i--);
-            }
+            embed.Title = title;
         }
+        
+        embed.Description = song.release?? "null";
+        embed.Description += "\n" + song.lyrics_url;
+        return embed.Build();
     }
 
-    private static List<SongInfo> FilterInvalidAuthors(string supposedAuthor, List<SongInfo> songs){
-        var filtered = new List<SongInfo>();
-        foreach (var song in songs){
-            if (song.artist_name == null){
-                Console.WriteLine("Genius provided no author.");
-                filtered.Add(song);
-                continue;
-            }
+    private static string PerformHacksOnAuthor(string author){
+        StringBuilder str = new StringBuilder(author);
+        str.Replace("Topic", "");
+        str.Replace('-', ' ');
+        return str.ToString().Trim();
+    }
 
-            float accuracy = StringMatching.Accuracy(supposedAuthor, DeGeniusify(song.artist_name));
-            if (accuracy < 0.4){
-                continue;
-            }
-            filtered.Add(song);
+    private static bool StringHasTwoParts(string song){
+        if (song.Length < 3){
+            return false;
         }
-
-        return filtered;
+        int anyWhitespace = song.IndexOf(' ', 1);
+        return anyWhitespace != -1;
     }
 
     private async Task<List<SongInfo>> retrieveSongs(string songName){
@@ -1047,7 +1048,10 @@ public class AudioModule : BaseCommandModule{
             }
         }
 
-        return str.ToString();
+        str.Replace("Official", "");
+        str.Replace("Video", "");
+        str.Replace("Music", "");
+        return str.ToString().Trim();
     }
 
     private static string ScrapeLyrics(string page){
