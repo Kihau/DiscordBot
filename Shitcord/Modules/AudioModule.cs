@@ -871,18 +871,20 @@ public class AudioModule : BaseCommandModule{
         }
         string songName = Data.CurrentTrack.Title;
         songName = DeGeniusify(songName);
-        string fullSongName = AddFullAuthorIfMissing(songName);
-        var songs = await retrieveSongs(fullSongName);
-        
-        if (songs.Count == 0){
-            string partSongName = AddPartAuthorIfMissing(songName);
-            songs = await retrieveSongs(partSongName);
+        var songs = await retrieveSongs(songName);
+        bool trackAuthorExists = !string.IsNullOrEmpty(Data.CurrentTrack.Author);
+        if (trackAuthorExists){
+            FilterInvalidAuthors(Data.CurrentTrack.Author, songs);
             if (songs.Count == 0){
-                songs = await retrieveSongs(songName);
+                songs = await retrieveSongs(songName + " " + Data.CurrentTrack.Author);
             }
         }
 
-        defer:
+        if (songs.Count == 0){
+            Console.WriteLine("No results after searching with author");
+        }
+
+        //defer:
         SongInfo? mostAccurate = SelectMostAccurate(songName, songs);
         if (mostAccurate?.lyrics_url == null) 
             return;
@@ -918,6 +920,21 @@ public class AudioModule : BaseCommandModule{
             PaginationBehaviour.WrapAround, ButtonPaginationBehavior.DeleteMessage);
     }
 
+    private static void FilterInvalidAuthors(string supposedAuthor, List<SongInfo> songs){
+        for (var i = 0; i < songs.Count; i++){
+            var song = songs[i];
+            if (song.artist_name == null){
+                Console.WriteLine("Genius provided no author.");
+                continue;
+            }
+
+            float accuracy = StringMatching.Accuracy(supposedAuthor, DeGeniusify(song.artist_name));
+            if (accuracy < 0.4){
+                songs.RemoveAt(i--);
+            }
+        }
+    }
+
     private async Task<List<SongInfo>> retrieveSongs(string songName){
         var searchRequest = new HttpRequestMessage {
             RequestUri = new Uri($"https://api.genius.com/search?q={songName}"),
@@ -951,17 +968,7 @@ public class AudioModule : BaseCommandModule{
 
         return songs;
     }
-
-    private string AddFullAuthorIfMissing(string songName){
-        if (Data.CurrentTrack?.Author == null || songName.Contains('-')) 
-            return songName;
-        string? author = Data.CurrentTrack?.Author;
-        if (author == null){ //impossible to be null
-            return songName;
-        }
-        return songName + " " + author;
-    }
-
+    
     private string AddPartAuthorIfMissing(string songName){
         if (Data.CurrentTrack?.Author == null || songName.Contains('-')) 
             return songName;
