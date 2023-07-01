@@ -882,6 +882,7 @@ public class AudioModule : BaseCommandModule{
             }
         }
 
+        defer:
         SongInfo? mostAccurate = SelectMostAccurate(songName, songs);
         if (mostAccurate?.lyrics_url == null) 
             return;
@@ -1137,8 +1138,9 @@ public class AudioModule : BaseCommandModule{
         if(len == 0){
             return null;
         }
-        double[] accuracies = new double[len];
-        double max = 0;
+
+        float[] accuracies = new float[len];
+        float max = 0;
         int index = -1;
         for (int i = 0; i < len; i++){
             string? fullTitle = songs[i].full_title;
@@ -1146,7 +1148,6 @@ public class AudioModule : BaseCommandModule{
                 continue;
             
             accuracies[i] = StringMatching.Accuracy(name, fullTitle);
-            accuracies[i] /= fullTitle.Length;
             if(accuracies[i] > max){
                 max = accuracies[i];
                 index = i;

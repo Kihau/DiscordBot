@@ -4,8 +4,8 @@ namespace Shitcord.Extensions;
 public class StringMatching
 {
     private const int MIN_LEN_THRESHOLD = 3;
-    // larger value = better matching
-    public static int Accuracy(string name, string target)
+    // returns 0.0 - 1.0 value representing what percentage of target string was matched
+    public static float Accuracy(string name, string target)
     {
         if (name.Length == 0 || target.Length == 0) {
             return 0;
@@ -14,10 +14,10 @@ public class StringMatching
         int accuracy = 0;
         string[] names = name.ToLower().Split(" ");
         string[] targets = target.ToLower().Split(" ");
-        foreach (string q in names) {
-            foreach (string t in targets){
+        foreach (var q in names){
+            foreach (var t in targets){
                 int tmp = matchingLen(q.ToLower(), t.ToLower());
-                if (tmp >= MIN_LEN_THRESHOLD) {
+                if (tmp >= MIN_LEN_THRESHOLD){
                     accuracy += tmp;
                 }
 
@@ -26,16 +26,15 @@ public class StringMatching
                 }
             }
         }
-        
-        accuracy = Math.Min(accuracy, name.Length);
-        return Math.Min(accuracy, target.Length);
+
+        int targetNonSpaceLen = target.Count(chr => chr != ' ');
+        return Math.Min((float)accuracy / targetNonSpaceLen, 1);
     }
 
     public static int matchingLen(string str1, string str2)
     {
         int score = 0;
-        int minLen = Math.Min(str1.Length, str2.Length);
-        for (int i = 0, j = 0; i < minLen && j < minLen; i++, j++) {
+        for (int i = 0, j = 0; i < str1.Length && j < str2.Length; i++, j++) {
             char chr1 = str1[i];
             char chr2 = str2[j];
             if (chr1 == chr2) {
