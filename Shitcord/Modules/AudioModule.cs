@@ -882,8 +882,10 @@ public class AudioModule : BaseCommandModule{
             songs = filtered;
             goto defer;
         }
-        
-        var withAuthorSongs = await retrieveSongs(songName + " " + Data.CurrentTrack.Author);
+
+        string nameWithAuthor = songName + " " + Data.CurrentTrack.Author;
+        var withAuthorSongs = await retrieveSongs(nameWithAuthor);
+        RemoveInvalidSongs(nameWithAuthor, withAuthorSongs);
         if (withAuthorSongs.Count > 0){
             songs = withAuthorSongs;
         }
@@ -923,6 +925,21 @@ public class AudioModule : BaseCommandModule{
         }
         await ctx.Channel.SendPaginatedMessageAsync(ctx.Member, interactivity.GeneratePagesInEmbed(lyrics, SplitType.Line),
             PaginationBehaviour.WrapAround, ButtonPaginationBehavior.DeleteMessage);
+    }
+
+    private static void RemoveInvalidSongs(string nameWithAuthor, List<SongInfo> songs){
+        for (var i = 0; i < songs.Count; i++){
+            var song = songs[i];
+            if (song.full_title == null){
+                continue;
+            }
+            float accuracy = StringMatching.Accuracy(nameWithAuthor, song.full_title);
+            if (accuracy < 0.6){
+                songs.RemoveAt(i--);
+            }
+        }
+
+        throw new NotImplementedException();
     }
 
     private static List<SongInfo> FilterInvalidAuthors(string supposedAuthor, List<SongInfo> songs){
