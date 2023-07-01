@@ -938,8 +938,6 @@ public class AudioModule : BaseCommandModule{
                 songs.RemoveAt(i--);
             }
         }
-
-        throw new NotImplementedException();
     }
 
     private static List<SongInfo> FilterInvalidAuthors(string supposedAuthor, List<SongInfo> songs){
