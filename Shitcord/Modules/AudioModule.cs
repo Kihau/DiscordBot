@@ -891,7 +891,7 @@ public class AudioModule : BaseCommandModule{
         string firstPart = author[..author.IndexOf(' ')];
         var onePartAuthorSongs = await retrieveSongs(songName + " " + firstPart);
         songs.AddRange(onePartAuthorSongs);
-
+        
         foreach (var song in songs){
             if (song.full_title == null){
                 continue;
@@ -900,10 +900,17 @@ public class AudioModule : BaseCommandModule{
         }
         
         defer:
+        if (trackAuthorExists){
+            FilterOutGeniusGarbage(songName + " " + author, songs);
+        }else{
+            FilterOutGeniusGarbage(songName, songs);
+        }
+        
+        
         SongInfo? mostAccurate = trackAuthorExists ? 
             SelectMostAccurate(songName + " " + author, songs) : 
             SelectMostAccurate(songName, songs);
-
+        
         if (mostAccurate?.lyrics_url == null) 
             return;
         Console.WriteLine(mostAccurate);
@@ -938,6 +945,19 @@ public class AudioModule : BaseCommandModule{
         }
         await ctx.Channel.SendPaginatedMessageAsync(ctx.Member, interactivity.GeneratePagesInEmbed(lyrics, SplitType.Line),
             PaginationBehaviour.WrapAround, ButtonPaginationBehavior.DeleteMessage);
+    }
+
+    private static void FilterOutGeniusGarbage(string songName, List<SongInfo> songs){
+        for (int i = 0; i < songs.Count; i++){
+            SongInfo song = songs[i];
+            if (song.full_title == null){
+                continue;
+            }
+            float accuracy = StringMatching.Accuracy(songName, song.full_title);
+            if (accuracy < 0.15){
+                songs.RemoveAt(i--);
+            }
+        }
     }
 
     private static DiscordEmbed EmbedSong(SongInfo song){
