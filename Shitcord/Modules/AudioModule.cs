@@ -873,7 +873,7 @@ public class AudioModule : BaseCommandModule{
         string author = Data.CurrentTrack.Author;
         bool trackAuthorExists = !string.IsNullOrEmpty(Data.CurrentTrack.Author);
         
-        songName = DeGeniusify(songName);
+        songName = DeGeniusify(songName.ToLower());
         author = PerformHacksOnAuthor(author);
         var songs = await retrieveSongs(songName);
         
@@ -905,7 +905,10 @@ public class AudioModule : BaseCommandModule{
         }else{
             FilterOutGeniusGarbage(songName, songs);
         }
-        
+
+        if (songs.Count == 0){
+            throw new CommandException("No songs found");
+        }
         
         SongInfo? mostAccurate = trackAuthorExists ? 
             SelectMostAccurate(songName + " " + author, songs) : 
@@ -1068,9 +1071,10 @@ public class AudioModule : BaseCommandModule{
             }
         }
 
-        str.Replace("Official", "");
-        str.Replace("Video", "");
-        str.Replace("Music", "");
+        str.Replace("official", "");
+        str.Replace("video", "");
+        str.Replace("music", "");
+        str.Replace("prod", "");
         return str.ToString().Trim();
     }
 
@@ -1212,7 +1216,6 @@ public class AudioModule : BaseCommandModule{
             index = 0;
         }
 
-        Console.WriteLine("accc");
         return songs[index];
     }
 }
