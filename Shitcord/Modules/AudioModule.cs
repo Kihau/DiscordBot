@@ -891,9 +891,19 @@ public class AudioModule : BaseCommandModule{
         string firstPart = author[..author.IndexOf(' ')];
         var onePartAuthorSongs = await retrieveSongs(songName + " " + firstPart);
         songs.AddRange(onePartAuthorSongs);
+
+        foreach (var song in songs){
+            if (song.full_title == null){
+                continue;
+            }
+            song.full_title = DeGeniusify(song.full_title);
+        }
         
         defer:
-        SongInfo? mostAccurate = SelectMostAccurate(songName, songs);
+        SongInfo? mostAccurate = trackAuthorExists ? 
+            SelectMostAccurate(songName + " " + author, songs) : 
+            SelectMostAccurate(songName, songs);
+
         if (mostAccurate?.lyrics_url == null) 
             return;
         Console.WriteLine(mostAccurate);
@@ -939,9 +949,13 @@ public class AudioModule : BaseCommandModule{
             }
             embed.Title = title;
         }
-        
-        embed.Description = song.release?? "null";
-        embed.Description += "\n" + song.lyrics_url;
+
+        if (song.thumbnail_url != null){
+            embed.WithThumbnail(song.thumbnail_url);
+        }
+
+        embed.Description = (song.release?? "Unknown release") +
+            (song.lyrics_url == null ? "" : "\n" + song.lyrics_url);
         return embed.Build();
     }
 
@@ -992,20 +1006,6 @@ public class AudioModule : BaseCommandModule{
         }
 
         return songs;
-    }
-    
-    private string AddPartAuthorIfMissing(string songName){
-        if (Data.CurrentTrack?.Author == null || songName.Contains('-')) 
-            return songName;
-        string? author = Data.CurrentTrack?.Author;
-        if (author == null){ //impossible to be null
-            return songName;
-        }
-        int whitespace = author.IndexOf(' ');
-        if (whitespace == -1){
-            return songName + " " + author;
-        }
-        return songName + " " + author[..whitespace];
     }
 
     private static string DeGeniusify(string songName){
@@ -1191,6 +1191,8 @@ public class AudioModule : BaseCommandModule{
         if(index == -1){
             index = 0;
         }
+
+        Console.WriteLine("accc");
         return songs[index];
     }
 }

@@ -8,6 +8,8 @@ public class MatchingTest{
     public static void RunTests(){
         //TODO: base larger tests on accuracy rather than matching len
         test("lyrics", "lyics", 1f);
+        test("Daylight Bôa", "Daylight by Bôa", 0.84f);
+        test("Daylight Bôa", "Daylight by Maroon 5", 0.47f);
         test("lil yachty", "lil yachty", 1);
         test("lil yachty", "lil yachty russia", 0.6f);
         test("dekstop", "desktop", 0.85f);
@@ -23,6 +25,7 @@ public class MatchingTest{
         test("q", "something", 0);
         test("Lil Yachty german", "lil yachty german", 1);
         test("assassin player okkay", "okkay player assassin", 1);
+        test("match more than you're supposed to", "match than", 1);
         test("assassin player - okkay", "okkay player assassin", 1);
         test("lil yachty german", "lil yachty german", 1);
         test("lil yachty poland", "Lil Yachty - Poland", 0.93f);

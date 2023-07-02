@@ -15,6 +15,9 @@ record SongInfo
 
     [JsonPropertyName("url")] 
     public string? lyrics_url { get; set; }
+    
+    [JsonPropertyName("header_image_thumbnail_url")] 
+    public string? thumbnail_url { get; set; }
 
     [JsonPropertyName("release_date_for_display")] 
     public string? release { get; set; }
