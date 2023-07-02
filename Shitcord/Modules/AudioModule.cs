@@ -996,7 +996,7 @@ public class AudioModule : BaseCommandModule{
 
     private async Task<List<SongInfo>> retrieveSongs(string songName){
         var searchRequest = new HttpRequestMessage {
-            RequestUri = new Uri($"https://api.genius.com/search?q={songName}"),
+            RequestUri = new Uri($"https://api.genius.com/search?q={Uri.EscapeDataString(songName)}"),
             Method = HttpMethod.Get,
         };
         searchRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
